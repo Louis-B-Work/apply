@@ -784,7 +784,7 @@ function mountAddress(preset){
 /* ============================== DESIGN NOTES (annotations) ==============================
    Numbered pins and outlines on the phone, plus a panel saying why each change was made and
    how it could reduce drop-off. The drop-off lines are expectations to test, not measured results. */
-let notesOn=qs.get('notes')==='1';
+let notesOn=qs.has('notes')?qs.get('notes')==='1':!SHOT;   // on by default; ?notes=0 turns it off
 let dobHelp=qs.get('dobhelp')!=='0';   // the 'For example' line and the 'That makes you ...' line
 const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact:'Step 3: Contact details'};
 const CHANGES={
