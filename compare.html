@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car Finance 247 - current against redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#6905F2;--green:#00D4B5;--ok:#0B7A55;--line:#DDE0E6;--grey:#4B5563}
+*{box-sizing:border-box}
+body{margin:0;background:#F1F2F6;color:#111;font-family:Inter,sans-serif;font-size:16px;line-height:24px}
+.page{max-width:1500px;margin:0 auto;padding:32px 24px 64px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+h1{margin:0;font-size:30px;line-height:38px}
+.back{color:#111;font-size:14px;font-weight:500;text-underline-offset:3px}
+.lead{margin:4px 0 32px;color:var(--grey);max-width:760px}
+section{margin:0 0 48px}
+h2{margin:0 0 4px;font-size:22px;line-height:30px}
+.sub{margin:0 0 16px;color:var(--grey);font-size:14px;line-height:20px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.col{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.tag{display:inline-block;margin:0 0 12px;padding:3px 12px;border-radius:999px;font-size:12px;line-height:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tag.cur{background:#E5E7EB;color:#374151}
+.tag.new{background:var(--purple);color:#fff}
+.col img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:6px}
+.diff{margin:16px 0 0;padding:14px 18px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.diff h3{margin:0 0 6px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--ok)}
+.diff ul{margin:0;padding-left:20px;font-size:15px;line-height:22px}
+.diff li{margin:3px 0}
+.sum{margin:16px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.sum .what,.sum .why{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px}
+.sum h3{margin:0 0 6px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase}
+.sum .what h3{color:var(--purple)}
+.sum .why h3{color:var(--ok)}
+.sum strong{font-weight:700;color:#000}
+.sum p{margin:0;font-size:15px;line-height:24px}
+.note{margin:40px 0 0;font-size:13px;line-height:19px;color:#6B7280;max-width:760px}
+@media (max-width:900px){ .pair,.sum{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Current against redesign</h1>
+    <a class="back" href="index.html?notes=1#/address/default">Open the interactive prototype</a>
+  </header>
+  <p class="lead">The three steps as they are today, next to the redesign. Each pair shows the same state of the page.</p>
+
+  <section>
+    <h2>Step 1: Address</h2>
+    <p class="sub">Starting state of the step.</p>
+    <div class="pair">
+      <div class="col"><span class="tag cur">Current</span><img src="compare/current-address.png" alt="Current address step: 'Next, where do you live?' with a search box for an address or street name"></div>
+      <div class="col"><span class="tag new">Redesign</span><img src="compare/redesign-address.png" alt="Redesigned address step: 'Next, what's your postcode?' with a postcode field and a Find address button"></div>
+    </div>
+    <div class="sum"><div class="what"><h3>What changed</h3><p>The single 'address or street name' box is now a <strong>postcode-first search</strong>. 'See more addresses' is replaced by <strong>one scrollable, filterable list</strong>, with a way to <strong>enter the address manually</strong> if it is missing.</p></div><div class="why"><h3>Why it should reduce abandoned sessions</h3><p>There is <strong>less to decide</strong> before the first tap, <strong>no repeated clicking</strong> to find an address deep in the list, and <strong>no dead end</strong> for people whose address is not listed.</p></div></div>
+  </section>
+
+  <section>
+    <h2>Step 2: Date of birth</h2>
+    <p class="sub">A valid date has been entered.</p>
+    <div class="pair">
+      <div class="col"><span class="tag cur">Current</span><img src="compare/current-dob.png" alt="Current date of birth step with separate Day, Month and Year boxes"></div>
+      <div class="col"><span class="tag new">Redesign</span><img src="compare/redesign-dob.png" alt="Redesigned date of birth step with one date box, a calendar button and an age confirmation"></div>
+    </div>
+    <div class="sum"><div class="what"><h3>What changed</h3><p>Three separate boxes are now <strong>one box</strong> that <strong>adds the slashes</strong> for you, with a <strong>calendar</strong> that goes year, then month, then day as a second way in. <strong>Tapping the day finishes it</strong>.</p></div><div class="why"><h3>Why it should reduce abandoned sessions</h3><p>It is <strong>faster and less fiddly</strong> on a phone, and typing mistakes are <strong>caught straight away</strong>. A collapsed <strong>'Why do we ask this?'</strong> line under the heading answers the doubt behind the leaving.</p></div></div>
+  </section>
+
+  <section>
+    <h2>Step 3: Contact details</h2>
+    <p class="sub">Starting state of the final page.</p>
+    <div class="pair">
+      <div class="col"><span class="tag cur">Current</span><img src="compare/current-contact.png" alt="Current final step: 'And finally, where should we send your quote?' with email and phone fields"></div>
+      <div class="col"><span class="tag new">Redesign</span><img src="compare/redesign-contact.png" alt="Redesigned final step: 'Last step, then see your results' with a '?' beside the phone number and a See my results button"></div>
+    </div>
+    <div class="sum"><div class="what"><h3>What changed</h3><p>The headline now <strong>promises results</strong> instead of a quote sent later, and a small <strong>'?' next to the phone number</strong> explains on <strong>hover or tap</strong> why it is needed. The phone field <strong>accepts numbers the way people type them</strong>.</p></div><div class="why"><h3>Why it should reduce abandoned sessions</h3><p>People worried about unwanted calls <strong>get an answer at the moment they hesitate</strong>, <strong>without a box adding to the page</strong>. Fewer people should drop out of a page where everything else is already filled in.</p></div></div>
+  </section>
+
+  <p class="note">The 'current' images are the screenshots supplied for this project, so they are desktop width. The redesign is shown at the same width for a fair comparison.</p>
+</div>
+</body>
+</html>
