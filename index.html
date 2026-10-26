@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car Finance 247 - apply form redesign prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#6905F2; --green:#00D4B5; --ink:#000; --btn-ink:#111;
+  --grey:#8C8C8C; --grey-text:#4B5563; --line:#E5E7EB;
+  --err:#D92D20; --ok:#0E9F6E;
+  --tint:rgba(105,5,242,.05); --tint-hover:rgba(105,5,242,.08);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,sans-serif;font-size:16px;line-height:24px;color:var(--ink);background:#fff}
+button,input{font-family:inherit}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ic{width:1em;height:1em;fill:currentColor;flex:none}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+
+/* shell */
+.wrap{max-width:640px;margin:0 auto;padding:0 20px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;padding-top:20px}
+.logo svg{display:block;width:70.15px;height:60px;fill:var(--purple)}
+.tp{display:block;width:156px;color:#000;text-decoration:none}
+.tp .l svg{display:block;width:100%;aspect-ratio:126/31;fill:#000}
+.tp .s svg{display:block;width:100%;aspect-ratio:512/96;margin-top:4px}
+.tp .i{font-size:10px;line-height:14px;margin-top:4px;white-space:nowrap}
+.tp .i b{font-weight:700}
+.tp .i .dv{margin:0 4px;color:#6B7280}
+.progress{display:flex;align-items:center;height:32px;margin:16px 0 42px}
+.pstep{position:relative;flex:none;width:32px;height:32px}
+.pnum{display:grid;place-items:center;box-sizing:border-box;width:32px;height:32px;border-radius:50%;border:2px solid #E5E7EB;background:#F3F4F6;color:#6B7280;font-size:14px;line-height:1;font-weight:700}
+.pline{flex:1 1 0;min-width:0;height:3px;margin:0 8px;border-radius:2px;background:var(--line);overflow:hidden}
+.pline i{display:block;height:100%;width:0;background:var(--green)}
+.pstep.on .pnum{background:var(--green);border-color:var(--green);color:#111}
+.pstep.now .pnum{box-shadow:0 0 0 4px rgba(0,212,181,.3)}
+.pstep.end .pnum{background:#fff;border-color:var(--purple);color:var(--purple)}
+.plabel{position:absolute;top:39px;font-size:12px;line-height:16px;font-weight:500;color:#9CA3AF;white-space:nowrap}
+.plabel.first{left:0}
+.plabel.mid{left:50%;transform:translateX(-50%)}
+.plabel.last{right:0}
+.pstep.done .plabel{color:#4B5563}
+.pstep.now .plabel{color:#111;font-weight:700}
+main{padding-bottom:48px}
+.back{display:inline-flex;align-items:center;gap:4px;margin:12px 0 20px;color:#000;font-size:18px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.back .ic{width:24px;height:24px;margin-left:-6px}
+h1{font-size:30px;line-height:37.5px;font-weight:700;margin:0 0 16px}
+.sub{margin:0 0 24px}
+.hint-lg{margin:0 0 16px;color:var(--grey-text)}
+
+/* form primitives */
+.field{margin-bottom:20px}
+.field>label,.lbl{display:block;font-weight:700;font-size:16px;line-height:24px;margin-bottom:6px}
+.hint{display:block;color:var(--grey-text);font-size:14px;line-height:20px;margin:-2px 0 8px}
+.control{position:relative}
+.input{width:100%;height:56px;border:1px solid var(--grey);border-radius:6px;padding:0 16px;font-size:18px;color:#000;background:#fff;-webkit-appearance:none;appearance:none}
+.input::placeholder{color:#9CA3AF}
+.input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px var(--purple)}
+.input.err{border-color:var(--err);box-shadow:0 0 0 1px var(--err)}
+.input.err:focus{box-shadow:0 0 0 2px var(--err)}
+.input[readonly]{background:#F9FAFB}
+.error{display:flex;gap:6px;align-items:flex-start;color:var(--err);font-size:14px;line-height:20px;font-weight:500;margin-top:8px}
+.error .ic{width:16px;height:16px;margin-top:2px}
+.okmsg{display:flex;gap:6px;align-items:center;color:#0B7A55;font-size:14px;line-height:20px;font-weight:500;margin-top:8px}
+.okmsg .ic{width:18px;height:18px}
+.suggest{font-size:14px;line-height:20px;margin-top:8px}
+.link{background:none;border:0;padding:0;font-size:inherit;font-weight:500;color:#000;text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;border:0;border-radius:6px;background:var(--green);color:var(--btn-ink);font-size:18px;font-weight:700;cursor:pointer}
+.btn .ic{width:16px;height:16px}
+.btn:hover{filter:brightness(.96)}
+.btn.secondary{background:#fff;border:2px solid var(--green)}
+.btn[disabled]{background:var(--line);color:#6B7280;cursor:not-allowed;filter:none}
+.btn:focus-visible{outline:3px solid #000;outline-offset:2px}
+.spinner{width:20px;height:20px;border:3px solid rgba(17,17,17,.2);border-top-color:#111;border-radius:50%;animation:sp .8s linear infinite;flex:none}
+.control .spinner{position:absolute;right:16px;top:18px;width:20px;height:20px;border-color:rgba(105,5,242,.2);border-top-color:var(--purple)}
+@keyframes sp{to{transform:rotate(360deg)}}
+.legal{font-size:14px;line-height:20px;margin:16px 0 0}
+.legal a{font-weight:700;color:#000;text-decoration:underline;text-underline-offset:3px}
+
+/* step 1 address */
+.why{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;margin:-4px 0 20px;font-size:16px;font-weight:500;color:#000;cursor:pointer}
+.why .ic{width:20px;height:20px;margin-left:-4px;transition:transform .15s}
+.why[aria-expanded=true] .ic{transform:rotate(90deg)}
+.why span{text-decoration:underline;text-underline-offset:3px}
+.why-panel{margin:-8px 0 20px 22px;color:var(--grey-text);font-size:16px}
+.count{margin:20px 0 12px;font-weight:700}
+.filter .input{padding-left:46px;font-size:16px}
+.filter .ic{position:absolute;left:14px;top:16px;width:24px;height:24px;color:#6B7280}
+.lbwrap{position:relative;margin-top:12px}
+.lbwrap::after{content:"";position:absolute;left:1px;right:1px;bottom:1px;height:36px;background:linear-gradient(rgba(255,255,255,0),#fff);border-radius:0 0 8px 8px;pointer-events:none}
+.lbwrap.at-end::after{display:none}
+.lb{max-height:272px;overflow:auto;border:1px solid var(--grey);border-radius:8px;background:#fff;outline:none;overscroll-behavior:contain}
+.lb:focus-visible{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple)}
+.grp{position:sticky;top:0;z-index:1;background:#F3EEFE;border-bottom:1px solid var(--line);padding:8px 16px;font-size:14px;line-height:20px;font-weight:700}
+.opt{display:flex;align-items:center;min-height:52px;padding:8px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.opt:hover{background:var(--tint)}
+.opt[aria-selected=true]{background:var(--tint-hover);box-shadow:inset 3px 0 0 var(--purple)}
+.lb>[role=group]:last-child .opt:last-child{border-bottom:0}
+mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:2px}
+.nomatch{margin:12px 0 0;color:var(--grey-text)}
+.manual{display:inline-block;margin:16px 0 24px;font-size:16px}
+.card{background:var(--tint);border:.8px solid var(--purple);border-radius:8px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;margin-bottom:24px}
+.card .pin{width:24px;height:24px;color:var(--purple);margin-top:2px}
+.card .adr{flex:1;font-weight:500}
+.card .adr b{font-weight:700}
+.card .link{flex:none}
+.switch{display:inline-block;margin:0 0 24px}
+
+/* step 2 DOB */
+.dob{border:0;margin:0;padding:0;min-width:0}
+.dob-row{display:grid;grid-template-columns:1fr 56px;gap:8px;align-items:start}
+.seg .input{padding:0 16px 0 calc(50% - 4.3em);text-align:left;letter-spacing:.02em;color:transparent;caret-color:#000}
+.mask{position:absolute;inset:0;display:flex;align-items:center;box-sizing:border-box;padding:0 16px 0 calc(50% - 4.3em);border:1px solid transparent;font-size:18px;letter-spacing:.02em;white-space:pre;pointer-events:none}
+.mask .typed{color:#000}
+.mask .rest{color:#9CA3AF}
+.seg .tick{position:absolute;right:14px;top:50%;width:24px;height:24px;margin-top:-12px;display:none}
+.seg.ok .tick{display:block}
+.calbtn{width:56px;height:56px;border:1px solid var(--purple);border-radius:6px;background:var(--tint);color:var(--purple);display:grid;place-items:center;cursor:pointer;padding:0}
+.calbtn .ic{width:28px;height:28px}
+.calbtn:hover{background:var(--tint-hover)}
+.dobmsg{min-height:0;margin-bottom:24px}
+.dobmsg:empty{margin:0}
+.dobmsg .error,.dobmsg .okmsg{margin-top:12px}
+.cta-gap{margin-top:24px}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;max-height:85vh;background:#fff;border-radius:16px 16px 0 0;z-index:51;display:flex;flex-direction:column;box-shadow:0 -8px 32px rgba(0,0,0,.2);outline:none}
+.sheet:focus,.sheet:focus-visible{outline:none}
+.grab{width:40px;height:4px;border-radius:2px;background:#D1D5DB;margin:8px auto 0;flex:none}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;padding:8px 8px 0 20px;flex:none}
+.sheet-h h2{font-size:20px;line-height:28px;font-weight:700;margin:0}
+.x{width:44px;height:44px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:#000;padding:0}
+.x .ic{width:28px;height:28px}
+.chips{display:flex;gap:8px;padding:8px 20px 12px;flex:none}
+.chip{height:40px;padding:0 14px;border:1px solid var(--grey);border-radius:20px;background:#fff;font-size:16px;font-weight:500;color:#000;cursor:pointer;white-space:nowrap}
+.chip[aria-current=true]{border:2px solid var(--purple);background:var(--tint);padding:0 13px}
+.chip[disabled]{color:#9CA3AF;border-color:#D1D5DB;cursor:not-allowed}
+.pview{position:relative;overflow:auto;padding:0 20px 28px;height:400px;flex:none}
+.pgrid{display:grid;gap:8px}
+.pgrid.c4{grid-template-columns:repeat(4,1fr)}
+.pgrid.c3{grid-template-columns:repeat(3,1fr)}
+.pgrid.c7{grid-template-columns:repeat(7,1fr);gap:4px}
+.pbtn{height:48px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;font-size:16px;font-weight:500;color:#000;cursor:pointer;padding:0}
+.pgrid.c3 .pbtn{height:56px}
+.pgrid.c7 .pbtn{height:44px;border-radius:6px}
+.pbtn:hover{background:var(--tint)}
+.pbtn[aria-pressed=true]{background:var(--purple);border-color:var(--purple);color:#fff}
+.pbtn[aria-disabled=true]{color:#9CA3AF;background:#F3F4F6;cursor:not-allowed}
+.dec{grid-column:1/-1;font-size:14px;line-height:20px;font-weight:700;color:var(--grey-text);padding:12px 0 0}
+.dec:first-child{padding-top:4px}
+.mhead{font-weight:700;font-size:18px;margin:4px 0 8px}
+.wd{font-size:13px;line-height:20px;font-weight:700;color:var(--grey-text);text-align:center}
+.sfoot{padding:12px 20px 20px;border-top:1px solid var(--line);flex:none}
+
+/* step 3 contact */
+.assure{list-style:none;margin:8px 0 24px;padding:16px;background:var(--tint);border:.8px solid var(--purple);border-radius:8px;display:grid;gap:16px}
+.assure li{display:flex;gap:12px;align-items:flex-start}
+.assure .ico{flex:none;width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid rgba(105,5,242,.3);display:grid;place-items:center;color:var(--purple)}
+.assure .ico .ic{width:16px;height:16px}
+.assure .ico .ic.lg{width:22px;height:22px}
+.assure strong{display:block;font-weight:700;font-size:16px;line-height:22px}
+.assure .t{display:block;font-size:14px;line-height:20px;color:var(--grey-text);margin-top:2px}
+.lblrow{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lblrow label{display:block;font-weight:700;font-size:16px;line-height:24px}
+.tip{display:inline-flex}
+.tipbtn{width:22px;height:22px;padding:0;border-radius:50%;border:1.5px solid var(--purple);background:#fff;color:var(--purple);font-size:13px;line-height:1;font-weight:700;cursor:pointer;display:grid;place-items:center}
+.tipbtn:hover,.tipbtn[aria-expanded=true]{background:var(--purple);color:#fff}
+.tipbox{position:absolute;left:0;top:32px;z-index:20;width:min(320px,100%);box-sizing:border-box;padding:10px 12px;border-radius:8px;background:#111;color:#fff;font-size:14px;line-height:20px;font-weight:400;display:none}
+.tipbox.show{display:block}
+.tipbox::before{content:"";position:absolute;left:calc(var(--arrow,140px) - 5px);top:-5px;width:10px;height:10px;background:#111;transform:rotate(45deg)}
+.formerr{margin:0 0 16px}
+.formerr:empty{margin:0}
+
+/* design notes: phone on the left, notes on the right (?notes=1 or the Annotations button) */
+#notes{display:none}
+body.notes-on{background:#F1F2F6}
+body.notes-on #stage{display:flex;gap:32px;align-items:flex-start;justify-content:center;padding:24px}
+body.notes-on #screen{position:relative;flex:1 1 640px;max-width:640px;min-height:calc(100vh - 152px);background:#fff;box-shadow:0 0 0 1px #D9DCE3,0 8px 24px rgba(0,0,0,.08)}
+body.notes-on.shot #screen{flex:none;width:375px;min-height:812px}
+#side,#summary{display:none}
+body.notes-on #side{display:flex;gap:24px;align-items:flex-start;flex:none;position:sticky;top:24px}
+body.notes-on #summary{display:block;flex:none;width:300px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px;font-size:14px;line-height:21px;color:#111}
+#summary h3{margin:0 0 12px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#4B5563}
+#summary p{margin:0 0 12px}
+#summary b{display:block;margin-bottom:2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase}
+#summary .s-what b{color:var(--purple)}
+#summary .s-why b{color:#0B7A55}
+#summary .s-note{margin:4px 0 0;font-size:12px;line-height:17px;color:#6B7280}
+body.notes-on .sheet,body.notes-on .backdrop{position:absolute}
+body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px 18px;font-size:14px;line-height:20px;color:#111}
+@media (max-width:1360px){ body.notes-on #side{flex-direction:column} body.notes-on #summary{width:340px} }
+@media (max-width:780px){ body.notes-on #stage{flex-direction:column;align-items:center} body.notes-on #screen{flex:none;width:100%} body.notes-on #side{position:static;width:100%;max-width:640px} body.notes-on #notes,body.notes-on #summary{width:100%} }
+.n-head{margin:0 0 2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--purple)}
+#notes h2{margin:0 0 16px;font-size:20px;line-height:26px;font-weight:700}
+.n-list{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.n-item{display:grid;grid-template-columns:24px 1fr;gap:10px}
+.n-num{width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}
+.n-item strong{display:block;font-size:14px;line-height:20px;font-weight:700}
+.n-item ul{margin:4px 0 0;padding-left:18px}
+.n-item ul li{margin:3px 0;color:#374151}
+.n-item ul li b{color:#111}
+.n-fx b{color:#0B7A55}
+.n-data{margin:0 0 18px;padding:12px 14px;background:#F7F3FF;border:1px solid #E4D8FB;border-radius:8px;font-size:13.5px;line-height:20px;color:#111}
+.n-data b{display:block;margin-bottom:2px;color:var(--purple);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.n-data p{margin:0}
+.n-src{margin-top:8px!important;font-size:11.5px;line-height:16px;color:#6B7280}
+.n-caveat{margin:16px 0 0;padding:10px 12px;background:#FFF8E6;border:1px solid #F3DFA2;border-radius:8px;font-size:13px;line-height:19px;color:#4B3B00}
+.n-today{margin:0 0 18px;padding:10px 12px;background:#F7F3FF;border:1px solid #E4D8FB;border-radius:8px;font-size:14px;line-height:20px;color:#111}
+.n-today span{display:block;margin-top:3px;font-size:11.5px;line-height:16px;color:#6B7280}
+.n-sub{margin:0 0 4px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#4B5563}
+.c-list{margin:0;padding-left:20px;font-size:15px;line-height:22px;color:#111}
+.c-list li{margin:10px 0}
+.gain{display:block;margin-top:1px;font-size:13px;line-height:18px;font-weight:500;color:#0B7A55}
+.n-measure{margin:18px 0 0;padding-top:14px;border-top:1px solid #E5E7EB;font-size:13px;line-height:19px;color:#4B5563}
+.n-foot{margin:10px 0 0;font-size:12px;line-height:17px;color:#6B7280}
+.dev-cap{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dev-toggle{flex:none;border:1px solid #666;background:#222;color:#fff;border-radius:999px;padding:3px 12px;font-size:12px;cursor:pointer}
+.dev-toggle[aria-pressed=true]{background:var(--purple);border-color:var(--purple);font-weight:700}
+
+/* prototype navigator bar (never in screenshots) */
+.dv-in{max-width:1100px;margin:0 auto;display:flex;gap:24px;align-items:stretch;justify-content:space-between}
+.dv-main{flex:1 1 auto;min-width:0;display:grid;gap:10px}
+.dv-row{display:flex;align-items:center;gap:12px}
+.dv-label{flex:none;width:54px;font-size:11px;line-height:14px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#8A8F99}
+.dv-steps,.dv-states{display:flex;gap:6px;flex-wrap:wrap}
+.dv-step{display:flex;align-items:center;gap:8px;border:1px solid #444;background:#1f1f1f;color:#d1d5db;border-radius:8px;padding:7px 14px 7px 8px;font-size:13px;line-height:18px;font-weight:700;cursor:pointer}
+.dv-step b{flex:none;width:20px;height:20px;border-radius:50%;background:#444;color:#fff;display:grid;place-items:center;font-size:11px}
+.dv-step[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#111}
+.dv-step[aria-pressed=true] b{background:#111;color:#fff}
+.dv-state{border:1px solid #555;background:transparent;color:#d1d5db;border-radius:999px;padding:4px 12px;font-size:13px;line-height:18px;cursor:pointer}
+.dv-state[aria-pressed=true]{background:#fff;border-color:#fff;color:#111;font-weight:700}
+.dv-side{flex:none;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:10px;padding-left:24px;border-left:1px solid #2c2c2c}
+.dv-pager{display:flex;align-items:center;gap:10px;color:#c7cad1;font-size:12px;line-height:16px}
+.dv-pager button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid #555;background:#1f1f1f;color:#fff;display:grid;place-items:center;cursor:pointer}
+.dv-pager button[disabled]{opacity:.35;cursor:default}
+.dv-pager .ic{width:20px;height:20px}
+.dv-switch{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:#fff;font-size:13px;line-height:18px;font-weight:700;cursor:pointer}
+.dv-track{position:relative;width:38px;height:22px;border-radius:11px;background:#555;transition:background .15s}
+.dv-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.dv-switch[aria-checked=true] .dv-track{background:var(--purple)}
+.dv-switch[hidden]{display:none}
+.dv-switch[aria-checked=true] .dv-knob{left:19px}
+.dv-compare{flex:none;display:flex;align-items:center;padding-left:24px;border-left:1px solid #2c2c2c}
+.dv-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:8px;background:#fff;color:#111;font-size:13px;line-height:18px;font-weight:700;text-decoration:none;white-space:nowrap}
+.dv-btn:hover{background:#E5E7EB}
+@media (max-width:900px){ .dv-in{flex-direction:column;gap:10px} .dv-compare{border-left:0;padding-left:0} .dv-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;border-left:0;padding-left:0} }
+
+/* prototype chrome (never in screenshots) */
+body.has-dev{padding-bottom:132px}
+.dev{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#111;color:#fff;padding:8px 10px 10px;font-size:12px;line-height:16px;box-shadow:0 -4px 16px rgba(0,0,0,.25)}
+.dev-in{max-width:640px;margin:0 auto}
+.dev-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dev-step{display:flex;align-items:center;gap:6px;border:1px solid #444;background:#1f1f1f;color:#ccc;border-radius:6px;padding:6px 8px;font-size:12px;font-weight:700;cursor:pointer;text-align:left;line-height:14px}
+.dev-step b{flex:none;width:18px;height:18px;border-radius:50%;background:#444;color:#fff;display:grid;place-items:center;font-size:11px}
+.dev-step[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#111}
+.dev-step[aria-pressed=true] b{background:#111;color:#fff}
+.dev-states{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dev-state{border:1px solid #555;background:transparent;color:#ddd;border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
+.dev-state[aria-pressed=true]{background:#fff;color:#111;border-color:#fff;font-weight:700}
+.dev-cap{color:#999;margin-top:6px;font-size:11px}
+.note{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 16px;border-radius:8px;font-size:14px;z-index:120;max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="stacked-logo" viewBox="0 0 71 60"><path d="M9.84038 4.3472C9.66092 4.05488 9.42912 3.80005 9.15993 3.57519C8.89074 3.35783 8.57669 3.18544 8.23272 3.05803C7.88876 2.9381 7.52984 2.87065 7.15596 2.87065C6.46803 2.87065 5.88479 3.00556 5.40623 3.26789C4.92767 3.53772 4.53884 3.89749 4.23974 4.3472C3.94064 4.79691 3.72379 5.30658 3.5892 5.87621C3.4546 6.44584 3.3873 7.03796 3.3873 7.65257C3.3873 8.23719 3.4546 8.80682 3.5892 9.36146C3.72379 9.91611 3.94064 10.4108 4.23974 10.853C4.53884 11.2952 4.92767 11.6475 5.40623 11.9173C5.88479 12.1871 6.46803 12.3146 7.15596 12.3146C8.09065 12.3146 8.81597 12.0297 9.34687 11.4601C9.87029 10.8905 10.1918 10.1335 10.3115 9.19657H13.2651C13.1903 10.066 12.9884 10.853 12.6594 11.5575C12.3379 12.2621 11.9042 12.8542 11.3733 13.3489C10.8424 13.8436 10.2217 14.2183 9.5039 14.4807C8.79353 14.743 8.0084 14.8704 7.14848 14.8704C6.08668 14.8704 5.12956 14.683 4.27713 14.3158C3.43965 13.941 2.72181 13.4313 2.13856 12.7793C1.55532 12.1272 1.10667 11.3627 0.800092 10.4857C0.486037 9.6088 0.336487 8.66441 0.336487 7.65257C0.336487 6.61074 0.493514 5.65136 0.800092 4.75943C1.11415 3.86751 1.55532 3.0955 2.13856 2.42843C2.72181 1.76886 3.43965 1.2442 4.2846 0.869438C5.13704 0.487184 6.09416 0.299805 7.15596 0.299805C7.91867 0.299805 8.64398 0.412232 9.32444 0.629592C10.0049 0.846952 10.618 1.16924 11.1564 1.59647C11.6948 2.0162 12.136 2.54086 12.4874 3.16296C12.8389 3.78506 13.0557 4.50459 13.1454 5.30658H10.1918C10.1395 4.9618 10.0198 4.63951 9.84038 4.3472Z" fill="#6905F2"/><path d="M14.5512 7.57009C14.5886 6.91801 14.7531 6.37836 15.0372 5.95114C15.3214 5.52391 15.6878 5.17913 16.129 4.9168C16.5701 4.65447 17.0636 4.47459 17.617 4.36216C18.1703 4.24973 18.7236 4.19727 19.277 4.19727C19.7855 4.19727 20.2939 4.23474 20.8099 4.3022C21.3258 4.37715 21.8044 4.51206 22.2306 4.72193C22.6568 4.93179 23.0083 5.21661 23.2774 5.59137C23.5466 5.95863 23.6887 6.45331 23.6887 7.06042V12.307C23.6887 12.7642 23.7111 13.199 23.7635 13.6112C23.8158 14.0309 23.9056 14.3382 24.0327 14.5481H21.2361C21.1837 14.3907 21.1389 14.2333 21.109 14.0684C21.0791 13.9035 21.0566 13.7386 21.0417 13.5737C20.6005 14.0309 20.0846 14.3457 19.4864 14.5256C18.8882 14.7055 18.2825 14.7954 17.6618 14.7954C17.1833 14.7954 16.7346 14.7355 16.3159 14.623C15.8972 14.5031 15.5382 14.3232 15.2242 14.0759C14.9101 13.8286 14.6708 13.5138 14.4914 13.139C14.3194 12.7642 14.2297 12.3145 14.2297 11.7899C14.2297 11.2202 14.3269 10.748 14.5288 10.3733C14.7307 10.006 14.9924 9.70621 15.3064 9.48885C15.628 9.27149 15.9869 9.09911 16.3981 8.99417C16.8094 8.88175 17.2207 8.7993 17.6319 8.73184C18.0432 8.66439 18.4545 8.61192 18.8582 8.57444C19.262 8.53697 19.6135 8.47701 19.9275 8.40206C20.2416 8.3271 20.4883 8.20718 20.6678 8.05728C20.8473 7.90737 20.937 7.69001 20.922 7.4052C20.922 7.10539 20.8697 6.86555 20.7725 6.69316C20.6753 6.52077 20.5482 6.37836 20.3837 6.28092C20.2191 6.18349 20.0322 6.11603 19.8228 6.08605C19.606 6.05607 19.3817 6.03358 19.1349 6.03358C18.5891 6.03358 18.1628 6.1535 17.8488 6.38585C17.5347 6.6182 17.3553 7.00795 17.3029 7.5551H14.5512V7.57009ZM20.9295 9.61627C20.8099 9.72121 20.6678 9.80365 20.4883 9.86361C20.3164 9.92357 20.1219 9.96855 19.9275 10.006C19.7256 10.0435 19.5163 10.081 19.2919 10.1035C19.0751 10.1259 18.8508 10.1634 18.6339 10.2009C18.4245 10.2384 18.2227 10.2908 18.0208 10.3583C17.8189 10.4258 17.6469 10.5082 17.4973 10.6206C17.3478 10.7331 17.2282 10.868 17.1384 11.0404C17.0487 11.2127 17.0038 11.4226 17.0038 11.6849C17.0038 11.9323 17.0487 12.1421 17.1384 12.307C17.2282 12.4794 17.3553 12.6068 17.5048 12.7043C17.6618 12.8017 17.8413 12.8692 18.0507 12.9067C18.26 12.9441 18.4694 12.9666 18.6937 12.9666C19.2396 12.9666 19.6583 12.8767 19.9574 12.6968C20.2565 12.5169 20.4734 12.2995 20.6155 12.0447C20.7575 11.7899 20.8473 11.535 20.8772 11.2727C20.9071 11.0104 20.9295 10.808 20.9295 10.6506V9.61627Z" fill="#6905F2"/><path d="M28.0705 4.47459V6.34838H28.1079C28.235 6.03358 28.4145 5.74877 28.6313 5.47894C28.8482 5.20911 29.1024 4.98426 29.3866 4.79688C29.6707 4.6095 29.9773 4.4596 30.2988 4.35466C30.6204 4.24973 30.9568 4.19727 31.3083 4.19727C31.4877 4.19727 31.6896 4.22725 31.914 4.2947V6.86555C31.7868 6.84306 31.6298 6.81308 31.4504 6.79809C31.2709 6.7756 31.0914 6.76811 30.9269 6.76811C30.4185 6.76811 29.9922 6.85056 29.6408 7.02294C29.2894 7.19533 29.0052 7.42019 28.7958 7.7125C28.579 8.00481 28.4294 8.34959 28.3397 8.73934C28.25 9.12909 28.2051 9.54882 28.2051 10.006V14.5481H25.4459V4.47459H28.0705Z" fill="#6905F2"/><path d="M10.7003 17.5312V20.102H3.98551V23.3175H9.803V25.6934H3.98551V31.4422H0.934692V17.5312H10.7003Z" fill="#6905F2"/><path d="M12.1733 20.102V17.5312H14.9325V20.102H12.1733ZM14.94 21.3687V31.4497H12.1808V21.3687H14.94Z" fill="#6905F2"/><path d="M19.0452 21.3687V22.7703H19.105C19.4564 22.1857 19.9126 21.7585 20.4659 21.4961C21.0267 21.2338 21.595 21.0989 22.1782 21.0989C22.9185 21.0989 23.5242 21.1963 23.9953 21.3987C24.4663 21.6011 24.8402 21.8784 25.1169 22.2381C25.3861 22.5979 25.5805 23.0326 25.6927 23.5423C25.8048 24.0595 25.8572 24.6216 25.8572 25.2512V31.4497H23.098V25.7534C23.098 24.9214 22.9708 24.2993 22.7091 23.8946C22.4474 23.4823 21.9913 23.28 21.3258 23.28C20.5706 23.28 20.0322 23.5048 19.6957 23.9545C19.3592 24.4042 19.1872 25.1388 19.1872 26.1656V31.4497H16.428V21.3687H19.0452Z" fill="#6905F2"/><path d="M27.4424 24.4717C27.4798 23.8196 27.6443 23.28 27.9284 22.8527C28.2126 22.4255 28.579 22.0807 29.0202 21.8184C29.4613 21.5561 29.9549 21.3762 30.5082 21.2638C31.0615 21.1513 31.6149 21.0989 32.1682 21.0989C32.6767 21.0989 33.1851 21.1364 33.7011 21.2038C34.217 21.2788 34.6956 21.4137 35.1218 21.6235C35.548 21.8334 35.8995 22.1182 36.1686 22.493C36.4378 22.8602 36.5799 23.3549 36.5799 23.962V29.2087C36.5799 29.6659 36.6023 30.1006 36.6547 30.5128C36.707 30.9325 36.7968 31.2398 36.9239 31.4497H34.1198C34.0675 31.2923 34.0226 31.1349 33.9927 30.97C33.9628 30.8051 33.9404 30.6402 33.9254 30.4753C33.4842 30.9325 32.9683 31.2473 32.3701 31.4272C31.7719 31.6071 31.1662 31.697 30.5456 31.697C30.067 31.697 29.6184 31.6371 29.1996 31.5247C28.7809 31.4047 28.422 31.2248 28.1079 30.9775C27.7939 30.7302 27.5546 30.4154 27.3751 30.0406C27.2031 29.6659 27.1134 29.2161 27.1134 28.6915C27.1134 28.1218 27.2106 27.6497 27.4125 27.2749C27.6144 26.9076 27.8761 26.6078 28.1902 26.3905C28.5117 26.1731 28.8706 26.0007 29.2819 25.8958C29.6931 25.7834 30.1044 25.7009 30.5157 25.6335C30.9269 25.566 31.3382 25.5135 31.742 25.4761C32.1458 25.4386 32.4972 25.3786 32.8113 25.3037C33.1253 25.2287 33.3721 25.1088 33.5515 24.9589C33.731 24.809 33.8207 24.5916 33.8058 24.3068C33.8058 24.007 33.7534 23.7672 33.6562 23.5948C33.559 23.4224 33.4319 23.28 33.2674 23.1825C33.1029 23.0851 32.9159 23.0176 32.7066 22.9877C32.4897 22.9577 32.2654 22.9352 32.0186 22.9352C31.4728 22.9352 31.0466 23.0551 30.7325 23.2875C30.4185 23.5198 30.239 23.9096 30.1867 24.4567H27.4424V24.4717ZM33.8207 26.5179C33.7011 26.6228 33.559 26.7053 33.3795 26.7652C33.2076 26.8252 33.0131 26.8702 32.8187 26.9076C32.6168 26.9451 32.4075 26.9826 32.1831 27.0051C31.9663 27.0276 31.742 27.065 31.5251 27.1025C31.3158 27.14 31.1139 27.1925 30.912 27.2599C30.7101 27.3274 30.5381 27.4098 30.3885 27.5222C30.239 27.6347 30.1194 27.7696 30.0296 27.942C29.9399 28.1144 29.895 28.3242 29.895 28.5865C29.895 28.8339 29.9399 29.0438 30.0296 29.2087C30.1194 29.3735 30.2465 29.5085 30.396 29.6059C30.553 29.7033 30.7325 29.7708 30.9419 29.8083C31.1512 29.8457 31.3606 29.8682 31.5849 29.8682C32.1308 29.8682 32.5495 29.7783 32.8486 29.5984C33.1477 29.4185 33.3646 29.2012 33.5067 28.9463C33.6487 28.6915 33.7385 28.4366 33.7684 28.1743C33.7983 27.912 33.8207 27.7096 33.8207 27.5522V26.5179Z" fill="#6905F2"/><path d="M40.9617 21.3687V22.7703H41.0215C41.373 22.1857 41.8291 21.7585 42.3825 21.4961C42.9433 21.2338 43.5116 21.0989 44.0948 21.0989C44.8351 21.0989 45.4407 21.1963 45.9118 21.3987C46.3829 21.6011 46.7568 21.8784 47.0335 22.2381C47.3026 22.5979 47.4971 23.0326 47.6092 23.5423C47.7214 24.0595 47.7737 24.6216 47.7737 25.2512V31.4497H45.0145V25.7534C45.0145 24.9214 44.8874 24.2993 44.6257 23.8946C44.364 23.4823 43.9079 23.28 43.2424 23.28C42.4871 23.28 41.9488 23.5048 41.6123 23.9545C41.2758 24.4042 41.1038 25.1388 41.1038 26.1656V31.4497H38.3446V21.3687H40.9617Z" fill="#6905F2"/><path d="M54.2866 23.1826C53.8454 23.1826 53.479 23.28 53.1799 23.4824C52.8808 23.6847 52.6416 23.9471 52.4471 24.2619C52.2602 24.5842 52.1256 24.9289 52.0508 25.3112C51.9761 25.6934 51.9312 26.0757 51.9312 26.4504C51.9312 26.8177 51.9686 27.185 52.0508 27.5597C52.1256 27.9345 52.2527 28.2793 52.4322 28.5866C52.6042 28.8939 52.8435 29.1412 53.1425 29.3361C53.4416 29.531 53.8006 29.6284 54.2343 29.6284C54.8923 29.6284 55.4008 29.441 55.7597 29.0738C56.1186 28.7065 56.3429 28.2043 56.4326 27.5822H59.0946C58.9152 28.9239 58.3918 29.9432 57.5393 30.6402C56.6869 31.3448 55.5877 31.6896 54.2492 31.6896C53.494 31.6896 52.8061 31.5622 52.178 31.3073C51.5498 31.0525 51.0115 30.7002 50.5703 30.243C50.1291 29.7858 49.7852 29.2461 49.5384 28.6166C49.2916 27.987 49.172 27.2974 49.172 26.5404C49.172 25.7609 49.2842 25.0339 49.516 24.3668C49.7403 23.6997 50.0768 23.1226 50.5179 22.6279C50.9591 22.1407 51.4975 21.7585 52.1331 21.4887C52.7687 21.2188 53.494 21.0764 54.309 21.0764C54.9072 21.0764 55.4755 21.1514 56.0289 21.3088C56.5822 21.4662 57.0757 21.6985 57.5094 22.0208C57.9431 22.3431 58.2945 22.7328 58.5712 23.2125C58.8404 23.6847 58.9974 24.2469 59.0348 24.899H56.328C56.1485 23.7597 55.4681 23.1826 54.2866 23.1826Z" fill="#6905F2"/><path d="M63.5587 29.0288C63.9774 29.4336 64.5682 29.6359 65.3458 29.6359C65.9066 29.6359 66.3852 29.4935 66.7815 29.2162C67.1853 28.9389 67.432 28.6391 67.5218 28.3318H69.952C69.5631 29.5385 68.9649 30.4079 68.1648 30.9251C67.3573 31.4423 66.3852 31.7046 65.2486 31.7046C64.456 31.7046 63.7456 31.5772 63.11 31.3223C62.4745 31.0675 61.9361 30.7077 61.4949 30.243C61.0537 29.7783 60.7172 29.2162 60.4705 28.5641C60.2312 27.912 60.1116 27.2 60.1116 26.4205C60.1116 25.6635 60.2312 24.9664 60.478 24.3144C60.7247 23.6623 61.0762 23.1001 61.5248 22.6279C61.9809 22.1557 62.5193 21.781 63.1474 21.5037C63.7755 21.2338 64.471 21.0914 65.2411 21.0914C66.0936 21.0914 66.8413 21.2563 67.4769 21.5861C68.1125 21.9159 68.6359 22.3656 69.0397 22.9203C69.451 23.4824 69.7426 24.1195 69.922 24.8315C70.1015 25.5436 70.1688 26.2931 70.1165 27.0726H62.8633C62.9231 27.9795 63.1474 28.6316 63.5587 29.0288ZM66.6843 23.7297C66.3553 23.3625 65.8543 23.1826 65.1738 23.1826C64.7327 23.1826 64.3663 23.2575 64.0746 23.4074C63.783 23.5573 63.5512 23.7447 63.3718 23.9621C63.1998 24.1869 63.0727 24.4193 63.0054 24.6666C62.9306 24.914 62.8932 25.1313 62.8782 25.3262H67.3722C67.2451 24.6217 67.0133 24.0895 66.6843 23.7297Z" fill="#6905F2"/><path d="M0.583245 37.7681C0.792615 37.1011 1.09919 36.5164 1.51793 36.0143C1.92919 35.5121 2.45262 35.1223 3.08073 34.845C3.70884 34.5677 4.43415 34.4253 5.2492 34.4253C5.86983 34.4253 6.46803 34.5227 7.02885 34.7176C7.58966 34.9125 8.09065 35.1898 8.51687 35.5571C8.94308 35.9243 9.28705 36.3665 9.54128 36.9062C9.79552 37.4384 9.92264 38.038 9.92264 38.6975C9.92264 39.3871 9.81047 39.9792 9.59363 40.4739C9.37678 40.9686 9.07768 41.4033 8.71876 41.793C8.35236 42.1753 7.9411 42.5276 7.48497 42.8349C7.02137 43.1497 6.55776 43.457 6.09416 43.7643C5.63055 44.0716 5.17443 44.4014 4.73325 44.7461C4.29208 45.0984 3.90325 45.5032 3.56677 45.9754H10.0049V48.3438H0C0 47.5493 0.112162 46.8598 0.343965 46.2752C0.56829 45.6905 0.882345 45.1659 1.27117 44.7087C1.66 44.2515 2.11613 43.8242 2.63956 43.4345C3.16298 43.0447 3.71632 42.6475 4.29956 42.2428C4.59866 42.0329 4.91271 41.823 5.25668 41.6057C5.59317 41.3883 5.89974 41.156 6.18389 40.8936C6.46056 40.6313 6.69984 40.339 6.88677 40.0167C7.07371 39.6944 7.17092 39.3196 7.17092 38.9074C7.17092 38.2478 6.9765 37.7307 6.59515 37.3559C6.2138 36.9886 5.72028 36.8013 5.12956 36.8013C4.72578 36.8013 4.38929 36.8987 4.11262 37.0861C3.83596 37.2735 3.61163 37.5208 3.43965 37.8281C3.26767 38.1354 3.14803 38.4727 3.08073 38.8399C3.00595 39.2072 2.97604 39.5745 2.97604 39.9417H0.314055C0.284145 39.1622 0.373875 38.4352 0.583245 37.7681Z" fill="#6905F2"/><path d="M10.6479 45.1884V42.655L16.5626 34.7026H19.0302V42.9098H20.8398V45.1884H19.0302V48.3438H16.4056V45.1884H10.6479ZM16.3458 38.1654L12.8239 42.9024H16.4056V38.1654H16.3458Z" fill="#6905F2"/><path d="M28.2724 39.3796C27.7191 40.2865 27.2629 41.2609 26.8891 42.2877C26.5227 43.3146 26.2311 44.3564 26.0366 45.4057C25.8347 46.4551 25.7301 47.4369 25.7151 48.3513H22.7615C22.9185 46.3126 23.3971 44.3489 24.1897 42.4601C24.9898 40.5788 26.0366 38.8475 27.3302 37.2735H20.8697V34.7026H30.1642V37.0786C29.4539 37.7007 28.8183 38.4652 28.2724 39.3796Z" fill="#6905F2"/><path d="M41.1935 37.2735C35.1068 37.2735 30.1642 42.2203 30.1642 48.3289C30.1642 54.4299 35.0993 59.3842 41.1935 59.3842C47.2802 59.3842 52.2228 54.4374 52.2228 48.3289C52.2228 42.2203 47.2876 37.2735 41.1935 37.2735ZM41.1935 55.8465C37.7015 55.8465 34.7554 53.4406 33.9254 50.1952L35.9667 49.7829C36.6023 52.0765 38.7035 53.7704 41.1935 53.7704C44.1845 53.7704 46.6147 51.3344 46.6147 48.3364C46.6147 48.0965 46.5997 47.8717 46.5698 47.6393L48.6112 47.2271C48.6635 47.5868 48.6934 47.9616 48.6934 48.3364C48.6934 52.4737 45.3285 55.8465 41.1935 55.8465Z" fill="#6905F2"/></symbol><symbol id="trustpilot-logo" viewBox="0 0 126 31"><path class="tp-logo__text" d="M33.074774 11.07005H45.81806v2.364196h-5.010656v13.290316h-2.755306V13.434246h-4.988435V11.07005h.01111zm12.198892 4.319629h2.355341v2.187433h.04444c.077771-.309334.222203-.60762.433295-.894859.211092-.287239.466624-.56343.766597-.79543.299972-.243048.633276-.430858.999909-.585525.366633-.14362.744377-.220953 1.12212-.220953.288863 0 .499955.011047.611056.022095.1111.011048.222202.033143.344413.04419v2.408387c-.177762-.033143-.355523-.055238-.544395-.077333-.188872-.022096-.366633-.033143-.544395-.033143-.422184 0-.822148.08838-1.199891.254096-.377744.165714-.699936.41981-.977689.740192-.277753.331429-.499955.729144-.666606 1.21524-.166652.486097-.244422 1.03848-.244422 1.668195v5.39125h-2.510883V15.38968h.01111zm18.220567 11.334883H61.02779v-1.579813h-.04444c-.311083.574477-.766597 1.02743-1.377653 1.369908-.611055.342477-1.233221.51924-1.866497.51924-1.499864 0-2.588654-.364573-3.25526-1.104765-.666606-.740193-.999909-1.856005-.999909-3.347437V15.38968h2.510883v6.948968c0 .994288.188872 1.701337.577725 2.1101.377744.408763.922139.618668 1.610965.618668.533285 0 .96658-.077333 1.322102-.243048.355524-.165714.644386-.37562.855478-.65181.222202-.265144.377744-.596574.477735-.972194.09999-.37562.144431-.784382.144431-1.226288v-6.573349h2.510883v11.323836zm4.27739-3.634675c.07777.729144.355522 1.237336.833257 1.535623.488844.287238 1.06657.441905 1.744286.441905.233312 0 .499954-.022095.799927-.055238.299973-.033143.588836-.110476.844368-.209905.266642-.099429.477734-.254096.655496-.452954.166652-.198857.244422-.452953.233312-.773335-.01111-.320381-.133321-.585525-.355523-.784382-.222202-.209906-.499955-.364573-.844368-.497144-.344413-.121525-.733267-.232-1.17767-.320382-.444405-.088381-.888809-.18781-1.344323-.287239-.466624-.099429-.922138-.232-1.355432-.37562-.433294-.14362-.822148-.342477-1.166561-.596573-.344413-.243048-.622166-.56343-.822148-.950097-.211092-.386668-.311083-.861716-.311083-1.436194 0-.618668.155542-1.12686.455515-1.54667.299972-.41981.688826-.75124 1.14434-1.005336.466624-.254095.97769-.430858 1.544304-.541334.566615-.099429 1.11101-.154667 1.622075-.154667.588836 0 1.15545.066286 1.688736.18781.533285.121524 1.02213.320381 1.455423.60762.433294.276191.788817.640764 1.07768 1.08267.288863.441905.466624.98324.544395 1.612955h-2.621984c-.122211-.596572-.388854-1.005335-.822148-1.204193-.433294-.209905-.933248-.309334-1.488753-.309334-.177762 0-.388854.011048-.633276.04419-.244422.033144-.466624.088382-.688826.165715-.211092.077334-.388854.198858-.544395.353525-.144432.154667-.222203.353525-.222203.60762 0 .309335.111101.552383.322193.740193.211092.18781.488845.342477.833258.475048.344413.121524.733267.232 1.177671.320382.444404.088381.899918.18781 1.366542.287239.455515.099429.899919.232 1.344323.37562.444404.14362.833257.342477 1.17767.596573.344414.254095.622166.56343.833258.93905.211092.37562.322193.850668.322193 1.40305 0 .673906-.155541 1.237336-.466624 1.712385-.311083.464001-.711047.850669-1.199891 1.137907-.488845.28724-1.04435.508192-1.644295.640764-.599946.132572-1.199891.198857-1.788727.198857-.722156 0-1.388762-.077333-1.999818-.243048-.611056-.165714-1.14434-.408763-1.588745-.729144-.444404-.33143-.799927-.740192-1.05546-1.226289-.255532-.486096-.388853-1.071621-.411073-1.745528h2.533103v-.022095zm8.288135-7.700208h1.899828v-3.402675h2.510883v3.402675h2.26646v1.867052h-2.26646v6.054109c0 .265143.01111.486096.03333.684954.02222.18781.07777.353524.155542.486096.07777.132572.199981.232.366633.298287.166651.066285.377743.099428.666606.099428.177762 0 .355523 0 .533285-.011047.177762-.011048.355523-.033143.533285-.077334v1.933338c-.277753.033143-.555505.055238-.811038.088381-.266642.033143-.533285.04419-.811037.04419-.666606 0-1.199891-.066285-1.599855-.18781-.399963-.121523-.722156-.309333-.944358-.552381-.233313-.243049-.377744-.541335-.466625-.905907-.07777-.364573-.13332-.784383-.144431-1.248384v-6.683825h-1.899827v-1.889147h-.02222zm8.454788 0h2.377562V16.9253h.04444c.355523-.662858.844368-1.12686 1.477644-1.414098.633276-.287239 1.310992-.430858 2.055369-.430858.899918 0 1.677625.154667 2.344231.475048.666606.309335 1.222111.740193 1.666515 1.292575.444405.552382.766597 1.193145.9888 1.92229.222202.729145.333303 1.513527.333303 2.3421 0 .762288-.099991 1.50248-.299973 2.20953-.199982.718096-.499955 1.347812-.899918 1.900194-.399964.552383-.911029.98324-1.533194 1.31467-.622166.33143-1.344323.497144-2.18869.497144-.366634 0-.733267-.033143-1.0999-.099429-.366634-.066286-.722157-.176762-1.05546-.320381-.333303-.14362-.655496-.33143-.933249-.56343-.288863-.232-.522175-.497144-.722157-.79543h-.04444v5.656393h-2.510883V15.38968zm8.77698 5.67849c0-.508193-.06666-1.005337-.199981-1.491433-.133321-.486096-.333303-.905907-.599946-1.281527-.266642-.37562-.599945-.673906-.988799-.894859-.399963-.220953-.855478-.342477-1.366542-.342477-1.05546 0-1.855387.364572-2.388672 1.093717-.533285.729144-.799928 1.701337-.799928 2.916578 0 .574478.066661 1.104764.211092 1.59086.144432.486097.344414.905908.633276 1.259432.277753.353525.611056.629716.99991.828574.388853.209905.844367.309334 1.355432.309334.577725 0 1.05546-.121524 1.455423-.353525.399964-.232.722157-.541335.97769-.905907.255531-.37562.444403-.79543.555504-1.270479.099991-.475049.155542-.961145.155542-1.458289zm4.432931-9.99812h2.510883v2.364197h-2.510883V11.07005zm0 4.31963h2.510883v11.334883h-2.510883V15.389679zm4.755124-4.31963h2.510883v15.654513h-2.510883V11.07005zm10.210184 15.963847c-.911029 0-1.722066-.154667-2.433113-.452953-.711046-.298287-1.310992-.718097-1.810946-1.237337-.488845-.530287-.866588-1.160002-1.12212-1.889147-.255533-.729144-.388854-1.535622-.388854-2.408386 0-.861716.133321-1.657147.388853-2.386291.255533-.729145.633276-1.35886 1.12212-1.889148.488845-.530287 1.0999-.93905 1.810947-1.237336.711047-.298286 1.522084-.452953 2.433113-.452953.911028 0 1.722066.154667 2.433112.452953.711047.298287 1.310992.718097 1.810947 1.237336.488844.530287.866588 1.160003 1.12212 1.889148.255532.729144.388854 1.524575.388854 2.38629 0 .872765-.133322 1.679243-.388854 2.408387-.255532.729145-.633276 1.35886-1.12212 1.889147-.488845.530287-1.0999.93905-1.810947 1.237337-.711046.298286-1.522084.452953-2.433112.452953zm0-1.977528c.555505 0 1.04435-.121524 1.455423-.353525.411074-.232.744377-.541335 1.01102-.916954.266642-.37562.455513-.806478.588835-1.281527.12221-.475049.188872-.961145.188872-1.45829 0-.486096-.066661-.961144-.188872-1.44724-.122211-.486097-.322193-.905907-.588836-1.281527-.266642-.37562-.599945-.673907-1.011019-.905907-.411074-.232-.899918-.353525-1.455423-.353525-.555505 0-1.04435.121524-1.455424.353525-.411073.232-.744376.541334-1.011019.905907-.266642.37562-.455514.79543-.588835 1.281526-.122211.486097-.188872.961145-.188872 1.447242 0 .497144.06666.98324.188872 1.458289.12221.475049.322193.905907.588835 1.281527.266643.37562.599946.684954 1.01102.916954.411073.243048.899918.353525 1.455423.353525zm6.4883-9.66669h1.899827v-3.402674h2.510883v3.402675h2.26646v1.867052h-2.26646v6.054109c0 .265143.01111.486096.03333.684954.02222.18781.07777.353524.155541.486096.077771.132572.199982.232.366634.298287.166651.066285.377743.099428.666606.099428.177762 0 .355523 0 .533285-.011047.177762-.011048.355523-.033143.533285-.077334v1.933338c-.277753.033143-.555505.055238-.811038.088381-.266642.033143-.533285.04419-.811037.04419-.666606 0-1.199891-.066285-1.599855-.18781-.399963-.121523-.722156-.309333-.944358-.552381-.233313-.243049-.377744-.541335-.466625-.905907-.07777-.364573-.133321-.784383-.144431-1.248384v-6.683825h-1.899827v-1.889147h-.02222z"></path><path class="tp-logo__star" fill="#00B67A" d="M30.141707 11.07005H18.63164L15.076408.177071l-3.566342 10.892977L0 11.059002l9.321376 6.739063-3.566343 10.88193 9.321375-6.728016 9.310266 6.728016-3.555233-10.88193 9.310266-6.728016z"></path><path class="tp-logo__star-notch" fill="#005128" d="M21.631369 20.26169l-.799928-2.463625-5.755033 4.153914z"></path></symbol><symbol id="trustpilot-stars" viewBox="0 0 512 96"><defs><path id="star" d="M48 64.7l14.6-3.7 6.1 18.8-20.7-15.1zm33.6-24.3H55.9L48 16.2l-7.9 24.2H14.4l20.8 15-7.9 24.2 20.8-15 12.8-9.2 20.7-15z"/></defs><g fill="#00B67A"><rect width="96" height="96"/><rect x="104" width="96" height="96"/><rect x="208" width="96" height="96"/><rect x="312" width="96" height="96"/><rect x="416" width="96" height="96"/></g><g fill="#FFF"><use href="#star"/><use href="#star" x="104"/><use href="#star" x="208"/><use href="#star" x="312"/><use href="#star" x="416"/></g></symbol><symbol id="shield-check" width="32" height="32" viewBox="0 0 32 32" fill="#ffffff00"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M27.1668 17.3333C27.1668 23.9999 22.5002 27.3333 16.9535 29.2666C16.663 29.365 16.3475 29.3603 16.0602 29.2533C10.5002 27.3333 5.8335 23.9999 5.8335 17.3333V7.99995C5.8335 7.64633 5.97397 7.30719 6.22402 7.05714C6.47407 6.80709 6.81321 6.66662 7.16683 6.66662C9.8335 6.66662 13.1668 5.06662 15.4868 3.03995C15.7693 2.79861 16.1286 2.66602 16.5002 2.66602C16.8717 2.66602 17.231 2.79861 17.5135 3.03995C19.8468 5.07995 23.1668 6.66662 25.8335 6.66662C26.1871 6.66662 26.5263 6.80709 26.7763 7.05714C27.0264 7.30719 27.1668 7.64633 27.1668 7.99995V17.3333Z"/><path stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12.5 16.0002L15.1667 18.6668L20.5 13.3335"/></symbol><symbol id="phone" viewBox="0 0 15 14"><path d="M3.45703 6.33594C3.99609 7.39062 4.6875 8.35156 5.53125 9.21875C6.39844 10.0625 7.35938 10.7539 8.41406 11.293L10.0664 9.64062C10.2773 9.42969 10.5352 9.37109 10.8398 9.46484C11.6836 9.74609 12.5742 9.88672 13.5117 9.88672C13.7227 9.88672 13.8984 9.95703 14.0391 10.0977C14.1797 10.2383 14.25 10.4141 14.25 10.625V13.2617C14.25 13.4727 14.1797 13.6484 14.0391 13.7891C13.8984 13.9297 13.7227 14 13.5117 14C11.8242 14 10.1953 13.6836 8.625 13.0508C7.05469 12.3945 5.67188 11.4688 4.47656 10.2734C3.28125 9.07812 2.35547 7.69531 1.69922 6.125C1.06641 4.55469 0.75 2.92578 0.75 1.23828C0.75 1.02734 0.820312 0.851562 0.960938 0.710938C1.10156 0.570312 1.27734 0.5 1.48828 0.5H4.125C4.33594 0.5 4.51172 0.570312 4.65234 0.710938C4.79297 0.851562 4.86328 1.02734 4.86328 1.23828C4.86328 2.17578 5.00391 3.06641 5.28516 3.91016C5.37891 4.21484 5.32031 4.47266 5.10938 4.68359L3.45703 6.33594Z" fill="#6905F2"/></symbol><symbol id="arrow-right" viewBox="0 0 16 16"><path d="M2.48828 8.51172H11.4883L7.375 4.36328L8.42969 3.30859L14.3711 9.25L8.42969 15.1914L7.375 14.1367L11.4883 9.98828H2.48828V8.51172Z"/></symbol><symbol id="search" viewBox="0 0 33 32"><path d="M13.1875 4C14.7292 4 16.1667 4.39583 17.5 5.1875C18.8333 5.9375 19.875 6.97917 20.625 8.3125C21.4167 9.64583 21.8125 11.1042 21.8125 12.6875C21.8125 14.8125 21.125 16.6875 19.75 18.3125L20.125 18.6875H21.1875L27.8125 25.3125L25.8125 27.3125L19.1875 20.6875V19.625L18.8125 19.25C17.1875 20.625 15.3125 21.3125 13.1875 21.3125C11.6042 21.3125 10.1458 20.9375 8.8125 20.1875C7.47917 19.3958 6.41667 18.3333 5.625 17C4.875 15.6667 4.5 14.2292 4.5 12.6875C4.5 11.1042 4.875 9.64583 5.625 8.3125C6.41667 6.97917 7.47917 5.9375 8.8125 5.1875C10.1458 4.39583 11.6042 4 13.1875 4ZM13.1875 6.6875C11.5208 6.6875 10.1042 7.27083 8.9375 8.4375C7.77083 9.60417 7.1875 11.0208 7.1875 12.6875C7.1875 14.3542 7.77083 15.7708 8.9375 16.9375C10.1042 18.1042 11.5208 18.6875 13.1875 18.6875C14.8542 18.6875 16.2708 18.1042 17.4375 16.9375C18.6042 15.7708 19.1875 14.3542 19.1875 12.6875C19.1875 11.0208 18.6042 9.60417 17.4375 8.4375C16.2708 7.27083 14.8542 6.6875 13.1875 6.6875Z" fill="#6905F2"/></symbol><symbol id="location" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></symbol><symbol id="chevron-left" viewBox="0 -960 960 960"><path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/></symbol><symbol id="chevron-right" viewBox="0 -960 960 960"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></symbol><symbol id="close" viewBox="0 -960 960 960"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></symbol><symbol id="i-alert" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 3.5h1.5v4.25h-1.5V4.5zM8 12.5a1 1 0 110-2 1 1 0 010 2z"/></symbol><symbol id="i-tick" viewBox="0 0 22 22"><circle cx="11" cy="11" r="11" fill="#0E9F6E"/><path d="M6.2 11.4l3.1 3.1 6.5-6.7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol></svg>
+<div id="stage"><div id="screen"><div id="pins"></div><div id="app">
+  <div class="wrap">
+    <header class="top">
+      <a class="logo" href="#" aria-label="Car Finance 247"><svg aria-hidden="true" focusable="false"><use href="#stacked-logo"/></svg></a>
+      <a class="tp" href="#" aria-label="Trustpilot TrustScore 4.9 from 59,415 reviews">
+        <div class="l"><svg viewBox="0 0 126 31" aria-hidden="true" focusable="false"><use href="#trustpilot-logo"/></svg></div>
+        <div class="s"><svg viewBox="0 0 512 96" aria-hidden="true" focusable="false"><use href="#trustpilot-stars"/></svg></div>
+        <div class="i">TrustScore <b>4.9</b><span class="dv">|</span><b>59,415</b> reviews</div>
+      </a>
+    </header>
+    <div class="progress" role="progressbar" aria-label="Application progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    <main id="main"></main>
+  </div>
+</div></div><div id="side"><aside id="notes" aria-label="Design notes"></aside><aside id="summary" aria-label="Summary"></aside></div></div>
+
+<script>
+(function(){
+'use strict';
+const qs=new URLSearchParams(location.search);
+const SHOT=qs.get('shot')==='1';
+const TODAY=new Date((qs.get('today')||new Date().toISOString().slice(0,10))+'T12:00:00');
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ic=(id,cls='')=>'<svg class="ic '+cls+'" aria-hidden="true" focusable="false"><use href="#'+id+'"/></svg>';
+const main=$('#main'), app=$('#app'), bar=$('#bar');
+const track=(name,data)=>{ (window.dataLayer=window.dataLayer||[]).push(Object.assign({event:name},data||{})); console.debug('[track]',name,data||''); };
+const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.className='note'; n.textContent=msg; document.body.appendChild(n); setTimeout(()=>n.remove(),3000); };
+/* every page of the live "direct" flow (15 pages), in order. We only redesign three of them. */
+const PAGES=[
+  {k:'finance-details',t:'Finance details'},{k:'vehicle-found',t:'Vehicle'},{k:'driving-licence',t:'Driving licence'},
+  {k:'marital-status',t:'Marital status'},{k:'date-of-birth',t:'Date of birth'},{k:'address-add',t:'Address'},
+  {k:'address-status',t:'Home ownership'},{k:'address-length',t:'Time at address'},{k:'employment',t:'Employment status'},
+  {k:'employment-location',t:'Job details'},{k:'employment-length',t:'Time in job'},{k:'employment-income',t:'Income'},
+  {k:'amount-to-finance',t:'Amount to borrow'},{k:'contact-details-p1',t:'Contact details (part 1)'},{k:'contact-details-p2',t:'Contact details'}
+];
+const pct=i=>Math.floor(i/PAGES.length*100);
+/* the 15 pages fall into four stages: Vehicle (finance details, vehicle), Details (licence, marital status,
+   date of birth, address), Employment (status, job, length, income) and Finance (amount, contact), then Results */
+const GROUPS=[{label:'Vehicle',from:0,to:1},{label:'Details',from:2,to:7},{label:'Employment',from:8,to:11},{label:'Finance',from:12,to:14}];
+const NPAGES=PAGES.length, GAP=4;
+const groupOf=i=>GROUPS.findIndex(g=>i>=g.from&&i<=g.to);
+const POS=(page,g)=>'calc((100% - '+(GAP*(GROUPS.length-1))+'px) * '+page+' / '+NPAGES+' + '+(GAP*g)+'px)';
+(function buildProgress(){
+  const pb=$('.progress'), names=GROUPS.map(g=>g.label).concat('Results');
+  pb.innerHTML=names.map((t,k)=>(k?'<div class="pline"><i></i></div>':'')+
+    '<div class="pstep'+(k===names.length-1?' end':'')+'" data-k="'+k+'"'+(k===names.length-1?' title="Your results"':'')+'><span class="pnum">'+(k+1)+'</span><span class="plabel '+(k===0?'first':k===names.length-1?'last':'mid')+'">'+t+'</span></div>').join('');
+})();
+const setProgress=key=>{
+  const pb=$('.progress'), cur=PAGES.findIndex(p=>p.k===key), n=pct(cur), cg=groupOf(cur);
+  // the line after a circle fills as you move through that stage
+  $$('.pline i',pb).forEach((bar,k)=>{ const g=GROUPS[k]; bar.style.width=(Math.max(0,Math.min(1,(cur-g.from)/(g.to-g.from+1)))*100)+'%'; });
+  $$('.pstep',pb).forEach(st=>{ const k=+st.dataset.k; st.classList.toggle('on',k<=cg); st.classList.toggle('now',k===cg); st.classList.toggle('done',k<cg); });
+  pb.setAttribute('aria-valuenow',n);
+  pb.setAttribute('aria-valuetext',n+'% complete. Stage '+(cg+1)+' of '+GROUPS.length+': '+GROUPS[cg].label+'. Current page: '+PAGES[cur].t);
+};
+const backLink='<a class="back" href="#" id="back">'+ic('chevron-left')+'<span>Previous Step</span></a>';
+const errHTML=m=>'<div class="error" role="alert">'+ic('i-alert')+'<span>'+esc(m)+'</span></div>';
+const wireBack=()=>{ $('#back').addEventListener('click',e=>{e.preventDefault();note('Prototype: this goes to the previous step.');}); };
+
+/* ============================== STEP 3: CONTACT ============================== */
+const DOMAIN_FIX={'gmial.com':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gmil.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','hotmial.com':'hotmail.com','hotmal.com':'hotmail.com','hotmail.con':'hotmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yahoo.con':'yahoo.com','outlok.com':'outlook.com','outlook.con':'outlook.com','icloud.co':'icloud.com','icloud.con':'icloud.com'};
+const validEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+const normPhone=v=>{ let p=v.replace(/\(0\)/g,'').replace(/[\s\-()]/g,''); if(p.indexOf('+44')===0)p='0'+p.slice(3); else if(p.indexOf('0044')===0)p='0'+p.slice(4); return p; };
+const validPhone=v=>/^0[1237]\d{8,9}$/.test(normPhone(v));
+const fmtPhone=v=>{ const p=normPhone(v); return /^07\d{9}$/.test(p)?p.replace(/^(07\d{3})(\d{6})$/,'$1 $2'):v.trim(); };
+function emailSuggestion(v){
+  v=v.trim(); const at=v.lastIndexOf('@'); if(at<1||!validEmail(v)) return null;
+  const local=v.slice(0,at); let dom=v.slice(at+1).toLowerCase(); const orig=dom;
+  if(DOMAIN_FIX[dom]) dom=DOMAIN_FIX[dom];
+  dom=dom.replace(/\.(con|cmo|vom)$/,'.com').replace(/\.co\.k$/,'.co.uk');
+  return dom!==orig? local+'@'+dom : null;
+}
+
+function mountContact(preset){
+  preset=preset||{};
+  setProgress('contact-details-p2');
+  main.innerHTML=backLink+
+  '<h1 id="step-title">Last step, then see your results</h1>'+
+  '<form id="f" novalidate aria-labelledby="step-title">'+
+    '<div class="field">'+
+      '<label for="email">Email address</label>'+
+      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="e.g. name@example.com" aria-describedby="email-msg"></div>'+
+      '<div id="email-msg" aria-live="polite"></div>'+
+    '</div>'+
+    '<div class="field">'+
+      '<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We\'ll only use your number if we need to check a detail to finalise your application.</span></span></div>'+
+      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 07700 900123" aria-describedby="phone-msg"></div>'+
+      '<div id="phone-msg" aria-live="polite"></div>'+
+    '</div>'+
+    '<div id="form-msg" class="formerr" aria-live="polite"></div>'+
+    '<button type="submit" class="btn" id="go"><span id="go-label">See my results</span>'+ic('arrow-right')+'</button>'+
+    '<p class="legal">By clicking \'See my results\' you agree to <a href="#">Car Finance 247 Limited\'s terms and conditions.</a></p>'+
+  '</form>';
+  wireBack();
+  const f=$('#f'), email=$('#email'), phone=$('#contact-phone'), go=$('#go');
+  // the '?': hover or keyboard focus shows it, a tap pins it open, tap again or Escape closes it
+  const tipBtn=$('#phone-why'), tipBox=$('#phone-tip'), tipWrap=tipBtn.parentElement; let pinned=false;
+  const showTip=on=>{ tipBox.style.setProperty('--arrow',(tipBtn.offsetLeft+11)+'px'); tipBox.classList.toggle('show',on); tipBtn.setAttribute('aria-expanded',String(on)); };
+  tipBtn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); pinned=!pinned; showTip(pinned); });
+  tipWrap.addEventListener('mouseenter',()=>showTip(true));
+  tipWrap.addEventListener('mouseleave',()=>showTip(pinned));
+  tipBtn.addEventListener('focus',()=>showTip(true));
+  tipBtn.addEventListener('blur',()=>showTip(pinned));
+  tipBtn.addEventListener('keydown',e=>{ if(e.key==='Escape'){ pinned=false; showTip(false); } });
+  main.onclick=()=>{ if(pinned){ pinned=false; showTip(false); } };
+  const touched={email:false,phone:false}; let submitting=false, shownSuggestion=null;
+
+  function emailError(){ const v=email.value.trim(); if(!v) return 'Enter your email address'; if(!validEmail(v)) return 'Enter an email address in the right format, like name@example.com'; return ''; }
+  function phoneError(){ const v=phone.value.trim(); if(!v) return 'Enter your phone number'; if(!validPhone(v)) return 'Enter a UK phone number, like 07700 900123'; return ''; }
+  function paint(which){
+    const el=which==='email'?email:phone, msg=$('#'+which+'-msg');
+    const e=touched[which]?(which==='email'?emailError():phoneError()):'';
+    el.classList.toggle('err',!!e); el.setAttribute('aria-invalid',e?'true':'false');
+    if(e){ msg.innerHTML=errHTML(e); track('contact_validation_error',{field:which}); return; }
+    if(which==='email'){
+      const s=touched.email?emailSuggestion(email.value):null;
+      if(s){ msg.innerHTML='<div class="suggest">Did you mean <button type="button" class="link" id="sugg">'+esc(s)+'</button>?</div>';
+        if(shownSuggestion!==s){ shownSuggestion=s; track('contact_email_suggestion_shown'); }
+        $('#sugg').addEventListener('click',()=>{ email.value=s; track('contact_email_suggestion_accepted'); shownSuggestion=null; paint('email'); phone.focus(); });
+        return; }
+    }
+    msg.innerHTML='';
+  }
+  email.addEventListener('blur',()=>{ if(email.value.trim()){ touched.email=true; paint('email'); } });
+  email.addEventListener('input',()=>{ if(touched.email) paint('email'); });
+  phone.addEventListener('blur',()=>{ if(phone.value.trim()){ touched.phone=true; if(validPhone(phone.value)) phone.value=fmtPhone(phone.value); paint('phone'); } });
+  phone.addEventListener('input',()=>{ if(touched.phone) paint('phone'); });
+
+  f.addEventListener('submit',e=>{
+    e.preventDefault(); if(submitting) return;
+    touched.email=touched.phone=true; paint('email'); paint('phone');
+    $('#form-msg').innerHTML='';
+    if(emailError()){ email.focus(); return; }
+    if(phoneError()){ phone.focus(); return; }
+    phone.value=fmtPhone(phone.value);
+    startSubmit();
+  });
+  function startSubmit(){
+    submitting=true; track('contact_submitted');
+    email.readOnly=phone.readOnly=true; go.setAttribute('aria-busy','true');
+    go.innerHTML='<span class="spinner" aria-hidden="true"></span><span id="go-label">Taking you to your results…</span>';
+    if(preset.hold) return;
+    setTimeout(()=>{ submitting=false; email.readOnly=phone.readOnly=false; go.removeAttribute('aria-busy');
+      go.innerHTML='<span id="go-label">See my results</span>'+ic('arrow-right'); note('Prototype: this would redirect to the Members\' Area.'); },1800);
+  }
+  if(preset.email!==undefined){ email.value=preset.email; touched.email=true; paint('email'); }
+  if(preset.phone!==undefined){ phone.value=preset.phone; touched.phone=true; paint('phone'); }
+  if(preset.submitting) startSubmit();
+}
+
+/* ============================== STEP 2: DATE OF BIRTH ============================== */
+const ty=TODAY.getFullYear(), tm=TODAY.getMonth(), td=TODAY.getDate();
+const MAXY=ty-18, MINY=ty-100;
+const ageOn=(y,m,d)=>{ let a=ty-y; if(tm<m||(tm===m&&td<d)) a--; return a; };
+const dim=(y,m)=>new Date(y,m+1,0).getDate();
+const DOBMSG={incomplete:'Enter your full date of birth',day:'Day must be between 1 and 31',month:'Month must be between 1 and 12',year:'Year must have four numbers, like 1990',future:'Your date of birth must be in the past',tooOld:'Please check the year. That would make you over 100.'};
+const fmtDate=dt=>dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear();
+
+function validateDob(d,m,y,mode){
+  const dn=+d, mn=+m, yn=+y;
+  if(mode==='live'&&!(d&&m&&y.length===4)) return null;   // stay quiet until the date is complete
+  if(mode==='submit'&&(!d||!m||!y)) return {field:!d?'day':!m?'month':'year',all:true,msg:DOBMSG.incomplete,type:'incomplete'};
+  if(d&&(dn<1||dn>31)) return {field:'day',msg:DOBMSG.day,type:'day'};
+  if(m&&(mn<1||mn>12)) return {field:'month',msg:DOBMSG.month,type:'month'};
+  if(y&&y.length!==4&&mode!=='live') return {field:'year',msg:DOBMSG.year,type:'year'};
+  if(!(d&&m&&y.length===4)) return null;
+  const dt=new Date(yn,mn-1,dn);
+  if(dt.getMonth()!==mn-1||dt.getDate()!==dn) return {all:true,msg:dn+' '+MONTHS[mn-1]+' '+y+' isn\'t a real date. Please check the day.',type:'notReal'};
+  if(dt>TODAY) return {all:true,msg:DOBMSG.future,type:'future'};
+  const age=ageOn(yn,mn-1,dn);
+  if(age<18) return {all:true,msg:'You need to be 18 or over to apply. You\'ll be able to apply from '+fmtDate(new Date(yn+18,mn-1,dn))+'.',type:'under18'};
+  if(age>100) return {field:'year',msg:DOBMSG.tooOld,type:'tooOld'};
+  return {ok:true,age:age};
+}
+
+/* One masked box: "DD/MM/YYYY". Slashes are added as you type; a lone first digit that can't start a
+   day (4 to 9) or month (2 to 9) is padded with a zero. */
+const SEP='  /  ';   // what separates day, month and year in the box: room either side of each slash
+function parseDob(raw,typing){
+  const toks=raw.split(/[^0-9]+/);
+  let d,m,y;
+  if(toks.length===3&&toks[0].length===4){ y=toks[0]; m=toks[1]; d=toks[2]; }            // 1990-03-27 (browser autofill)
+  else if(toks.length===1||toks[0].length>2||(toks.length>1&&toks[1].length>2)){          // digits only, or a paste with no separators
+    const ds=raw.replace(/\D/g,''); let i=0;
+    const take=first=>{ if(i>=ds.length) return ''; let s; if(+ds[i]>first){ s='0'+ds[i]; i+=1; } else { s=ds.slice(i,i+2); i+=s.length; } return s; };
+    d=take(3); m=take(1); y=ds.slice(i,i+4);
+  } else {
+    const pad=(t,first,isLast)=>t.length===1&&(!isLast||(typing&&+t>first))?'0'+t:t;
+    d=pad(toks[0]||'',3,toks.length===1); m=pad(toks[1]||'',1,toks.length===2); y=(toks[2]||'').slice(0,4);
+  }
+  return {d:d.slice(0,2),m:m.slice(0,2),y:y.slice(0,4)};
+}
+function renderDob(p,typing){
+  let out=p.d;
+  if(p.d.length===2&&(p.m.length||p.y.length||typing)) out+=SEP+p.m;
+  if(p.m.length===2&&(p.y.length||typing)) out+=SEP+p.y;
+  return out;
+}
+
+function mountDob(preset){
+  preset=preset||{};
+  setProgress('date-of-birth');
+  main.innerHTML=backLink+
+  '<h1 id="step-title">What\'s your date of birth?</h1>'+
+  '<button type="button" class="why" id="why" aria-expanded="false" aria-controls="why-panel">'+ic('chevron-right')+'<span>Why do we ask this?</span></button>'+
+  '<div class="why-panel" id="why-panel" hidden>Lenders need your date of birth to check you\'re 18 or over and to confirm who you are.</div>'+
+  (dobHelp?'<p class="hint-lg" id="dob-hint">For example, 27 / 03 / 1990</p>':'')+
+  '<form id="f" novalidate aria-labelledby="step-title">'+
+    '<label class="sr" for="dob">Date of birth</label>'+
+    '<div class="dob-row">'+
+      '<div class="seg" id="seg"><div class="control"><input class="input" id="dob" type="text" inputmode="numeric" autocomplete="bday" autocapitalize="off" spellcheck="false" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg"><div class="mask" id="dob-mask" aria-hidden="true"></div>'+ic('i-tick','tick')+'</div></div>'+
+      '<button type="button" class="calbtn" id="calbtn" aria-haspopup="dialog" aria-label="Choose your date of birth from a calendar">'+ic('i-cal')+'</button>'+
+    '</div>'+
+    '<div class="dobmsg" id="dob-msg" aria-live="polite"></div>'+
+    '<button type="submit" class="btn cta-gap" id="go">Continue'+ic('arrow-right')+'</button>'+
+  '</form>';
+  wireBack();
+  $('#why').addEventListener('click',e=>{ const b=e.currentTarget, open=b.getAttribute('aria-expanded')!=='true'; b.setAttribute('aria-expanded',open); $('#why-panel').hidden=!open; });
+  const inp=$('#dob'), seg=$('#seg'), msg=$('#dob-msg'), cal=$('#calbtn');
+  const mask=$('#dob-mask'), TEMPLATE='DD'+SEP+'MM'+SEP+'YYYY';
+  // typed digits in black, the rest of the template in grey; the real input sits underneath, so a click anywhere in the box types
+  function paintMask(){ const v=inp.value; mask.innerHTML='<span class="typed">'+esc(v)+'</span><span class="rest">'+esc(TEMPLATE.slice(v.length))+'</span>'; }
+  inp.addEventListener('click',()=>{ const l=inp.value.length; if(inp.selectionStart===inp.selectionEnd) inp.setSelectionRange(l,l); });
+  const parts=()=>parseDob(inp.value,false);
+  let prev='';
+
+  function clearState(){ inp.classList.remove('err'); inp.removeAttribute('aria-invalid'); seg.classList.remove('ok'); msg.innerHTML=''; }
+  function evaluate(mode){
+    const p=parts(); const r=validateDob(p.d,p.m,p.y,mode);
+    clearState();
+    if(!r) return null;
+    if(r.ok){ seg.classList.add('ok'); if(dobHelp) msg.innerHTML='<div class="okmsg">'+ic('i-tick')+'<span>That makes you '+r.age+'.</span></div>'; return r; }
+    inp.classList.add('err'); inp.setAttribute('aria-invalid','true');
+    msg.innerHTML='<div class="error" id="dob-error" role="alert">'+ic('i-alert')+'<span>'+esc(r.msg)+'</span></div>';
+    track('dob_validation_error',{type:r.type});
+    return r;
+  }
+  function setValue(v){ inp.value=v; prev=v; paintMask(); }
+  inp.addEventListener('input',()=>{
+    const raw=inp.value, typing=raw.length>prev.length;
+    const v=renderDob(parseDob(raw,typing),typing);
+    setValue(v); try{ inp.setSelectionRange(v.length,v.length); }catch(e){}
+    evaluate('live');
+  });
+  inp.addEventListener('blur',()=>evaluate('blur'));
+  $('#f').addEventListener('submit',e=>{
+    e.preventDefault();
+    const r=evaluate('submit');
+    if(!r||!r.ok){ inp.focus(); return; }
+    note('Prototype: this goes to the next step.');
+  });
+
+  /* ---- calendar sheet: year, then month, then day. Tapping the day is the final step. ---- */
+  let P=null, bd=null, sheet=null, firstOpen=true;
+  function parseSeed(){ const p=parts(); const r=validateDob(p.d,p.m,p.y,'blur'); return r&&r.ok?{y:+p.y,m:+p.m-1,d:+p.d}:null; }
+  function openPicker(seed){
+    track('dob_picker_opened');
+    P=seed||parseSeed()||{y:null,m:null,d:null}; P.view=P.view||(P.d!=null?'day':'year'); firstOpen=true;
+    bd=document.createElement('div'); bd.className='backdrop'; bd.addEventListener('click',closePicker);
+    sheet=document.createElement('div'); sheet.className='sheet'; sheet.setAttribute('role','dialog'); sheet.setAttribute('aria-modal','true'); sheet.setAttribute('aria-labelledby','pk-title'); sheet.tabIndex=-1;
+    const host=$('#screen')||document.body; host.appendChild(bd); host.appendChild(sheet); app.inert=true;
+    sheet.addEventListener('click',onSheetClick);
+    sheet.addEventListener('keydown',e=>{
+      if(e.key==='Escape'){ e.preventDefault(); closePicker(); }
+      if(e.key==='Tab'){ const f=$$('button:not([disabled]):not([aria-disabled=true])',sheet); if(!f.length) return; const a=document.activeElement; if(e.shiftKey&&(a===f[0]||a===sheet)){ e.preventDefault(); f[f.length-1].focus(); } else if(!e.shiftKey&&a===f[f.length-1]){ e.preventDefault(); f[0].focus(); } }
+    });
+    drawPicker(); sheet.focus();
+  }
+  function closePicker(){ if(!sheet) return; sheet.remove(); bd.remove(); sheet=bd=null; app.inert=false; cal.focus(); }
+  function focusFirst(){ const t=$('[aria-pressed=true]',sheet)||$('.pbtn:not([aria-disabled=true])',sheet); if(t) t.focus(); }
+  function drawPicker(){
+    const v=P.view;
+    const chip=(k,label,dis)=>'<button type="button" class="chip" data-act="view" data-v="'+k+'" '+(v===k?'aria-current="true"':'')+(dis?' disabled':'')+'>'+esc(label)+'</button>';
+    let body='';
+    if(v==='year'){
+      let lastDec=null; body='<div class="pgrid c4">';
+      for(let y=MAXY;y>=MINY;y--){ const dec=Math.floor(y/10)*10; if(dec!==lastDec){ body+='<div class="dec" data-dec="'+dec+'">'+dec+'s</div>'; lastDec=dec; }
+        body+='<button type="button" class="pbtn" data-act="year" data-y="'+y+'" aria-pressed="'+(P.y===y)+'">'+y+'</button>'; }
+      body+='</div>';
+    } else if(v==='month'){
+      body='<div class="pgrid c3">'+MONTHS.map((n,i)=>{ const dis=P.y===MAXY&&i>tm; return '<button type="button" class="pbtn" data-act="month" data-m="'+i+'" aria-label="'+n+'" aria-pressed="'+(P.m===i)+'" '+(dis?'aria-disabled="true"':'')+'>'+n.slice(0,3)+'</button>'; }).join('')+'</div>';
+    } else {
+      const first=(new Date(P.y,P.m,1).getDay()+6)%7, n=dim(P.y,P.m);
+      body='<div class="mhead">'+MONTHS[P.m]+' '+P.y+'</div><div class="pgrid c7">'+['Mo','Tu','We','Th','Fr','Sa','Su'].map(w=>'<div class="wd" aria-hidden="true">'+w+'</div>').join('')+'<span></span>'.repeat(first);
+      for(let d=1;d<=n;d++){ const dis=P.y===MAXY&&P.m===tm&&d>td; body+='<button type="button" class="pbtn" data-act="day" data-d="'+d+'" aria-label="'+d+' '+MONTHS[P.m]+' '+P.y+'" aria-pressed="'+(P.d===d)+'" '+(dis?'aria-disabled="true"':'')+'>'+d+'</button>'; }
+      body+='</div>';
+    }
+    sheet.innerHTML='<div class="grab" aria-hidden="true"></div>'+
+      '<div class="sheet-h"><h2 id="pk-title">Choose your date of birth</h2><button type="button" class="x" data-act="close" aria-label="Close">'+ic('close')+'</button></div>'+
+      '<div class="chips">'+chip('year',P.y!=null?String(P.y):'Year',false)+chip('month',P.m!=null?MONTHS[P.m]:'Month',P.y==null)+chip('day',P.d!=null?String(P.d):'Day',P.m==null)+'</div>'+
+      '<div class="pview" id="pview">'+body+'</div>';
+    const pv=$('#pview',sheet);
+    if(v==='year'&&firstOpen){ const t=P.y!=null?$('[data-y="'+P.y+'"]',sheet):null;
+      if(t) pv.scrollTop=t.offsetTop-pv.clientHeight/2; else { const h=$('[data-dec="1990"]',sheet); if(h) pv.scrollTop=h.offsetTop-150; } }
+    firstOpen=false;
+  }
+  function onSheetClick(e){
+    const b=e.target.closest('[data-act]'); if(!b||b.disabled||b.getAttribute('aria-disabled')==='true') return;
+    const a=b.dataset.act;
+    if(a==='close') return closePicker();
+    if(a==='view'){ P.view=b.dataset.v; drawPicker(); focusFirst(); return; }
+    if(a==='year'){ P.y=+b.dataset.y; if(P.m!=null&&P.y===MAXY&&P.m>tm) P.m=null; P.d=null; P.view='month'; drawPicker(); focusFirst(); return; }
+    if(a==='month'){ P.m=+b.dataset.m; P.d=null; P.view='day'; drawPicker(); focusFirst(); return; }
+    if(a==='day'){
+      P.d=+b.dataset.d;
+      setValue(String(P.d).padStart(2,'0')+SEP+String(P.m+1).padStart(2,'0')+SEP+P.y);
+      track('dob_picker_completed'); closePicker(); evaluate('live');
+    }
+  }
+  cal.addEventListener('click',()=>openPicker());
+
+  paintMask();
+  if(preset.values){ setValue(preset.values.join(SEP)); evaluate('live'); }
+  if(preset.picker) openPicker(preset.picker);
+}
+
+/* ============================== STEP 1: ADDRESS ============================== */
+const UK_PC=/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
+const fmtPC=v=>{ const p=v.replace(/\s+/g,'').toUpperCase(); return UK_PC.test(p)?p.slice(0,-3)+' '+p.slice(-3):v.toUpperCase().trim(); };
+const STREETS=[
+  {street:'Factory Lane',items:[[1],[2],[3],[4],[5],[6],[7],[8,'Flat 1'],[8,'Flat 2']]},
+  {street:'Morland Road',items:[[10],[12],[14],[16],[18,'Flat A'],[18,'Flat B']]}
+];
+function mockLookup(pc,instant){
+  const key=pc.replace(/\s/g,'');
+  const run=()=>{ if(key==='XX11XX') throw new Error('api'); if(key==='ZZ11ZZ') return []; let k=0;
+    return STREETS.flatMap(s=>s.items.map(it=>({id:'a'+(++k),n:it[0],sub:it[1]||'',street:s.street,line1:(it[1]?it[1]+', ':'')+it[0]+' '+s.street,town:'Croydon',postcode:pc}))); };
+  return new Promise((res,rej)=>{ const go=()=>{ try{res(run());}catch(e){rej(e);} }; instant?go():setTimeout(go,550); });
+}
+const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowerCase()); if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+f.length))+'</mark>'+esc(t.slice(i+f.length)); };
+
+function mountAddress(preset){
+  preset=preset||{};
+  setProgress('address-add');
+  const S={postcode:'',status:'idle',list:[],filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''}};
+  let seq=0, timer=null;
+  main.innerHTML=backLink+
+  '<h1 id="step-title">Next, what\'s your postcode?</h1>'+
+  '<button type="button" class="why" id="why" aria-expanded="false" aria-controls="why-panel">'+ic('chevron-right')+'<span>Why do we ask this?</span></button>'+
+  '<div class="why-panel" id="why-panel" hidden>Lenders use your address to confirm who you are and check you\'re eligible for finance.</div>'+
+  '<form id="f" novalidate aria-labelledby="step-title"><div id="zone"></div><div id="cont-msg" aria-live="polite"></div>'+
+  '<button type="submit" class="btn" id="cont" hidden>Continue'+ic('arrow-right')+'</button></form>';
+  wireBack();
+  const zone=$('#zone'), cont=$('#cont');
+  $('#why').addEventListener('click',e=>{ const b=e.currentTarget, open=b.getAttribute('aria-expanded')!=='true'; b.setAttribute('aria-expanded',open); $('#why-panel').hidden=!open; });
+
+  const sortAddr=(a,b)=>a.n-b.n||a.sub.localeCompare(b.sub);
+  function filtered(){
+    const f=S.filter.trim().toLowerCase();
+    const items=S.list.filter(a=>!f||a.line1.toLowerCase().indexOf(f)>-1).sort(sortAddr);
+    const by=new Map(); items.forEach(a=>{ if(!by.has(a.street)) by.set(a.street,[]); by.get(a.street).push(a); });
+    return {items:items,groups:Array.from(by).sort((a,b)=>a[0].localeCompare(b[0]))};
+  }
+  function updateCont(){ cont.hidden=!(S.selected||S.manual||S.status==='results'); }
+
+  function drawZone(){
+    if(S.selected){
+      const a=S.selected;
+      zone.innerHTML='<div class="card">'+ic('location','pin')+'<div class="adr"><b>'+esc(a.line1)+'</b><br>'+esc(a.town)+'<br>'+esc(a.postcode)+'</div><button type="button" class="link" id="change" aria-label="Change address">Change</button></div>';
+      $('#change').addEventListener('click',()=>{ S.selected=null; drawZone(); const t=$('#flt')||$('#lb')||$('#pc'); if(t) t.focus(); });
+    } else if(S.manual){
+      drawManual();
+    } else drawSearch();
+    updateCont();
+  }
+
+  /* --- postcode search --- */
+  function drawSearch(){
+    zone.innerHTML=
+    '<div class="field" id="pc-field"><label for="pc">Postcode</label>'+
+      '<div class="control"><input class="input" id="pc" type="text" maxlength="8" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" placeholder="e.g. CR0 3AG" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
+      '<div id="pc-msg" aria-live="polite"></div></div>'+
+    '<button type="button" class="btn secondary" id="find">Find address</button>'+
+    '<div id="results"></div>';
+    const pc=$('#pc');
+    pc.addEventListener('input',()=>{
+      S.postcode=pc.value.toUpperCase(); pc.value=S.postcode;
+      clearTimeout(timer); seq++;
+      if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; paint(); }
+      if(UK_PC.test(S.postcode.trim())) timer=setTimeout(()=>lookup('auto'),400);
+    });
+    pc.addEventListener('blur',()=>{ const f=fmtPC(pc.value); if(UK_PC.test(f.replace(/\s/g,''))&&f!==pc.value){ pc.value=f; S.postcode=f; } });
+    pc.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(timer); lookup('button'); } });
+    $('#find').addEventListener('click',()=>{ clearTimeout(timer); lookup('button'); });
+    paint();
+  }
+  function lookup(source,instant){
+    if(S.status==='loading') return;
+    if(!S.postcode.trim()||!UK_PC.test(S.postcode.replace(/\s/g,'').trim())){ S.status='invalid'; return paint(); }
+    S.postcode=fmtPC(S.postcode); const my=++seq; S.status='loading'; paint(); track('address_lookup_started',{source:source});
+    return mockLookup(S.postcode,instant).then(list=>{
+      if(my!==seq) return;
+      S.list=list; S.status=list.length?'results':'empty'; S.filter=''; S.active=null;
+      if(list.length===1){ S.selected=list[0]; drawZone(); track('address_selected',{position:1}); return; }
+      paint();
+      if(list.length){ track('address_results_shown',{count:list.length}); const c=$('#count'); if(c&&!instant) c.focus(); }
+    }).catch(()=>{ if(my!==seq) return; S.status='error'; paint(); });
+  }
+  function paint(){
+    const pc=$('#pc'); if(!pc) return;
+    const msg=$('#pc-msg'), find=$('#find'), res=$('#results');
+    $('#pc-spin').hidden=S.status!=='loading';
+    find.hidden=S.status==='results'; find.disabled=S.status==='loading';
+    pc.classList.toggle('err',S.status==='invalid'||S.status==='empty'||S.status==='error');
+    pc.setAttribute('aria-invalid',pc.classList.contains('err')?'true':'false');
+    let m='';
+    if(S.status==='invalid') m=errHTML(S.postcode.trim()?'Enter a full UK postcode, like CR0 3AG':'Enter your postcode');
+    if(S.status==='empty') m=errHTML('We couldn\'t find any addresses for '+S.postcode+'. Check the postcode, or enter your address manually.')+'<button type="button" class="link manual" id="manual-link">Enter your address manually</button>';
+    if(S.status==='error') m=errHTML('Our address finder isn\'t working right now. Please enter your address manually.')+'<div style="margin-top:16px"><button type="button" class="btn secondary" id="manual-link">Enter address manually</button></div>';
+    msg.innerHTML=m;
+    if(S.status==='invalid') track('address_validation_error');
+    const ml=$('#manual-link'); if(ml&&S.status!=='results') ml.addEventListener('click',goManual);
+    if(S.status==='results') drawResults(); else res.innerHTML='';
+    updateCont();
+  }
+
+  /* --- results: one scroll container, grouped by street, typeahead filter --- */
+  function drawResults(){
+    const res=$('#results'), many=S.list.length>8;
+    res.innerHTML=
+      '<p class="count" id="count" tabindex="-1" aria-live="polite"></p>'+
+      (many?'<div class="control filter">'+ic('search')+'<input class="input" id="flt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your house number or name" aria-label="Filter addresses" aria-controls="lb" value="'+esc(S.filter)+'"></div>':'')+
+      '<div class="lbwrap" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(S.postcode)+'"></div></div>'+
+      '<p class="nomatch" id="nomatch" hidden></p>'+
+      '<button type="button" class="link manual" id="manual-link">Can\'t see your address? Enter it manually</button>'+
+      '<div id="sel-msg" aria-live="polite"></div>';
+    const lb=$('#lb'), flt=$('#flt');
+    lb.addEventListener('scroll',atEnd);
+    lb.addEventListener('click',e=>{ const o=e.target.closest('.opt'); if(o) choose(o.dataset.id); });
+    lb.addEventListener('keydown',e=>{
+      const items=filtered().items; if(!items.length) return;
+      let i=items.findIndex(a=>a.id===S.active);
+      if(e.key==='ArrowDown'){ e.preventDefault(); i=Math.min(items.length-1,i+1); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); i=Math.max(0,i<0?0:i-1); }
+      else if(e.key==='Home'){ e.preventDefault(); i=0; }
+      else if(e.key==='End'){ e.preventDefault(); i=items.length-1; }
+      else if(e.key==='Enter'){ if(i>-1){ e.preventDefault(); choose(items[i].id); } return; }
+      else if(e.key==='Escape'){ if(flt){ e.preventDefault(); flt.focus(); } return; }
+      else return;
+      setActive(items[i].id);
+    });
+    if(flt){
+      flt.addEventListener('input',()=>{ S.filter=flt.value; S.active=null; drawList(); if(S.filter.trim()) track('address_filter_used'); });
+      flt.addEventListener('keydown',e=>{ if(e.key==='ArrowDown'){ e.preventDefault(); const it=filtered().items[0]; lb.focus(); if(it) setActive(it.id); } if(e.key==='Enter') e.preventDefault(); });
+    }
+    $('#manual-link').addEventListener('click',goManual);
+    drawList();
+  }
+  function setActive(id){
+    S.active=id; $$('.opt',$('#lb')).forEach(o=>o.setAttribute('aria-selected',String(o.dataset.id===id)));
+    $('#lb').setAttribute('aria-activedescendant','o-'+id);
+    const el=$('#o-'+id); if(el) el.scrollIntoView({block:'nearest'});
+  }
+  function atEnd(){ const lb=$('#lb'); if(!lb) return; $('#lbwrap').classList.toggle('at-end',lb.scrollTop+lb.clientHeight>=lb.scrollHeight-4); }
+  function drawList(){
+    const g=filtered(), lb=$('#lb'), f=S.filter.trim(), multi=g.groups.length>1, total=S.list.length;
+    $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+S.postcode);
+    lb.innerHTML=g.groups.map(([street,arr])=>'<div role="group" aria-label="'+esc(street)+'">'+(multi?'<div class="grp" aria-hidden="true">'+esc(street)+' · '+arr.length+'</div>':'')+
+      arr.map(a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(a.line1,f)+'</span></div>').join('')+'</div>').join('');
+    lb.removeAttribute('aria-activedescendant');
+    const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0;
+    if(!g.items.length) nm.textContent='No addresses match "'+S.filter+'". Check the number, or enter your address manually.';
+    lb.scrollTop=0; atEnd();
+  }
+  function choose(id){
+    S.selected=S.list.find(a=>a.id===id); S.manual=false; $('#cont-msg').innerHTML='';
+    track('address_selected',{position:S.list.indexOf(S.selected)+1});
+    drawZone(); cont.focus();
+  }
+  function goManual(){
+    track('address_manual_opened',{reason:S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
+    S.manual=true; S.selected=null; S.man.pc=S.postcode; drawZone(); const n=$('#man-n'); if(n) n.focus();
+  }
+
+  /* --- manual entry --- */
+  function drawManual(){
+    const F=[['n','Flat, house name or number','man-n','address-line1','Enter your flat, house name or number'],['street','Street','man-street','address-line2','Enter your street'],['town','Town or city','man-town','address-level2','Enter your town or city'],['pc','Postcode','man-pc','postal-code','Enter a full UK postcode, like CR0 3AG']];
+    zone.innerHTML=F.map(f=>'<div class="field"><label for="'+f[2]+'">'+f[1]+'</label><div class="control"><input class="input" id="'+f[2]+'" data-k="'+f[0]+'" type="text" autocomplete="'+f[3]+'" value="'+esc(S.man[f[0]])+'"'+(f[0]==='pc'?' maxlength="8" autocapitalize="characters"':'')+'></div><div id="'+f[2]+'-msg" aria-live="polite"></div></div>').join('')+
+      '<button type="button" class="link switch" id="to-search">Search by postcode instead</button>';
+    $$('input',zone).forEach(i=>i.addEventListener('input',()=>{ S.man[i.dataset.k]=i.dataset.k==='pc'?i.value.toUpperCase():i.value; if(i.dataset.k==='pc') i.value=S.man.pc; if(i.classList.contains('err')) manualCheck(i,F); }));
+    $('#to-search').addEventListener('click',()=>{ S.manual=false; drawZone(); const p=$('#pc'); if(p) p.focus(); });
+    zone._F=F;
+  }
+  function manualCheck(inp,F){
+    const f=F.find(x=>x[2]===inp.id), v=S.man[f[0]].trim();
+    const bad=f[0]==='pc'?!UK_PC.test(v.replace(/\s/g,'')):!v;
+    inp.classList.toggle('err',bad); inp.setAttribute('aria-invalid',bad?'true':'false');
+    $('#'+inp.id+'-msg').innerHTML=bad?errHTML(f[4]):'';
+    return !bad;
+  }
+
+  $('#f').addEventListener('submit',e=>{
+    e.preventDefault();
+    if(S.selected){ note('Prototype: this goes to the next step.'); return; }
+    if(S.manual){ const F=zone._F; let first=null; F.forEach(f=>{ const i=$('#'+f[2]); if(!manualCheck(i,F)&&!first) first=i; }); if(first){ first.focus(); return; } note('Prototype: this goes to the next step.'); return; }
+    $('#cont-msg').innerHTML='<div style="margin-bottom:16px">'+errHTML('Choose your address from the list to continue')+'</div>'; const t=$('#lb'); if(t) t.focus();
+  });
+
+  /* --- presets for screenshots --- */
+  drawZone();
+  if(preset.postcode){ S.postcode=preset.postcode; $('#pc').value=preset.postcode; }
+  // the lookup is async even when instant, so apply the rest of the preset once it has resolved
+  Promise.resolve(preset.lookup?lookup('button',true):null).then(()=>{
+    if(preset.filter){ S.filter=preset.filter; const fl=$('#flt'); if(fl) fl.value=preset.filter; drawList(); }
+    if(preset.select){ S.selected=S.list.find(a=>a.line1===preset.select); drawZone(); }
+    if(preset.manual){ goManual(); }
+  });
+}
+
+/* ============================== DESIGN NOTES (annotations) ==============================
+   Numbered pins and outlines on the phone, plus a panel saying why each change was made and
+   how it could reduce drop-off. The drop-off lines are expectations to test, not measured results. */
+let notesOn=qs.get('notes')==='1';
+let dobHelp=qs.get('dobhelp')!=='0';   // the 'For example' line and the 'That makes you ...' line
+const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact:'Step 3: Contact details'};
+const CHANGES={
+  "address/default":[
+    ["Postcode first, nothing else to fill in","Easy to start: everyone knows their postcode"],
+    ["Search runs by itself once the postcode is valid","One less tap"],
+    ["'Find address' button kept as a backup","Still works if the search doesn't start"],
+    ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
+    ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
+  "address/results":[
+    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address"],
+    ["Grouped by street","Easier to scan"],
+    ["Filter box to jump to a house number","A long list becomes a few rows"],
+    ["Count confirms the search worked","Removes the doubt that makes people leave"],
+    ["'Enter it manually' always under the list","No dead end if your address is missing"]],
+  "address/filtered":[
+    ["List narrows as you type, matches in bold","Reach your address faster"],
+    ["Count updates: 'Showing 8 of 15'","Shows the filter is working"],
+    ["Still grouped by street","Stays easy to scan"]],
+  "address/selected":[
+    ["Chosen address shown as a summary card","Confirms the right address is used"],
+    ["'Change' link to pick again","A mistake is fixed in one tap"],
+    ["Continue appears once an address is chosen","A clear next step, nothing to puzzle over"]],
+  "address/manual":[
+    ["Short form, four fields","Quick for people whose address isn't listed"],
+    ["Postcode carried over from the search","Less retyping"],
+    ["'Search by postcode instead' link back","Manual entry is never a trap"]],
+  "address/error":[
+    ["Error says what to fix, with an example","Fewer repeat errors"],
+    ["Field and message turn red together","Easy to see what to fix"]],
+  "dob/default":[
+    ["One box instead of three","Fewer taps, no box-to-box friction"],
+    ["Slashes added as you type","Fewer format mistakes"],
+    ["Rest of the date stays in grey as you type","Shows what is still to come"],
+    ["Numeric keypad on mobile","Faster on a phone"],
+    ["Calendar button as a second way in","A route for people who dislike typing"],
+    ["Example shown under the question","No guessing the format"],
+    ["'Why do we ask this?' added, collapsed","Answers the doubt that makes people leave"]],
+  "dob/picker-year":[
+    ["Calendar picks year first, then month, then day","Three taps, no scrolling back from today"],
+    ["Only valid years shown (18 to 100)","Errors are prevented before they happen"],
+    ["Chips jump back a step","Easy to change your mind"]],
+  "dob/picker-day":[
+    ["Tapping the day finishes it, no 'Use this date' step","One fewer step"],
+    ["Days that would make you under 18 can't be picked","Errors are prevented before they happen"],
+    ["Chips jump back to the year or month","Easy to correct"]],
+  "dob/valid":[
+    ["Green tick as soon as the date is valid","Instant confirmation"],
+    ["'That makes you 26.' confirms the date","A wrong year jumps out"]],
+  "dob/under18":[
+    ["Says why, and when they can apply","People understand instead of just being blocked"],
+    ["Whole box turns red with one clear message","One clear thing to fix"]],
+  "contact/default":[
+    ["New headline: 'Last step, then see your results'","Sets the expectation of an instant result"],
+    ["Intro line and field hints removed","Less to read, and the fields sit higher up"],
+    ["'?' next to the phone number explains why it's needed","Answers the spam worry on hover or tap, without adding a box"],
+    ["Button now says 'See my results'","Matches the headline and what you get"],
+    ["Phone accepts spaces, brackets and +44","Fewer phone validation failures"]],
+  "contact/errors":[
+    ["Plain errors with an example, for email and phone","Fewer repeat errors"]],
+  "contact/suggestion":[
+    ["'Did you mean ...@gmail.com?' for common typos","Saves customers who would be lost to a typo"],
+    ["One tap to fix it","Quick to correct"]],
+  "contact/submitting":[
+    ["Spinner and 'Taking you to your results...'","Shows it is working"],
+    ["Fields lock while it sends","Stops double taps"]]
+};
+const SUMMARY={
+  address:{what:"The single 'address or street name' box is now a postcode-first search. 'See more addresses' is replaced by one scrollable, filterable list, with a way to enter the address manually if it is missing.",
+           why:"There is less to decide before the first tap, no repeated clicking to find an address deep in the list, and no dead end for people whose address is not listed."},
+  dob:{what:"Three separate boxes are now one box that adds the slashes for you, with a calendar that goes year, then month, then day as a second way in. Tapping the day finishes it.",
+       why:"It is faster and less fiddly on a phone, and typing mistakes are caught straight away. A collapsed 'Why do we ask this?' line under the heading answers the doubt behind the leaving."},
+  contact:{what:"The headline now promises results instead of a quote sent later, and a small '?' next to the phone number explains on hover or tap why it is needed. The phone field accepts numbers the way people type them.",
+           why:"People worried about unwanted calls get an answer at the moment they hesitate, without a box adding to the page. Fewer people should drop out of a page where everything else is already filled in."}
+};
+
+function paintNotes(k){
+  const btn=$('#dev-notes');
+  if(btn){ btn.setAttribute('aria-checked',String(notesOn)); }
+  document.body.classList.toggle('notes-on',notesOn); document.body.classList.toggle('shot',SHOT);
+  const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
+  if(!notesOn) return;
+  const step=k.split('/')[0], list=(CHANGES[k]||[]).filter(p=>dobHelp||!/^Example shown|confirms the date/.test(p[0]));
+  panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
+    '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>';
+  const sm=SUMMARY[step];
+  $('#summary').innerHTML='<h3>Summary</h3><p class="s-what"><b>What changed</b>'+esc(sm.what)+'</p><p class="s-why"><b>Why it should reduce abandoned sessions</b>'+esc(sm.why)+'</p><p class="s-note">Expected effect, not a measured result.</p>';
+}
+
+/* ============================== ROUTER + DEV SWITCHER ============================== */
+const ROUTES={
+  'address/default':()=>mountAddress(),
+  'address/results':()=>mountAddress({postcode:'CR0 3AG',lookup:true}),
+  'address/filtered':()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'}),
+  'address/selected':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'}),
+  'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
+  'address/error':()=>mountAddress({postcode:'CR0 3A',lookup:true}),
+  'dob/default':()=>mountDob(),
+  'dob/picker-year':()=>mountDob({picker:{y:null,m:null,d:null,view:'year'}}),
+  'dob/picker-day':()=>mountDob({picker:{y:2000,m:9,d:10,view:'day'}}),
+  'dob/valid':()=>mountDob({values:['10','10','2000']}),
+  'dob/under18':()=>mountDob({values:['10','10','2010']}),
+  'contact/default':()=>mountContact(),
+  'contact/errors':()=>mountContact({email:'alex.smith@example',phone:'07700 9001'}),
+  'contact/suggestion':()=>mountContact({email:'alex.smith@gmial.com',phone:'07700 900123'}),
+  'contact/submitting':()=>mountContact({email:'alex.smith@gmail.com',phone:'07700 900123',submitting:true,hold:true})
+};
+function route(){
+  const old=$('.backdrop'); if(old) old.remove(); const os=$('.sheet'); if(os) os.remove(); app.inert=false;
+  const k=(location.hash||'#/address/default').replace(/^#\//,''); const fn=ROUTES[k]||ROUTES['address/default'];
+  fn(); window.scrollTo(0,0); paintDev(ROUTES[k]?k:'address/default'); paintNotes(ROUTES[k]?k:'address/default');
+  // screenshots should not show a stray focus ring left by a preset
+  if(SHOT) setTimeout(()=>{ const a=document.activeElement; if(a&&a!==document.body&&a.blur) a.blur(); },50);
+}
+/* prototype navigator: three steps, each with its own states (hidden when ?shot=1) */
+const STEPS=[
+  {key:'address',n:1,label:'Address'},
+  {key:'dob',n:2,label:'Date of birth'},
+  {key:'contact',n:3,label:'Contact details'}
+];
+const STATE_LABELS={
+  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error',
+  'dob/default':'Empty','dob/picker-year':'Calendar: year','dob/picker-day':'Calendar: day','dob/valid':'Valid','dob/under18':'Under 18',
+  'contact/default':'Default','contact/errors':'Errors','contact/suggestion':'Email suggestion','contact/submitting':'Submitting'
+};
+let dev=null;
+const ORDER=Object.keys(ROUTES);
+function paintDev(cur){
+  if(!dev) return;
+  const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
+  const hb=dev.querySelector('#dev-dobhelp'); if(hb){ hb.hidden=step!=='dob'; hb.setAttribute('aria-checked',String(dobHelp)); }
+  dev.querySelector('.dv-steps').innerHTML=STEPS.map(s=>'<button type="button" class="dv-step" data-go="'+s.key+'/default" aria-pressed="'+(s.key===step)+'"><b>'+s.n+'</b><span>'+s.label+'</span></button>').join('');
+}
+if(!SHOT){
+  dev=document.createElement('div'); dev.className='dev';
+  dev.innerHTML=
+   '<div class="dv-in">'+
+     '<div class="dv-main">'+
+       '<div class="dv-row"><span class="dv-label">Step</span><div class="dv-steps"></div></div>'+
+     '</div>'+
+     '<div class="dv-side">'+
+       '<button type="button" class="dv-switch" id="dev-notes" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Annotations</button>'+
+       '<button type="button" class="dv-switch" id="dev-dobhelp" role="switch" aria-checked="true" hidden><span class="dv-track"><span class="dv-knob"></span></span>Example and age line</button>'+
+       '</div>'+
+   '</div>';
+  document.body.appendChild(dev); document.body.classList.add('has-dev');
+  dev.addEventListener('click',e=>{
+    const g=e.target.closest('[data-go]'); if(g){ location.hash='#/'+g.dataset.go; return; }
+  });
+  $('#dev-notes').addEventListener('click',()=>{ notesOn=!notesOn; route(); });
+  $('#dev-dobhelp').addEventListener('click',()=>{ dobHelp=!dobHelp; route(); });
+}
+window.addEventListener('hashchange',route);
+route();
+})();
+</script>
+</body>
+</html>
