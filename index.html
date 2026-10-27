@@ -237,7 +237,7 @@ body.notes-on:not(.shot) #stage{align-items:stretch}
 body.notes-on:not(.shot) #side{position:static;align-items:stretch}
 .n-exps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:0 0 4px}
 body.notes-on #notes{width:100%;box-sizing:border-box}
-.n-exp{display:grid;grid-template-columns:1fr 1fr;align-content:start;gap:6px 18px;margin:0;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
+.n-exp{display:grid;grid-template-columns:1fr;align-content:start;gap:6px;margin:0;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
 .n-sw{grid-column:1/-1;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;font:inherit;font-size:15px;line-height:20px;font-weight:700;text-align:left;color:#111;cursor:pointer}
 .n-sw .dv-track{flex:none;background:#B8BCC6}
 .n-sw[aria-checked=true] .dv-track{background:var(--purple)}
@@ -1136,7 +1136,7 @@ function paintNotes(k){
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.map(e=>'<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p><i>Why</i><span>'+esc(e.short)+'</span></p><p><i>Change</i><span>'+esc(e.brief)+'</span></p></div>').join('')+'</div>':'')+
+    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.map(e=>'<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p></div>').join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
 }
