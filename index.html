@@ -48,6 +48,10 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid 
 .plabel.last{right:0}
 .pstep.done .plabel{color:#4B5563}
 .pstep.now .plabel{color:#111;font-weight:700}
+/* classic: the original plain bar (6px grey track, green fill) with a small orb marking where you are */
+.progress.classic{display:block;position:relative;height:6px;margin:20px 0 14px;background:var(--line)}
+.progress.classic .cfill{display:block;height:100%;width:0;background:var(--green)}
+.progress.classic .orb{position:absolute;top:50%;left:0;box-sizing:border-box;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#fff;border:3px solid var(--green);box-shadow:0 0 0 4px rgba(0,212,181,.3)}
 main{padding-bottom:48px}
 .back{display:inline-flex;align-items:center;gap:4px;margin:12px 0 20px;color:#000;font-size:18px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
 .back .ic{width:24px;height:24px;margin-left:-6px}
@@ -252,7 +256,7 @@ body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:
 @media (max-width:900px){ .dv-in{flex-direction:column;gap:10px} .dv-compare{border-left:0;padding-left:0} .dv-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;border-left:0;padding-left:0} }
 
 /* prototype chrome (never in screenshots) */
-body.has-dev{padding-bottom:132px}
+body.has-dev{padding-bottom:156px}
 .dev{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#111;color:#fff;padding:8px 10px 10px;font-size:12px;line-height:16px;box-shadow:0 -4px 16px rgba(0,0,0,.25)}
 .dev-in{max-width:640px;margin:0 auto}
 .dev-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -314,13 +318,22 @@ const GROUPS=[{label:'Vehicle',from:0,to:1},{label:'Details',from:2,to:7},{label
 const NPAGES=PAGES.length, GAP=4;
 const groupOf=i=>GROUPS.findIndex(g=>i>=g.from&&i<=g.to);
 const POS=(page,g)=>'calc((100% - '+(GAP*(GROUPS.length-1))+'px) * '+page+' / '+NPAGES+' + '+(GAP*g)+'px)';
-(function buildProgress(){
-  const pb=$('.progress'), names=GROUPS.map(g=>g.label).concat('Results');
+let classicBar=qs.get('bar')==='classic';   // the original plain bar, with an orb at the end of the fill
+function buildProgress(){
+  const pb=$('.progress'); pb.classList.toggle('classic',classicBar);
+  if(classicBar){ pb.innerHTML='<i class="cfill"></i><b class="orb" title="You are here"></b>'; return; }
+  const names=GROUPS.map(g=>g.label).concat('Results');
   pb.innerHTML=names.map((t,k)=>(k?'<div class="pline"><i></i></div>':'')+
     '<div class="pstep'+(k===names.length-1?' end':'')+'" data-k="'+k+'"'+(k===names.length-1?' title="Your results"':'')+'><span class="pnum">'+(k+1)+'</span><span class="plabel '+(k===0?'first':k===names.length-1?'last':'mid')+'">'+t+'</span></div>').join('');
-})();
+}
 const setProgress=key=>{
   const pb=$('.progress'), cur=PAGES.findIndex(p=>p.k===key), n=pct(cur), cg=groupOf(cur);
+  buildProgress();
+  if(classicBar){
+    pb.querySelector('.cfill').style.width=n+'%'; pb.querySelector('.orb').style.left=n+'%';
+    pb.setAttribute('aria-valuenow',n); pb.setAttribute('aria-valuetext',n+'% complete. Current page: '+PAGES[cur].t);
+    return;
+  }
   // the line after a circle fills as you move through that stage
   $$('.pline i',pb).forEach((bar,k)=>{ const g=GROUPS[k]; bar.style.width=(Math.max(0,Math.min(1,(cur-g.from)/(g.to-g.from+1)))*100)+'%'; });
   $$('.pstep',pb).forEach(st=>{ const k=+st.dataset.k; st.classList.toggle('on',k<=cg); st.classList.toggle('now',k===cg); st.classList.toggle('done',k<cg); });
@@ -916,6 +929,7 @@ function paintDev(cur){
   if(!dev) return;
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
   const hb=dev.querySelector('#dev-dobhelp'); if(hb){ hb.hidden=step!=='dob'; hb.setAttribute('aria-checked',String(dobHelp)); }
+  const bb=dev.querySelector('#dev-bar'); if(bb) bb.setAttribute('aria-checked',String(classicBar));
   dev.querySelector('.dv-steps').innerHTML=STEPS.map(s=>'<button type="button" class="dv-step" data-go="'+s.key+'/default" aria-pressed="'+(s.key===step)+'"><b>'+s.n+'</b><span>'+s.label+'</span></button>').join('');
 }
 if(!SHOT){
@@ -928,6 +942,7 @@ if(!SHOT){
      '<div class="dv-side">'+
        '<button type="button" class="dv-switch" id="dev-notes" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Annotations</button>'+
        '<button type="button" class="dv-switch" id="dev-dobhelp" role="switch" aria-checked="true" hidden><span class="dv-track"><span class="dv-knob"></span></span>Example and age line</button>'+
+       '<button type="button" class="dv-switch" id="dev-bar" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Classic progress bar</button>'+
        '</div>'+
      '<div class="dv-compare"><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
    '</div>';
@@ -937,6 +952,7 @@ if(!SHOT){
   });
   $('#dev-notes').addEventListener('click',()=>{ notesOn=!notesOn; route(); });
   $('#dev-dobhelp').addEventListener('click',()=>{ dobHelp=!dobHelp; route(); });
+  $('#dev-bar').addEventListener('click',()=>{ classicBar=!classicBar; route(); });
 }
 window.addEventListener('hashchange',route);
 route();
