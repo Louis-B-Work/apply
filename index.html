@@ -117,6 +117,15 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .card .link{flex:none}
 .confirm-sub{margin:0 0 12px;font-size:18px;line-height:26px;font-weight:700}
 .lbwrap.paged::after{display:none}
+.lbwrap.live{margin-top:6px}
+.lbwrap.live::after{display:none}
+.lbwrap.live .lb{max-height:320px;border-color:#D1D5DB;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.14)}
+.lbwrap.live .opt{margin:0 16px;padding:0;min-height:64px;border-bottom:1px solid var(--line)}
+.lbwrap.live .opt:hover,.lbwrap.live .opt[aria-selected=true]{margin:0;padding:0 16px;background:var(--tint)}
+.live-more{margin:0 16px;padding:20px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.live-more:hover{background:var(--tint)}
+.live-foot{padding:18px 16px 22px;line-height:24px}
+.live-foot .link{display:block;margin-top:6px;font-weight:700}
 .lbwrap.paged .lb{max-height:none;overflow:visible}
 .lb>.opt:last-child{border-bottom:0}
 .more{margin:16px 0 24px}
@@ -394,12 +403,17 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:false,name:'Postcode-first search and wording',
-   short:"People stall on the open search box and on 'See more addresses', so a postcode box with one full list gets them to their address.",
-   brief:"A Postcode box, one list of every address, and a clear 'Can't see your address?' button.",
-   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious, a single list of every address removes the repeated 'See more addresses' clicking, and a clear button for a missing address beats a small link people miss.",
-   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it. Results show five addresses at a time with a 'See more addresses' button.",
-   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. Every address is in one scrollable list with a count line ('15 addresses found'), and lists of more than eight also get a type-to-filter box. A clear 'Can't see your address? Enter it manually' button sits under the results, instead of the small link.",
-   metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
+   short:"People stall on the open search box because they don't know what to type, and a clear button beats a small link for a missing address.",
+   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious, and a clear button for a missing address beats a link people miss.",
+   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, a small 'Manually enter address details' link under it, and results in a dropdown that ends with 'Can't see your address? Enter address manually'.",
+   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. A clear 'Can't see your address? Enter it manually' button sits under the results.",
+   metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
+  {id:'addr-show-all',step:'address',on:false,name:"Show every address, no 'Show more addresses' button",
+   short:"People must press 'Show more addresses' to reach theirs; a list that already holds every address removes that step.",
+   hypothesis:"The address list only shows part of the results and has to be expanded with a 'Show more addresses' button. People may not notice it, or give up before they find their address. A list that already holds every address, which they scroll to find, removes the extra step and could reduce abandonment.",
+   control:"A dropdown showing ten addresses, then a 'Show more addresses' row to press for the rest.",
+   variant:"Every address is in the list from the start with a count line ('15 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
+   metric:"Step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave.",
    brief:"The question sits under the address instead of on a separate page.",
@@ -944,10 +958,10 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ONE=PF, CSB=PF, MOV=xOn('addr-one-screen');
+  const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=PF, LIVE=!PF, MOV=xOn('addr-one-screen');
   let MDATE=xOn('addr-move-in-date');
-  const FLT=ONE;   // the single list comes with a type-to-filter box (shown when it has more than eight addresses)
-  const PAGE=5;   // the live page shows this many addresses at a time
+  const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
+  const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
   let seq=0, timer=null;
   main.innerHTML=backLink+
@@ -971,7 +985,7 @@ function mountAddress(preset){
     const by=new Map(); items.forEach(a=>{ if(!by.has(a.street)) by.set(a.street,[]); by.get(a.street).push(a); });
     return {items:items,groups:Array.from(by).sort((a,b)=>a[0].localeCompare(b[0]))};
   }
-  const visible=()=>{ const g=filtered(); return ONE?g.items:g.items.slice(0,S.shown); };
+  const visible=()=>{ const g=filtered(); return ALL?g.items:g.items.slice(0,S.shown); };
   function updateCont(){ cont.hidden=!(S.selected||S.manual||S.status==='results'); }
 
   function drawZone(){
@@ -992,7 +1006,7 @@ function mountAddress(preset){
       '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
     (PF?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+
-    (CSB?'':'<button type="button" class="link manual" data-manual>Manually enter address details</button>')+
+    (CSB?'':'<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>')+
     '<div id="results"></div>';
     const pc=$('#pc');
     pc.addEventListener('input',()=>{
@@ -1001,7 +1015,7 @@ function mountAddress(preset){
       if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; paint(); }
       if(PF?looksPc(S.postcode):S.postcode.trim().length>=3) timer=setTimeout(()=>lookup('auto'),400);
     });
-    pc.addEventListener('blur',()=>{ if(!looksPc(pc.value)) return; const f=fmtPC(pc.value); if(f!==pc.value){ pc.value=f; S.postcode=f; } });
+    pc.addEventListener('blur',()=>{ if(!PF||!looksPc(pc.value)) return; const f=fmtPC(pc.value); if(f!==pc.value){ pc.value=f; S.postcode=f; } });
     pc.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(timer); lookup('button'); } });
     const find=$('#find'); if(find) find.addEventListener('click',()=>{ clearTimeout(timer); lookup('button'); });
     paint();
@@ -1011,7 +1025,7 @@ function mountAddress(preset){
     const txt=S.postcode.trim();
     if(!txt||(PF?!looksPc(txt):txt.length<3&&!looksPc(txt))){ S.status='invalid'; return paint(); }
     S.isPc=looksPc(txt);
-    if(S.isPc){ S.postcode=fmtPC(S.postcode); const el=$('#pc'); if(el) el.value=S.postcode; }   // tidy what was typed or pasted
+    if(S.isPc&&PF){ S.postcode=fmtPC(S.postcode); const el=$('#pc'); if(el) el.value=S.postcode; }   // tidy what was typed or pasted
     const my=++seq; S.status='loading'; paint(); track('address_lookup_started',{source:source});
     // never leave a spinner running: after LOOKUP_TIMEOUT fall back to the manual route
     const to=setTimeout(()=>{ if(my===seq&&S.status==='loading'){ seq++; S.status='error'; paint(); track('address_lookup_timeout'); } },LOOKUP_TIMEOUT);
@@ -1036,25 +1050,28 @@ function mountAddress(preset){
     if(S.status==='error') m=errHTML('Our address finder isn\'t working right now. Please enter your address manually.')+(CSB?'<div style="margin-top:16px"><button type="button" class="btn secondary" data-manual>Enter address manually</button></div>':'');
     msg.innerHTML=m;
     if(S.status==='invalid') track('address_validation_error');
+    const tm=$('#top-manual'); if(tm) tm.style.display=S.status==='results'?'none':'';   // the live dropdown covers the link
     if(S.status==='results') drawResults(); else res.innerHTML='';
     updateCont();
   }
 
-  /* --- results: one scroll container (single list) or five at a time (live) --- */
+  /* --- results: the live dropdown (ten rows, then 'Show more addresses') or, with addr-show-all, every address --- */
+  function showMore(){ const lb=$('#lb'), st=lb.scrollTop; S.shown+=PAGE; track('address_see_more',{shown:S.shown}); drawList(); lb.scrollTop=st; atEnd(); }
   function drawResults(){
     const res=$('#results'), many=S.list.length>8;
     res.innerHTML=
-      '<p class="count'+(ONE?'':' sr')+'" id="count" tabindex="-1" aria-live="polite"></p>'+
+      '<p class="count'+(ALL?'':' sr')+'" id="count" tabindex="-1" aria-live="polite"></p>'+
       (FLT&&many?'<div class="control filter">'+ic('search')+'<input class="input" id="flt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your house number or name" aria-label="Filter addresses" aria-controls="lb" value="'+esc(S.filter)+'"></div>':'')+
-      '<div class="lbwrap'+(ONE?'':' paged')+'" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(qlabel())+'"></div></div>'+
+      '<div class="lbwrap'+(LIVE?' live':ALL?'':' paged')+'" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(qlabel())+'"></div></div>'+
       '<p class="nomatch" id="nomatch" hidden></p>'+
-      (ONE?'':'<button type="button" class="btn secondary more" id="more">See more addresses</button>')+
+      (ALL||LIVE?'':'<button type="button" class="btn secondary more" id="more">Show more addresses</button>')+
       (CSB?'<button type="button" class="btn secondary cant" data-manual>Can\'t see your address? Enter it manually</button>':'')+
       '<div id="sel-msg" aria-live="polite"></div>';
-    const lb=$('#lb'), flt=$('#flt'), more=$('#more');
+    const lb=$('#lb'), flt=$('#flt'), moreBtn=!LIVE&&!ALL?$('#more'):null;
     lb.addEventListener('scroll',atEnd);
-    lb.addEventListener('click',e=>{ const o=e.target.closest('.opt'); if(o) choose(o.dataset.id); });
+    lb.addEventListener('click',e=>{ const o=e.target.closest('.opt'); if(o&&o.dataset.id){ choose(o.dataset.id); return; } if(e.target.closest('#more')) showMore(); });
     lb.addEventListener('keydown',e=>{
+      if(e.target.id==='more'&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); showMore(); return; }
       const items=visible(); if(!items.length) return;
       let i=items.findIndex(a=>a.id===S.active);
       if(e.key==='ArrowDown'){ e.preventDefault(); i=Math.min(items.length-1,i+1); }
@@ -1070,7 +1087,7 @@ function mountAddress(preset){
       flt.addEventListener('input',()=>{ S.filter=flt.value; S.active=null; drawList(); if(S.filter.trim()) track('address_filter_used'); });
       flt.addEventListener('keydown',e=>{ if(e.key==='ArrowDown'){ e.preventDefault(); const it=visible()[0]; lb.focus(); if(it) setActive(it.id); } if(e.key==='Enter') e.preventDefault(); });
     }
-    if(more) more.addEventListener('click',()=>{ S.shown+=PAGE; track('address_see_more',{shown:S.shown}); drawList(); });
+    if(moreBtn) moreBtn.addEventListener('click',showMore);
     drawList();
   }
   function setActive(id){
@@ -1080,14 +1097,16 @@ function mountAddress(preset){
   }
   function atEnd(){ const lb=$('#lb'); if(!lb) return; $('#lbwrap').classList.toggle('at-end',lb.scrollTop+lb.clientHeight>=lb.scrollHeight-4); }
   function drawList(){
-    const g=filtered(), lb=$('#lb'), f=FLT?S.filter.trim():'', total=S.list.length, items=ONE?g.items:g.items.slice(0,S.shown);
+    const g=filtered(), lb=$('#lb'), f=FLT?S.filter.trim():'', total=S.list.length, items=ALL?g.items:g.items.slice(0,S.shown), left=!ALL&&g.items.length>S.shown;
     $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+qlabel());
-    const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(a.line1,f)+'</span></div>';
-    lb.innerHTML=items.map(opt).join('');
+    const label=a=>LIVE?a.postcode+' '+a.line1+', '+a.town.toUpperCase():a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
+    const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(label(a),f)+'</span></div>';
+    lb.innerHTML=items.map(opt).join('')+
+      (LIVE?(left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+'<div class="live-foot">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>':'');
     lb.removeAttribute('aria-activedescendant');
     const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0;
     if(!g.items.length) nm.textContent='No addresses match "'+S.filter+'". Check the number, or enter your address manually.';
-    const more=$('#more'); if(more) more.hidden=g.items.length<=S.shown;
+    const more=$('#more'); if(more&&!LIVE) more.hidden=!left;
     lb.scrollTop=0; atEnd();
   }
   function choose(id){
@@ -1173,8 +1192,8 @@ const CHANGES={
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
   "address/results":[
-    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-postcode-first"],
-    ["Count confirms the search worked","Removes the doubt that makes people leave","addr-postcode-first"],
+    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-show-all"],
+    ["Count confirms the search worked","Removes the doubt that makes people leave","addr-show-all"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
     ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-postcode-first"]],
   "address/filtered":[
@@ -1269,7 +1288,7 @@ const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   
 const ROUTES={
   'address/default':()=>mountAddress(),
   'address/results':()=>mountAddress({postcode:'CR0 3AG',lookup:true}),
-  'address/filtered':force(['addr-postcode-first'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
+  'address/filtered':force(['addr-show-all'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
   'address/selected':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'}),
   'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
   'address/moved':force(['addr-one-screen'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'})),
