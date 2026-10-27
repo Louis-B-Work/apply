@@ -283,9 +283,9 @@ button.dv-btn{border:0;cursor:pointer;font-family:inherit}
 .xhead span{flex:1 1 100%;color:#b8bcc6}
 .xhead button{border:1px solid #555;background:transparent;color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer}
 .xstep{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#8A8F99}
-.xrow{padding:10px 0;border-top:1px solid #2c2c2c}
+.xrow{padding:8px 0;border-top:1px solid #2c2c2c}
 .xrow .dv-switch{font-size:14px;text-align:left}
-.xrow p{margin:6px 0 0 48px;color:#c7cad1}
+.xrow p{margin:3px 0 0 48px;color:#b8bcc6}
 .xrow p b{color:#fff}
 .xrow p.xneeds{color:#8A8F99;font-style:italic}
 @media (max-width:900px){ .dv-in{flex-direction:column;gap:10px} .dv-compare{border-left:0;padding-left:0} .dv-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;border-left:0;padding-left:0} }
@@ -343,31 +343,43 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:true,name:'Postcode-first search and wording',
+   short:"People stall on the open search box because they don't know what to type.",
    hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious.",
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name.",
    variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup.",
    metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
   {id:'addr-single-list',step:'address',on:true,name:'One list of every address, no pagination',
+   short:"'See more addresses' makes people give up before they find theirs.",
    hypothesis:"Pagination is what stops people choosing an address: they press 'See more addresses' again and again and give up before they find theirs. One list with every address removes the clicking.",
    control:"Five addresses at a time with a 'See more addresses' button.",
    variant:"Every address in one scrollable list with a count line ('15 addresses found'). No road headings and no filter box.",
    metric:"Address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
   {id:'addr-cant-see-button',step:'address',on:true,name:"'Can't see your address?' as its own button",
+   short:"A small link is missed, so people with a missing address hit a dead end.",
    hypothesis:"When an address is missing (new builds are common), a small text link under the search box is easy to miss, so people reach a dead end and leave. A clear button where they are looking gives them a visible way on.",
    control:"A small 'Manually enter address details' text link under the search box.",
    variant:"A 'Can't see your address? Enter it manually' button under the results, and in the no-results and error messages. The small link is removed.",
    metric:"address_manual_opened and completion of people who open it; abandonment after no results."},
-  {id:'addr-one-screen',step:'address',on:false,name:"'When did you move in?' on the same step",
-   hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking when they moved in on the address screen removes one page.",
+  {id:'addr-move-in-date',step:'address',on:true,name:"Ask 'When did you move in?', not 'How long?'",
+   short:"A date is easier to answer than a duration, and the system does the maths.",
+   hypothesis:"'How long have you lived there?' makes people do sums in their head (years and months) and some get it wrong or give up. 'When did you move in?' is quicker and easier to answer, and the system works out the years and months it needs. The same wording can replace the other 'how long' questions (for example 'When did you start there?' for a job).",
+   control:"'How long have you lived at this address?' with Years and Months boxes.",
+   variant:"'When did you move in?' with Month and Year boxes. The system works out the length.",
+   metric:"Completion and time on the time-at-address question; validation errors; people who enter a wrong length."},
+  {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
+   short:"Fewer screens means fewer chances to leave.",
+   hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking about time at the address on the address screen removes one page.",
    control:"Time at address is a separate page after the address.",
-   variant:"Once an address is confirmed (or typed), 'When did you move in?' (month and year) appears on the same step, and the separate time-at-address page is skipped.",
-   metric:"Completion of the combined address and move-in section; total time through it; move-in validation errors."},
+   variant:"Once an address is confirmed (or typed), the time-at-address question appears under it on the same step and the separate page is skipped.",
+   metric:"Completion of the combined address and time-at-address section; total time through it."},
   {id:'addr-street-groups',step:'address',on:false,needs:'addr-single-list',name:'Road headings in the list',
+   short:"Road headings help people scan to their street (single list only).",
    hypothesis:"A postcode can cover several streets, so headings per road help people scan to their street faster.",
    control:"No headings.",
    variant:"Sticky road headings with a count, only when the postcode covers more than one street.",
    metric:"Position of the chosen address; time on step; wrong-address changes (address_change_opened)."},
   {id:'addr-filter',step:'address',on:false,needs:'addr-single-list',name:'Type-to-filter box on long lists',
+   short:"Typing a house number beats scrolling a long list (single list only).",
    hypothesis:"On a long list, typing a house number to narrow it gets people to their address faster than scrolling.",
    control:"No filter box.",
    variant:"A filter box above lists of more than eight addresses. The list narrows as you type and the count updates.",
@@ -717,6 +729,66 @@ function mockLookup(pc,instant){
 }
 const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowerCase()); if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+f.length))+'</mark>'+esc(t.slice(i+f.length)); };
 
+/* The time-at-address question. Date mode asks 'When did you move in?' (month and year, the system works out the length);
+   otherwise the live 'How long have you lived at this address?' (years and months). */
+function movedWidget(host,v,date,showLegend){
+  const F=date?[{k:'a',id:'mv-a',label:'Month',ph:'MM',max:2},{k:'b',id:'mv-b',label:'Year',ph:'YYYY',max:4,year:true}]
+              :[{k:'a',id:'mv-a',label:'Years',ph:'0',max:2},{k:'b',id:'mv-b',label:'Months',ph:'0',max:2}];
+  const title=date?'When did you move in?':'How long have you lived at this address?';
+  host.innerHTML='<fieldset class="moved"><legend'+(showLegend?'':' class="sr"')+'>'+title+'</legend><div class="mv-row">'+
+    F.map(x=>'<div class="mv-f'+(x.year?' year':'')+'"><label for="'+x.id+'">'+x.label+'</label><input class="input" id="'+x.id+'" type="text" inputmode="numeric" maxlength="'+x.max+'" autocomplete="off" placeholder="'+x.ph+'" aria-describedby="mv-msg" value="'+esc(v[x.k])+'"></div>').join('')+
+    '</div><div id="mv-msg" aria-live="polite"></div></fieldset>';
+  const a=$('#mv-a',host), b=$('#mv-b',host), msg=$('#mv-msg',host), digits=el=>{ el.value=el.value.replace(/\D/g,''); };
+  function error(final,bblur){
+    if(date){
+      const ty=TODAY.getFullYear(), tmo=TODAY.getMonth()+1;
+      if(final&&v.a.length===1) v.a='0'+v.a;
+      if(v.a.length===2&&(+v.a<1||+v.a>12)) return {f:'a',msg:'Month must be between 1 and 12'};
+      if(v.b&&v.b.length!==4&&(final||bblur)) return {f:'b',msg:'Year must have four numbers, like 2019'};
+      if(v.b.length===4){
+        if(+v.b>ty||(+v.b===ty&&v.a.length===2&&+v.a>tmo)) return {f:'b',msg:'The date you moved in must be in the past'};
+        if(+v.b<ty-100) return {f:'b',msg:'Please check the year'};
+      }
+      if(final){
+        if(!v.a&&!v.b) return {f:'a',msg:'Enter the month and year you moved in'};
+        if(!v.a) return {f:'a',msg:'Enter the month you moved in'};
+        if(!v.b) return {f:'b',msg:'Enter the year you moved in'};
+      }
+    } else {
+      if(v.b!==''&&+v.b>11) return {f:'b',msg:'Months must be between 0 and 11'};
+      if(v.a!==''&&+v.a>99) return {f:'a',msg:'Please check the years'};
+      if(final&&v.a===''&&v.b==='') return {f:'a',msg:'Enter how long you have lived at this address'};
+    }
+    return null;
+  }
+  function check(final,bblur){
+    const e=error(final,bblur);
+    if(final) a.value=v.a;
+    a.classList.toggle('err',!!e&&e.f==='a'); b.classList.toggle('err',!!e&&e.f==='b');
+    a.setAttribute('aria-invalid',String(!!e&&e.f==='a')); b.setAttribute('aria-invalid',String(!!e&&e.f==='b'));
+    msg.innerHTML=e?errHTML(e.msg):'';
+    if(e&&(final||bblur)) track('address_moved_validation_error');
+    return e;
+  }
+  a.addEventListener('input',()=>{ digits(a); if(date&&a.value.length===1&&+a.value>1) a.value='0'+a.value; v.a=a.value; if(date&&a.value.length===2&&!error(false)) b.focus(); check(false); });
+  b.addEventListener('input',()=>{ digits(b); v.b=b.value; check(false); });
+  a.addEventListener('blur',()=>{ if(date&&a.value.length===1){ a.value='0'+a.value; v.a=a.value; } check(false); });
+  b.addEventListener('blur',()=>{ if(b.value) check(false,true); });
+  return {check:check};
+}
+function mountTimeAtAddress(){
+  setProgress('address-length'); trackExposure('address');
+  const date=xOn('addr-move-in-date'), v={a:'',b:''};
+  main.innerHTML=backLink+
+  '<h1 id="step-title">'+(date?'When did you move in?':'How long have you lived at this address?')+'</h1>'+
+  '<form id="f" novalidate aria-labelledby="step-title"><div id="moved"></div><button type="submit" class="btn" id="cont">Continue'+ic('arrow-right')+'</button></form>';
+  wireBack();
+  const w=movedWidget($('#moved'),v,date,false);
+  const ins=$$('#moved input');
+  ins.forEach((el,i)=>{ el.enterKeyHint=i<ins.length-1?'next':'go'; el.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; e.preventDefault(); if(i<ins.length-1) ins[i+1].focus(); else $('#f').requestSubmit(); }); });
+  $('#f').addEventListener('submit',e=>{ e.preventDefault(); const err=w.check(true); if(err){ $('#mv-'+err.f).focus(); return; } track('address_moved_in_entered'); note('Prototype: this goes to the next step.'); });
+}
+
 function mockSearch(text,instant){
   // a postcode looks up its addresses; anything else is a street or address search across the sample addresses
   const clean=text.replace(/[^A-Za-z0-9]/g,'');
@@ -730,10 +802,10 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=xOn('addr-cant-see-button'), MOV=xOn('addr-one-screen');
+  const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=xOn('addr-cant-see-button'), MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
   const GRP=ONE&&xOn('addr-street-groups'), FLT=ONE&&xOn('addr-filter');
   const PAGE=5;   // the live page shows this many addresses at a time
-  const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{m:'',y:''}};
+  const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
   let seq=0, timer=null;
   main.innerHTML=backLink+
   '<h1 id="step-title">'+(PF?'Next, what\'s your postcode?':'Next, where do you live?')+'</h1>'+
@@ -881,7 +953,7 @@ function mountAddress(preset){
   function choose(id){
     S.selected=S.list.find(a=>a.id===id); S.manual=false; $('#cont-msg').innerHTML='';
     track('address_selected',{position:S.list.indexOf(S.selected)+1});
-    drawZone(); const mv=$('#mv-m'); (mv||cont).focus();
+    drawZone(); const mv=$('#mv-a'); (mv||cont).focus();
   }
   function goManual(fromSelected){
     track('address_manual_opened',{reason:fromSelected?'change_address':S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
@@ -907,45 +979,14 @@ function mountAddress(preset){
     return !bad;
   }
 
-  /* --- optional: 'When did you move in?' on the same step (addr-one-screen) --- */
+  /* --- optional: the time-at-address question on the same step (addr-one-screen) --- */
+  let MVW=null;
   function drawMoved(){
     const el=$('#moved');
-    if(!MOV||!(S.selected||S.manual)){ el.innerHTML=''; return; }
-    el.innerHTML='<fieldset class="moved"><legend>When did you move in?</legend><div class="mv-row">'+
-      '<div class="mv-f"><label for="mv-m">Month</label><input class="input" id="mv-m" type="text" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="MM" aria-describedby="mv-msg" value="'+esc(S.mv.m)+'"></div>'+
-      '<div class="mv-f year"><label for="mv-y">Year</label><input class="input" id="mv-y" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="YYYY" aria-describedby="mv-msg" value="'+esc(S.mv.y)+'"></div>'+
-      '</div><div id="mv-msg" aria-live="polite"></div></fieldset>';
-    const m=$('#mv-m'), y=$('#mv-y'), digits=el=>{ el.value=el.value.replace(/\D/g,''); };
-    m.addEventListener('input',()=>{ digits(m); if(m.value.length===1&&+m.value>1) m.value='0'+m.value; S.mv.m=m.value; if(m.value.length===2&&!movedError(false)) y.focus(); movedCheck(false); });
-    y.addEventListener('input',()=>{ digits(y); S.mv.y=y.value; movedCheck(false); });
-    m.addEventListener('blur',()=>{ if(m.value.length===1){ m.value='0'+m.value; S.mv.m=m.value; } movedCheck(false); });
-    y.addEventListener('blur',()=>{ if(y.value) movedCheck(false,true); });
+    if(!MOV||!(S.selected||S.manual)){ el.innerHTML=''; MVW=null; return; }
+    MVW=movedWidget(el,S.mv,MDATE,true);
   }
-  function movedError(final,yblur){
-    const m=S.mv.m, y=S.mv.y, ty=TODAY.getFullYear(), tmo=TODAY.getMonth()+1;
-    if(final&&m.length===1) S.mv.m=m='0'+m;
-    if(m.length===2&&(+m<1||+m>12)) return {f:'m',msg:'Month must be between 1 and 12'};
-    if(y&&y.length!==4&&(final||yblur)) return {f:'y',msg:'Year must have four numbers, like 2019'};
-    if(y.length===4){
-      if(+y>ty||(+y===ty&&m.length===2&&+m>tmo)) return {f:'y',msg:'The date you moved in must be in the past'};
-      if(+y<ty-100) return {f:'y',msg:'Please check the year'};
-    }
-    if(final){
-      if(!m&&!y) return {f:'m',msg:'Enter the month and year you moved in'};
-      if(!m) return {f:'m',msg:'Enter the month you moved in'};
-      if(!y) return {f:'y',msg:'Enter the year you moved in'};
-    }
-    return null;
-  }
-  function movedCheck(final,yblur){
-    const e=movedError(final,yblur), m=$('#mv-m'), y=$('#mv-y'), msg=$('#mv-msg'); if(!m) return e;
-    if(final&&m.value!==S.mv.m) m.value=S.mv.m;
-    m.classList.toggle('err',!!e&&e.f==='m'); y.classList.toggle('err',!!e&&e.f==='y');
-    m.setAttribute('aria-invalid',String(!!e&&e.f==='m')); y.setAttribute('aria-invalid',String(!!e&&e.f==='y'));
-    msg.innerHTML=e?errHTML(e.msg):'';
-    if(e&&(final||yblur)) track('address_moved_validation_error');
-    return e;
-  }
+  const movedCheck=final=>MVW?MVW.check(final):null;
 
   /* --- the keyboard's Enter key goes to the next field, and submits on the last one --- */
   function wireEnter(){
@@ -960,8 +1001,8 @@ function mountAddress(preset){
     e.preventDefault();
     if(!S.selected&&!S.manual){ $('#cont-msg').innerHTML='<div style="margin-bottom:16px">'+errHTML('Choose your address from the list to continue')+'</div>'; const t=$('#lb'); if(t) t.focus(); return; }
     if(S.manual){ const F=zone._F; let first=null; F.forEach(f=>{ const i=$('#'+f[2]); if(!manualCheck(i,F)&&!first) first=i; }); if(first){ first.focus(); if(MOV) movedCheck(true); return; } }
-    if(MOV){ const err=movedCheck(true); if(err){ $(err.f==='m'?'#mv-m':'#mv-y').focus(); return; } track('address_moved_in_entered'); }
-    note('Prototype: this goes to the next step.');
+    if(MOV){ const err=movedCheck(true); if(err){ $('#mv-'+err.f).focus(); return; } track('address_moved_in_entered'); }
+    if(MOV) note('Prototype: this goes to the next step.'); else location.hash='#/address/time';   // the separate time-at-address page
   });
 
   /* --- presets for screenshots --- */
@@ -1011,8 +1052,12 @@ const CHANGES={
     ["Enter moves to the next field","Fewer taps with the keyboard open"],
     ["Link back to the search","Manual entry is never a trap"]],
   "address/moved":[
-    ["'When did you move in?' on the same step, month and year","One fewer screen in the address section","addr-one-screen"],
-    ["Month moves on to year by itself, Enter continues","Quick to fill in on a phone","addr-one-screen"]],
+    ["Time at address on the same step","One fewer screen in the address section","addr-one-screen"],
+    ["'When did you move in?', month and year","Easier than working out 'how long'; the system does the maths","addr-move-in-date"],
+    ["Month moves on to year by itself, Enter continues","Quick to fill in on a phone","addr-move-in-date"]],
+  "address/time":[
+    ["'When did you move in?', month and year","Easier than working out 'how long'; the system does the maths","addr-move-in-date"],
+    ["Month moves on to year by itself, Enter continues","Quick to fill in on a phone","addr-move-in-date"]],
   "address/error":[
     ["Error says what to fix, with an example","Fewer repeat errors"],
     ["Field and message turn red together","Easy to see what to fix"]],
@@ -1093,6 +1138,7 @@ const ROUTES={
   'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
   'address/moved':force(['addr-one-screen'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'})),
   'address/error':()=>mountAddress({postcode:'CR0 3A',lookup:true}),
+  'address/time':()=>mountTimeAtAddress(),
   'dob/default':()=>mountDob(),
   'dob/picker-year':()=>mountDob({picker:{y:null,m:null,d:null,view:'year'}}),
   'dob/picker-day':()=>mountDob({picker:{y:2000,m:9,d:10,view:'day'}}),
@@ -1117,7 +1163,7 @@ const STEPS=[
   {key:'contact',n:3,label:'Contact details'}
 ];
 const STATE_LABELS={
-  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error','address/moved':'Moved in',
+  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error','address/moved':'Same step','address/time':'Time at address',
   'dob/default':'Empty','dob/picker-year':'Calendar: year','dob/picker-day':'Calendar: day','dob/valid':'Valid','dob/under18':'Under 18',
   'contact/default':'Default','contact/errors':'Errors','contact/suggestion':'Email suggestion','contact/submitting':'Submitting'
 };
@@ -1127,10 +1173,9 @@ function paintX(){
   const b=$('#dev-x'); if(b) b.textContent='Experiments ('+EXPERIMENTS.filter(e=>X[e.id]).length+' on)';
   if(!xp) return;
   const keep=xp.scrollTop, steps=Array.from(new Set(EXPERIMENTS.map(e=>e.step)));
-  xp.innerHTML='<div class="xhead"><b>Experiments</b><button type="button" data-xall="on">All on</button><button type="button" data-xall="off">All off (live site)</button><button type="button" data-xclose>Close</button><span>Each switch is one change with one hypothesis. Off is what the live site does today.</span></div>'+
+  xp.innerHTML='<div class="xhead"><b>Experiments</b><button type="button" data-xall="on">All on</button><button type="button" data-xall="off">All off (live)</button><button type="button" data-xclose>Close</button></div>'+
     steps.map(st=>'<p class="xstep">'+esc(STEP_TITLES[st])+'</p>'+EXPERIMENTS.filter(e=>e.step===st).map(e=>
-      '<div class="xrow"><button type="button" class="dv-switch" role="switch" data-x="'+e.id+'" aria-checked="'+X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button>'+
-      '<p><b>Hypothesis.</b> '+esc(e.hypothesis)+'</p><p><b>Off (live):</b> '+esc(e.control)+'</p><p><b>On:</b> '+esc(e.variant)+'</p>'+(e.needs?'<p class="xneeds">Applies to the single list ('+e.needs+').</p>':'')+'</div>').join('')).join('');
+      '<div class="xrow"><button type="button" class="dv-switch" role="switch" data-x="'+e.id+'" aria-checked="'+X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p></div>').join('')).join('');
   xp.scrollTop=keep;
 }
 function paintDev(cur){
