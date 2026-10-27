@@ -210,13 +210,16 @@ body.notes-on #screen{position:relative;flex:1 1 640px;max-width:640px;min-heigh
 body.notes-on.shot #screen{flex:none;width:375px;min-height:812px}
 #side,#summary{display:none}
 body.notes-on #side{display:flex;gap:24px;align-items:flex-start;flex:none;position:sticky;top:24px}
-body.notes-on #summary{display:block;flex:none;width:300px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px;font-size:14px;line-height:21px;color:#111}
-#summary h3{margin:0 0 12px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#4B5563}
-#summary p{margin:0 0 12px}
-#summary b{display:block;margin-bottom:2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase}
-#summary .s-what b{color:var(--purple)}
-#summary .s-why b{color:#0B7A55}
-#summary .s-note{margin:4px 0 0;font-size:12px;line-height:17px;color:#6B7280}
+body.notes-on #summary{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:22px 24px 20px;font-size:15px;line-height:23px;color:#111}
+#summary h3{margin:0 0 16px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#4B5563}
+#summary .s-block{margin:0 0 20px;padding-top:16px;border-top:1px solid #E8EAEF}
+#summary h4{margin:0 0 10px;font-size:13px;line-height:18px;font-weight:700}
+#summary .s-what h4{color:var(--purple)}
+#summary .s-why h4{color:#0B7A55}
+#summary ul{margin:0;padding-left:20px}
+#summary li{margin:0 0 9px;padding-left:2px}
+#summary li:last-child{margin-bottom:0}
+#summary .s-note{margin:0;padding-top:14px;border-top:1px solid #E8EAEF;font-size:12px;line-height:17px;color:#6B7280}
 body.notes-on .sheet,body.notes-on .backdrop{position:absolute}
 body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px 18px;font-size:14px;line-height:20px;color:#111}
 @media (max-width:1360px){ body.notes-on #side{flex-direction:column} body.notes-on #summary{width:340px} }
@@ -1094,6 +1097,19 @@ const SUMMARY={
            why:"People worried about unwanted calls get an answer at the moment they hesitate, without a box adding to the page. Fewer people should drop out of a page where everything else is already filled in."}
 };
 
+/* the summary card: short bullets, each one shown only while its switch (if it has one) is on */
+const SUMBULLETS={
+  address:{
+    what:[["Postcode-first search replaces the 'address or street name' box","addr-postcode-first"],["One scrollable list replaces 'See more addresses'","addr-single-list"],["A clear 'Can't see your address?' button replaces the small manual link","addr-cant-see-button"],["'When did you move in?' replaces 'How long have you lived there?'","addr-move-in-date"],["Time at address is asked on the same step","addr-one-screen"],["'Is this your address?' confirms the choice, and Change opens a filled-in form"],["Enter moves between fields, and 44 at the start of a phone number becomes 0"]],
+    why:[["Less to decide before the first tap","addr-postcode-first"],["No repeated clicking to find an address deep in the list","addr-single-list"],["No dead end when an address is missing","addr-cant-see-button"],["A date is easier to answer than a sum, and the system works out the length","addr-move-in-date"],["One fewer screen to leave on","addr-one-screen"],["Fixing one wrong field takes one edit, not a new search"]]},
+  dob:{
+    what:[["One box that adds the slashes as you type"],["A calendar that starts at the year as a second way in, finished by tapping the day"],["A collapsed 'Why do we ask this?' line"],["An example and a 'That makes you 26.' line","dobhelp"],["Two-digit years such as 77 are read as 1977"]],
+    why:[["Faster and less fiddly on a phone"],["Typing mistakes are caught straight away"],["Answers the doubt behind most people leaving without ever hitting an error"],["A common way of typing a date no longer fails"]]},
+  contact:{
+    what:[["The headline promises results instead of a quote later"],["A '?' next to the phone number explains why it is needed"],["The phone box accepts spaces, +44, 44 and a missing 0, and tidies the number"],["Enter moves from email to phone, then sends"]],
+    why:[["People worried about unwanted calls get an answer when they hesitate"],["Fewer phone validation failures on the final page"],["Nothing extra is added to the page"]]}
+};
+const sumList=items=>'<ul>'+items.filter(p=>!p[1]||(p[1]==='dobhelp'?dobHelp:X[p[1]])).map(p=>'<li>'+esc(p[0])+'</li>').join('')+'</ul>';
 function paintNotes(k){
   const btn=$('#dev-notes');
   if(btn){ btn.setAttribute('aria-checked',String(notesOn)); }
@@ -1105,8 +1121,8 @@ function paintNotes(k){
     .concat(EXPERIMENTS.filter(e=>e.step===step&&X[e.id]&&!(CHANGES[k]||[]).some(p=>p[2]===e.id)).map(e=>[e.name,e.short,e.id]));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
     '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+(p[2]?'<span class="xid">'+esc(p[2])+'</span>':'')+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>';
-  const sm=SUMMARY[step];
-  $('#summary').innerHTML='<h3>Summary</h3><p class="s-what"><b>What changed</b>'+esc(sm.what)+'</p><p class="s-why"><b>Why it should reduce abandoned sessions</b>'+esc(sm.why)+'</p><p class="s-note">Expected effect, not a measured result.</p>';
+  const sb=SUMBULLETS[step];
+  $('#summary').innerHTML='<h3>Summary</h3><div class="s-block s-what"><h4>What changed</h4>'+sumList(sb.what)+'</div><div class="s-block s-why"><h4>Why it should reduce abandoned sessions</h4>'+sumList(sb.why)+'</div><p class="s-note">Expected effect, not a measured result.</p>';
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
