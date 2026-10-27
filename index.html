@@ -260,6 +260,9 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
 .n-exp p+p i{color:#0B7A55}
 .n-none{margin:0 0 14px;color:#4B5563}
+.n-reduce{margin:16px 0 0;padding:14px 16px;border-radius:8px;background:#F0FAF6;border:1px solid #CBEBDD}
+.n-reduce .n-sub{color:#0B7A55;margin-bottom:6px}
+.n-reduce p:last-child{margin:0;font-size:15px;line-height:23px;color:#1F2937}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
@@ -1256,6 +1259,7 @@ function paintNotes(k){
     (exps.length?(on.length||xOn('global-stepper')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')?', plus the progress stepper.':'.'):'The progress stepper is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
     (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(x.parent&&!X[x.parent]?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p>'+(x.parent&&!X[x.parent]?'<p class="n-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
+    (exps.length&&SUMMARY[step]?'<div class="n-reduce"><p class="n-sub">How this should reduce abandoned sessions</p><p>'+esc(SUMMARY[step].why)+'</p></div>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
 }
 
