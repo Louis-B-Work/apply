@@ -1129,7 +1129,7 @@ function paintNotes(k){
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
     (exps.length?'<p class="n-sub">Experiments switched on</p>'+(on.length?on.map(e=>'<div class="n-exp"><b>'+esc(e.name)+'</b><p><i>Why</i><span>'+esc(e.short)+'</span></p><p><i>Change</i><span>'+esc(e.brief)+'</span></p></div>').join(''):'<p class="n-none">None, so this is the live page.</p>'):'')+
-    (plain.length?'<p class="n-sub">'+(exps.length?'Also changed':'What changed')+'</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
+    (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
 }
 
