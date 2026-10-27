@@ -499,7 +499,9 @@ function buildProgress(){
   pb.innerHTML=names.map((t,k)=>(k?'<div class="pline"><i></i></div>':'')+
     '<div class="pstep'+(k===names.length-1?' end':'')+'" data-k="'+k+'"'+(k===names.length-1?' title="Your results"':'')+'><span class="pnum">'+(k+1)+'</span><span class="plabel '+(k===0?'first':k===names.length-1?'last':'mid')+'">'+t+'</span></div>').join('');
 }
+let progKey='';
 const setProgress=key=>{
+  progKey=key;
   classicBar=!xOn('global-stepper');   // off = the live plain bar
   const pb=$('.progress'), cur=PAGES.findIndex(p=>p.k===key), n=pct(cur), cg=groupOf(cur);
   buildProgress();
@@ -1246,11 +1248,11 @@ function paintNotes(k){
   document.body.classList.toggle('notes-on',notesOn); document.body.classList.toggle('shot',SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step||e.step==='all'), on=exps.filter(e=>xOn(e.id));
+  const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step), on=exps.filter(e=>xOn(e.id));
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?(on.length?'<div class="n-state redesign"><b>Redesign</b><span>'+on.length+' of '+exps.length+' changes switched on.</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
+    (exps.length?(on.length||xOn('global-stepper')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')?', plus the progress stepper.':'.'):'The progress stepper is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
     (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p></div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+(X[e.id]?exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join(''):'')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
@@ -1301,6 +1303,7 @@ let dev=null;
 const ORDER=Object.keys(ROUTES);
 function paintDev(cur){
   if(!dev) return;
+  const sb=dev.querySelector('#dev-stepper'); if(sb) sb.setAttribute('aria-checked',String(xOn('global-stepper')));
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
   dev.querySelector('.dv-steps').innerHTML=STEPS.map(s=>'<button type="button" class="dv-step" data-go="'+s.key+'/default" aria-pressed="'+(s.key===step)+'"><b>'+s.n+'</b><span>'+s.label+'</span></button>').join('');
 }
@@ -1311,6 +1314,7 @@ if(!SHOT){
      '<div class="dv-main">'+
        '<div class="dv-row"><span class="dv-label">Step</span><div class="dv-steps"></div></div>'+
      '</div>'+
+     '<div class="dv-side"><button type="button" class="dv-switch" id="dev-stepper" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Four-stage progress stepper (all steps)</button></div>'+
      '<div class="dv-compare"><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
    '</div>';
   document.body.appendChild(dev); document.body.classList.add('has-dev');
@@ -1319,6 +1323,7 @@ if(!SHOT){
   });
 }
 window.addEventListener('hashchange',route);
+if(dev) $('#dev-stepper').addEventListener('click',()=>{ X['global-stepper']=!X['global-stepper']; syncX(); $('#dev-stepper').setAttribute('aria-checked',String(xOn('global-stepper'))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
 $('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; const id=t.dataset.x; X[id]=!X[id]; syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { route(); window.scrollTo(0,y); } });
 route();
 })();
