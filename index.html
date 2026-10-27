@@ -126,6 +126,7 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .live-more:hover{background:var(--tint)}
 .live-foot{padding:18px 16px 22px;line-height:24px}
 .live-foot .link{display:block;margin-top:6px;font-weight:700}
+.live-foot.outside{padding:16px 0 4px}
 .lbwrap.paged .lb{max-height:none;overflow:visible}
 .lb>.opt:last-child{border-bottom:0}
 .more{margin:16px 0 24px}
@@ -403,10 +404,10 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:false,name:'Postcode-first search and wording',
-   short:"People stall on the open search box because they don't know what to type, and a clear button beats a small link for a missing address.",
-   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious, and a clear button for a missing address beats a link people miss.",
-   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, a small 'Manually enter address details' link under it, and results in a dropdown that ends with 'Can't see your address? Enter address manually'.",
-   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. A clear 'Can't see your address? Enter it manually' button sits under the results.",
+   short:"People stall on the open search box because they don't know what to type.",
+   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious.",
+   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
+   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup.",
    metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
   {id:'addr-show-all',step:'address',on:false,name:"Show every address, no 'Show more addresses' button",
    short:"People must press 'Show more addresses' to reach theirs; a list that already holds every address removes that step.",
@@ -414,6 +415,12 @@ const EXPERIMENTS=[
    control:"A dropdown showing ten addresses, then a 'Show more addresses' row to press for the rest.",
    variant:"Every address is in the list from the start with a count line ('15 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
    metric:"Step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
+  {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' outside the list, always visible",
+   short:"At the end of a long list it is out of sight, so people with a missing address may never find a way on.",
+   hypothesis:"The 'Can't see your address? Enter address manually' link only appears at the very end of the list, so people whose address is missing have to scroll through every row (and press 'Show more addresses') to find a way on, and some give up. Placing it outside the list, permanently visible, gives them a way out straight away.",
+   control:"Inside the dropdown, at the very end of the list, after 'Show more addresses'. A small 'Manually enter address details' link also sits under the search box until results appear.",
+   variant:"Outside the list, directly below it, always visible without scrolling. The small link under the search box is removed.",
+   metric:"address_manual_opened; abandonment after results are shown; step completion."},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave.",
    brief:"The question sits under the address instead of on a separate page.",
@@ -958,7 +965,7 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=PF, LIVE=!PF, MOV=xOn('addr-one-screen');
+  const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF, MOV=xOn('addr-one-screen');
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
@@ -1072,7 +1079,7 @@ function mountAddress(preset){
       '<div class="lbwrap'+(LIVE?' live':ALL?'':' paged')+'" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(qlabel())+'"></div></div>'+
       '<p class="nomatch" id="nomatch" hidden></p>'+
       (ALL||LIVE?'':'<button type="button" class="btn secondary more" id="more">Show more addresses</button>')+
-      (CSB?'<button type="button" class="btn secondary cant" data-manual>Can\'t see your address? Enter it manually</button>':'')+
+      (CSB?(PF?'<button type="button" class="btn secondary cant" data-manual>Can\'t see your address? Enter it manually</button>':'<div class="live-foot outside">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>'):'')+
       '<div id="sel-msg" aria-live="polite"></div>';
     const lb=$('#lb'), flt=$('#flt'), moreBtn=!LIVE&&!ALL?$('#more'):null;
     lb.addEventListener('scroll',atEnd);
@@ -1109,7 +1116,7 @@ function mountAddress(preset){
     const label=a=>LIVE?a.postcode+' '+a.line1+', '+a.town.toUpperCase():a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
     const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(label(a),f)+'</span></div>';
     lb.innerHTML=items.map(opt).join('')+
-      (LIVE?(left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+'<div class="live-foot">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>':'');
+      (LIVE&&left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+(CSB?'':'<div class="live-foot">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>');
     lb.removeAttribute('aria-activedescendant');
     const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0;
     if(!g.items.length) nm.textContent='No addresses match "'+S.filter+'". Check the number, or enter your address manually.';
@@ -1202,7 +1209,7 @@ const CHANGES={
     ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-show-all"],
     ["Count confirms the search worked","Removes the doubt that makes people leave","addr-show-all"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
-    ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-postcode-first"]],
+    ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-manual-outside"]],
   "address/filtered":[
     ["List narrows as you type, matches in bold","Reach your address faster"],
     ["Count updates: 'Showing 8 of 15'","Shows the filter is working"]],
