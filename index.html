@@ -964,6 +964,13 @@ function mountAddress(preset){
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
   let seq=0, timer=null;
+  liveSnap=()=>({postcode:S.postcode,status:S.status==='results'?'results':'idle',list:S.list,shown:S.shown,filter:S.filter,selected:S.selected,manual:S.manual,man:S.man});
+  if(carry){   // a switch was flipped: come back to the same place
+    const c=carry; carry=null;
+    S.postcode=c.postcode; S.isPc=UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''));
+    if(PF&&S.isPc) S.postcode=fmtPC(S.postcode);
+    S.list=c.list; S.status=c.status; S.shown=c.shown; S.filter=c.filter; S.selected=c.selected; S.manual=c.manual; S.man=c.man;
+  }
   main.innerHTML=backLink+
   '<h1 id="step-title">'+(PF?'Next, what\'s your postcode?':'Next, where do you live?')+'</h1>'+
   '<button type="button" class="why" id="why" aria-expanded="false" aria-controls="why-panel">'+ic('chevron-right')+'<span>Why do we ask this?</span></button>'+
@@ -1283,7 +1290,7 @@ function paintNotes(k){
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
-let liveHooks={}, lastKey='';   // switches a step can apply without re-mounting
+let liveHooks={}, lastKey='', carry=null, liveSnap=null;   // carry: what the step hands to its own re-mount when a switch is flipped   // switches a step can apply without re-mounting
 const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   // a state that only makes sense with some switches on
 const ROUTES={
   'address/default':()=>mountAddress(),
@@ -1304,7 +1311,7 @@ const ROUTES={
   'contact/submitting':()=>mountContact({email:'alex.smith@gmail.com',phone:'07700 900123',submitting:true,hold:true})
 };
 function route(){
-  liveHooks={};
+  liveHooks={}; liveSnap=null;
   const old=$('.backdrop'); if(old) old.remove(); const os=$('.sheet'); if(os) os.remove(); app.inert=false;
   const k=(location.hash||'#/address/default').replace(/^#\//,''); const fn=ROUTES[k]||ROUTES['address/default'];
   fn(); window.scrollTo(0,0); paintDev(ROUTES[k]?k:'address/default'); lastKey=ROUTES[k]?k:'address/default'; paintNotes(lastKey);
@@ -1347,7 +1354,7 @@ if(!SHOT){
 }
 window.addEventListener('hashchange',route);
 if(dev) $('#dev-stepper').addEventListener('click',()=>{ X['global-stepper']=!X['global-stepper']; syncX(); $('#dev-stepper').setAttribute('aria-checked',String(xOn('global-stepper'))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
-$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { route(); window.scrollTo(0,y); } });
+$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ carry=liveSnap?liveSnap():null; const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; route(); window.scrollTo(0,y); } });
 route();
 })();
 </script>
