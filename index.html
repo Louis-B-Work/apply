@@ -935,7 +935,8 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ONE=PF, CSB=PF, MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
+  const PF=xOn('addr-postcode-first'), ONE=PF, CSB=PF, MOV=xOn('addr-one-screen');
+  let MDATE=xOn('addr-move-in-date');
   const FLT=ONE;   // the single list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=5;   // the live page shows this many addresses at a time
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
@@ -1117,6 +1118,8 @@ function mountAddress(preset){
     MVW=movedWidget(el,S.mv,MDATE,true);
   }
   const movedCheck=final=>MVW?MVW.check(final):null;
+  // switching the wording on or off redraws just this question (its boxes mean something different, so they start empty); the rest of the step stays as it is
+  liveHooks['addr-move-in-date']=()=>{ MDATE=xOn('addr-move-in-date'); S.mv={a:'',b:''}; if(MOV) drawMoved(); };
 
   /* --- the keyboard's Enter key goes to the next field, and submits on the last one --- */
   function wireEnter(){
@@ -1254,6 +1257,7 @@ function paintNotes(k){
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
+let liveHooks={}, lastKey='';   // switches a step can apply without re-mounting
 const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   // a state that only makes sense with some switches on
 const ROUTES={
   'address/default':()=>mountAddress(),
@@ -1275,9 +1279,10 @@ const ROUTES={
   'contact/submitting':()=>mountContact({email:'alex.smith@gmail.com',phone:'07700 900123',submitting:true,hold:true})
 };
 function route(){
+  liveHooks={};
   const old=$('.backdrop'); if(old) old.remove(); const os=$('.sheet'); if(os) os.remove(); app.inert=false;
   const k=(location.hash||'#/address/default').replace(/^#\//,''); const fn=ROUTES[k]||ROUTES['address/default'];
-  fn(); window.scrollTo(0,0); paintDev(ROUTES[k]?k:'address/default'); paintNotes(ROUTES[k]?k:'address/default');
+  fn(); window.scrollTo(0,0); paintDev(ROUTES[k]?k:'address/default'); lastKey=ROUTES[k]?k:'address/default'; paintNotes(lastKey);
   // screenshots should not show a stray focus ring left by a preset
   if(SHOT) setTimeout(()=>{ const a=document.activeElement; if(a&&a!==document.body&&a.blur) a.blur(); },50);
 }
@@ -1314,7 +1319,7 @@ if(!SHOT){
   });
 }
 window.addEventListener('hashchange',route);
-$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; X[t.dataset.x]=!X[t.dataset.x]; syncX(); route(); window.scrollTo(0,y); });
+$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; const id=t.dataset.x; X[id]=!X[id]; syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { route(); window.scrollTo(0,y); } });
 route();
 })();
 </script>
