@@ -243,7 +243,10 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-sw[aria-checked=true] .dv-track{background:var(--purple)}
 .n-sw[aria-checked=true] .dv-knob{left:19px}
 .n-sw:focus-visible{outline:2px solid var(--purple);outline-offset:3px;border-radius:4px}
-.n-exp.off p{opacity:.55}
+.n-exp.off>p{opacity:.55}
+.n-child{grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #D3CAEE;display:grid;gap:6px}
+.n-child.off p{opacity:.55}
+.n-child p{margin:0}
 .n-exp p{margin:0;font-size:14px;line-height:20px;color:#1F2937}
 .n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
 .n-exp p+p i{color:#0B7A55}
@@ -378,26 +381,27 @@ const EXPERIMENTS=[
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it. Results show five addresses at a time with a 'See more addresses' button.",
    variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. Every address is in one scrollable list with a count line ('15 addresses found'), and lists of more than eight also get a type-to-filter box. A clear 'Can't see your address? Enter it manually' button sits under the results, instead of the small link.",
    metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
-  {id:'addr-move-in-date',step:'address',on:false,name:"Ask 'When did you move in?', not 'How long?'",
-   short:"A date is easier to answer than a duration, and the system does the maths.",
-   brief:"'When did you move in?' with month and year; the system works out the length.",
-   hypothesis:"'How long have you lived there?' makes people do sums in their head (years and months) and some get it wrong or give up. 'When did you move in?' is quicker and easier to answer, and the system works out the years and months it needs. The same wording can replace the other 'how long' questions (for example 'When did you start there?' for a job).",
-   control:"'How long have you lived at this address?' with Years and Months boxes.",
-   variant:"'When did you move in?' with Month and Year boxes. The system works out the length.",
-   metric:"Completion and time on the time-at-address question; validation errors; people who enter a wrong length."},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave.",
    brief:"The question sits under the address instead of on a separate page.",
    hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking about time at the address on the address screen removes one page.",
    control:"Time at address is a separate page after the address.",
    variant:"Once an address is confirmed (or typed), the time-at-address question appears under it on the same step and the separate page is skipped.",
-   metric:"Completion of the combined address and time-at-address section; total time through it."}
+   metric:"Completion of the combined address and time-at-address section; total time through it."},
+  {id:'addr-move-in-date',step:'address',on:false,parent:'addr-one-screen',name:"Ask 'When did you move in?', not 'How long?'",
+   short:"A date is easier to answer than a duration, and the system does the maths.",
+   brief:"'When did you move in?' with month and year; the system works out the length.",
+   hypothesis:"'How long have you lived there?' makes people do sums in their head (years and months) and some get it wrong or give up. 'When did you move in?' is quicker and easier to answer, and the system works out the years and months it needs. The same wording can replace the other 'how long' questions (for example 'When did you start there?' for a job).",
+   control:"'How long have you lived at this address?' with Years and Months boxes.",
+   variant:"'When did you move in?' with Month and Year boxes. The system works out the length. Only applies when time at address is asked on the same step.",
+   metric:"Completion and time on the time-at-address question; validation errors; people who enter a wrong length."}
 ];
 const X={};
 (function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
-const xOn=id=>!!X[id];
+const PARENT={}; EXPERIMENTS.forEach(e=>{ if(e.parent) PARENT[e.id]=e.parent; });
+const xOn=id=>!!X[id]&&(!PARENT[id]||!!X[PARENT[id]]);   // a branch only counts while its parent is on
 const syncX=()=>{ try{ const u=new URL(location.href); u.searchParams.set('x',EXPERIMENTS.filter(e=>X[e.id]).map(e=>e.id).join(',')||'none'); history.replaceState(null,'',u); }catch(e){} };
-const trackExposure=step=>EXPERIMENTS.filter(e=>e.step===step).forEach(e=>track('experiment_exposure',{id:e.id,variant:X[e.id]?'variant':'control'}));
+const trackExposure=step=>EXPERIMENTS.filter(e=>e.step===step).forEach(e=>track('experiment_exposure',{id:e.id,variant:xOn(e.id)?'variant':'control'}));
 
 /* every page of the live "direct" flow (15 pages), in order. We only redesign three of them. */
 const PAGES=[
@@ -1118,11 +1122,11 @@ function paintNotes(k){
   document.body.classList.toggle('notes-on',notesOn); document.body.classList.toggle('shot',SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step), on=exps.filter(e=>X[e.id]);
+  const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step), on=exps.filter(e=>xOn(e.id));
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.map(e=>'<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p></div>').join('')+'</div>':'')+
+    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p></div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+(X[e.id]?exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join(''):'')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
 }
