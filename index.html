@@ -231,6 +231,16 @@ body.notes-on #summary{display:block;flex:none;width:340px;background:#fff;borde
 body.notes-on .sheet,body.notes-on .backdrop{position:absolute}
 body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px 18px;font-size:14px;line-height:20px;color:#111}
 @media (max-width:1360px){ body.notes-on #side{flex-direction:column} body.notes-on #summary{width:340px} }
+body.notes-on #summary{display:none}
+body.notes-on #notes{width:380px}
+.n-exp{margin:0 0 12px;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
+.n-exp b{display:block;margin-bottom:6px;font-size:15px;line-height:20px}
+.n-exp p{display:grid;grid-template-columns:58px 1fr;gap:6px;margin:0 0 4px;font-size:14px;line-height:20px;color:#1F2937}
+.n-exp p:last-child{margin:0}
+.n-exp i{font-style:normal;font-size:11px;line-height:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.n-exp p+p i{color:#0B7A55}
+.n-none{margin:0 0 14px;color:#4B5563}
+.n-foot{margin:16px 0 0;font-size:12px;line-height:17px;color:#6B7280}
 @media (min-width:781px){ body.notes-on #summary,body.notes-on #notes{max-height:calc(100vh - 190px);overflow:auto} }
 @media (max-width:780px){ body.notes-on #stage{flex-direction:column;align-items:center} body.notes-on #screen{flex:none;width:100%} body.notes-on #side{position:static;width:100%;max-width:640px} body.notes-on #notes,body.notes-on #summary{width:100%} }
 .n-head{margin:0 0 2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--purple)}
@@ -356,30 +366,35 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:true,name:'Postcode-first search and wording',
    short:"People stall on the open search box because they don't know what to type.",
+   brief:"A Postcode box that searches by itself, with 'Find address' as a backup.",
    hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious.",
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name.",
    variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup.",
    metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
   {id:'addr-single-list',step:'address',on:true,name:'One list of every address, no pagination',
    short:"'See more addresses' makes people give up before they find theirs.",
+   brief:"Every address in one scrollable list, with a filter box on long lists.",
    hypothesis:"Pagination is what stops people choosing an address: they press 'See more addresses' again and again and give up before they find theirs. One list with every address removes the clicking.",
    control:"Five addresses at a time with a 'See more addresses' button.",
    variant:"Every address in one scrollable list with a count line ('15 addresses found'). Lists of more than eight addresses also get a type-to-filter box that narrows the list as you type.",
    metric:"Address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
   {id:'addr-cant-see-button',step:'address',on:true,name:"'Can't see your address?' as its own button",
    short:"A small link is missed, so people with a missing address hit a dead end.",
+   brief:"A clear 'Can't see your address?' button under the results.",
    hypothesis:"When an address is missing (new builds are common), a small text link under the search box is easy to miss, so people reach a dead end and leave. A clear button where they are looking gives them a visible way on.",
    control:"A small 'Manually enter address details' text link under the search box.",
    variant:"A 'Can't see your address? Enter it manually' button under the results, and in the no-results and error messages. The small link is removed.",
    metric:"address_manual_opened and completion of people who open it; abandonment after no results."},
   {id:'addr-move-in-date',step:'address',on:true,name:"Ask 'When did you move in?', not 'How long?'",
    short:"A date is easier to answer than a duration, and the system does the maths.",
+   brief:"'When did you move in?' with month and year; the system works out the length.",
    hypothesis:"'How long have you lived there?' makes people do sums in their head (years and months) and some get it wrong or give up. 'When did you move in?' is quicker and easier to answer, and the system works out the years and months it needs. The same wording can replace the other 'how long' questions (for example 'When did you start there?' for a job).",
    control:"'How long have you lived at this address?' with Years and Months boxes.",
    variant:"'When did you move in?' with Month and Year boxes. The system works out the length.",
    metric:"Completion and time on the time-at-address question; validation errors; people who enter a wrong length."},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave.",
+   brief:"The question sits under the address instead of on a separate page.",
    hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking about time at the address on the address screen removes one page.",
    control:"Time at address is a separate page after the address.",
    variant:"Once an address is confirmed (or typed), the time-at-address question appears under it on the same step and the separate page is skipped.",
@@ -1106,40 +1121,17 @@ const SUMMARY={
            why:"People worried about unwanted calls get an answer at the moment they hesitate, without a box adding to the page. Fewer people should drop out of a page where everything else is already filled in."}
 };
 
-/* the summary card: short bullets, each one shown only while its switch (if it has one) is on */
-const SUMBULLETS={
-  address:{
-    what:[["Postcode-first search replaces the 'address or street name' box","addr-postcode-first"],["One scrollable list replaces 'See more addresses'","addr-single-list"],["A clear 'Can't see your address?' button replaces the small manual link","addr-cant-see-button"],["'When did you move in?' replaces 'How long have you lived there?'","addr-move-in-date"],["Time at address is asked on the same step","addr-one-screen"],["'Is this your address?' confirms the choice, and Change opens a filled-in form"],["Enter moves between fields, and 44 at the start of a phone number becomes 0"]],
-    why:[["Less to decide before the first tap","addr-postcode-first"],["No repeated clicking to find an address deep in the list","addr-single-list"],["No dead end when an address is missing","addr-cant-see-button"],["A date is easier to answer than a sum, and the system works out the length","addr-move-in-date"],["One fewer screen to leave on","addr-one-screen"],["Fixing one wrong field takes one edit, not a new search"]]},
-  dob:{
-    what:[["One box that adds the slashes as you type"],["A calendar that starts at the year as a second way in, finished by tapping the day"],["A collapsed 'Why do we ask this?' line"],["An example and a 'That makes you 26.' line","dobhelp"],["Two-digit years such as 77 are read as 1977"]],
-    why:[["Faster and less fiddly on a phone"],["Typing mistakes are caught straight away"],["Answers the doubt behind most people leaving without ever hitting an error"],["A common way of typing a date no longer fails"]]},
-  contact:{
-    what:[["The headline promises results instead of a quote later"],["A '?' next to the phone number explains why it is needed"],["The phone box accepts spaces, +44, 44 and a missing 0, and tidies the number"],["Enter moves from email to phone, then sends"]],
-    why:[["People worried about unwanted calls get an answer when they hesitate"],["Fewer phone validation failures on the final page"],["Nothing extra is added to the page"]]}
-};
-const sumList=items=>'<ul>'+items.filter(p=>!p[1]||(p[1]==='dobhelp'?dobHelp:X[p[1]])).map(p=>'<li>'+esc(p[0])+'</li>').join('')+'</ul>';
 function paintNotes(k){
-  const btn=$('#dev-notes');
-  if(btn){ btn.setAttribute('aria-checked',String(notesOn)); }
   document.body.classList.toggle('notes-on',notesOn); document.body.classList.toggle('shot',SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], list=(CHANGES[k]||[]).filter(p=>(dobHelp||!/^Example shown|confirms the date/.test(p[0]))&&(!p[2]||X[p[2]]))
-    // an experiment that is switched on but has no line of its own on this state still shows up in the list
-    .concat(EXPERIMENTS.filter(e=>e.step===step&&X[e.id]&&!(CHANGES[k]||[]).some(p=>p[2]===e.id)).map(e=>[e.name,e.short,e.id]));
+  const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step), on=exps.filter(e=>X[e.id]);
+  // lines that belong to an experiment are covered by its block; the rest are changes that need no test
+  const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+(p[2]?'<span class="xid">'+esc(p[2])+'</span>':'')+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>';
-  const sb=SUMBULLETS[step], exps=EXPERIMENTS.filter(e=>e.step===step);
-  if(exps.length){   // steps with experiments: each switched-on one, with its hypothesis and the change it brings
-    const on=exps.filter(e=>X[e.id]), always=sb.what.filter(p=>!p[1]);
-    $('#summary').innerHTML='<h3>Summary</h3>'+
-      (on.length?on.map(e=>'<div class="s-exp"><h4>'+esc(e.name)+'</h4><p class="s-h"><b>Hypothesis</b>'+esc(e.hypothesis)+'</p><p class="s-c"><b>What changes</b>'+esc(e.variant)+'</p></div>').join(''):'<p class="s-empty">No experiments are switched on, so this is the live page.</p>')+
-      '<div class="s-block s-what"><h4>Always on, no hypothesis</h4>'+sumList(always)+'</div>'+
-      '<p class="s-note">Expected effect, not a measured result.</p>';
-    return;
-  }
-  $('#summary').innerHTML='<h3>Summary</h3><div class="s-block s-what"><h4>What changed</h4>'+sumList(sb.what)+'</div><div class="s-block s-why"><h4>Why it should reduce abandoned sessions</h4>'+sumList(sb.why)+'</div><p class="s-note">Expected effect, not a measured result.</p>';
+    (exps.length?'<p class="n-sub">Experiments switched on</p>'+(on.length?on.map(e=>'<div class="n-exp"><b>'+esc(e.name)+'</b><p><i>Why</i><span>'+esc(e.short)+'</span></p><p><i>Change</i><span>'+esc(e.brief)+'</span></p></div>').join(''):'<p class="n-none">None, so this is the live page.</p>'):'')+
+    (plain.length?'<p class="n-sub">'+(exps.length?'Also changed':'What changed')+'</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
+    '<p class="n-foot">Expected effects, not measured results.</p>';
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
