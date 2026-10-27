@@ -257,6 +257,13 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
 .n-exp p+p i{color:#0B7A55}
 .n-none{margin:0 0 14px;color:#4B5563}
+.n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
+.n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
+.n-state.live::before{content:"";width:10px;height:10px;border-radius:50%;background:#0E9F6E;flex:none}
+.n-state.redesign{background:#F1EBFE;border:1px solid #D8CBF8;color:#4a05b0}
+.n-state.redesign span{flex:1 1 auto}
+.n-state button{border:1px solid #4a05b0;background:#fff;color:#4a05b0;border-radius:999px;padding:4px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .n-foot{margin:16px 0 0;font-size:12px;line-height:17px;color:#6B7280}
 @media (max-width:780px){ body.notes-on #stage{flex-direction:column;align-items:center} body.notes-on #screen{flex:none;width:100%} body.notes-on #side{position:static;width:100%;max-width:640px} body.notes-on #notes,body.notes-on #summary{width:100%} }
 .n-head{margin:0 0 2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--purple)}
@@ -1240,6 +1247,7 @@ function paintNotes(k){
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
+    (exps.length?(on.length?'<div class="n-state redesign"><b>Redesign</b><span>'+on.length+' of '+exps.length+' changes switched on.</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
     (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p></div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+(X[e.id]?exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join(''):'')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
@@ -1306,7 +1314,7 @@ if(!SHOT){
   });
 }
 window.addEventListener('hashchange',route);
-$('#notes').addEventListener('click',e=>{ const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; X[t.dataset.x]=!X[t.dataset.x]; syncX(); route(); window.scrollTo(0,y); });
+$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; X[t.dataset.x]=!X[t.dataset.x]; syncX(); route(); window.scrollTo(0,y); });
 route();
 })();
 </script>
