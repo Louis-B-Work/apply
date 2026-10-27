@@ -357,10 +357,10 @@ body.has-dev{padding-bottom:156px}
   <div class="wrap">
     <header class="top">
       <a class="logo" href="#" aria-label="Car Finance 247"><svg aria-hidden="true" focusable="false"><use href="#stacked-logo"/></svg></a>
-      <a class="tp" href="#" aria-label="Trustpilot TrustScore 4.9 from 59,415 reviews">
+      <a class="tp" href="#" aria-label="Trustpilot TrustScore 4.9 from 59,629 reviews">
         <div class="l"><svg viewBox="0 0 126 31" aria-hidden="true" focusable="false"><use href="#trustpilot-logo"/></svg></div>
         <div class="s"><svg viewBox="0 0 512 96" aria-hidden="true" focusable="false"><use href="#trustpilot-stars"/></svg></div>
-        <div class="i">TrustScore <b>4.9</b><span class="dv">|</span><b>59,415</b> reviews</div>
+        <div class="i">TrustScore <b>4.9</b><span class="dv">|</span><b>59,629</b> reviews</div>
       </a>
     </header>
     <div class="progress" role="progressbar" aria-label="Application progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
@@ -494,7 +494,7 @@ const POS=(page,g)=>'calc((100% - '+(GAP*(GROUPS.length-1))+'px) * '+page+' / '+
 let classicBar=true;   // the original plain bar, with an orb at the end of the fill
 function buildProgress(){
   const pb=$('.progress'); pb.classList.toggle('classic',classicBar);
-  if(classicBar){ pb.innerHTML='<i class="cfill"></i><b class="orb" title="You are here"></b>'; return; }
+  if(classicBar){ pb.innerHTML='<i class="cfill"></i>'; return; }   // the live bar: no marker
   const names=GROUPS.map(g=>g.label).concat('Results');
   pb.innerHTML=names.map((t,k)=>(k?'<div class="pline"><i></i></div>':'')+
     '<div class="pstep'+(k===names.length-1?' end':'')+'" data-k="'+k+'"'+(k===names.length-1?' title="Your results"':'')+'><span class="pnum">'+(k+1)+'</span><span class="plabel '+(k===0?'first':k===names.length-1?'last':'mid')+'">'+t+'</span></div>').join('');
@@ -504,7 +504,7 @@ const setProgress=key=>{
   const pb=$('.progress'), cur=PAGES.findIndex(p=>p.k===key), n=pct(cur), cg=groupOf(cur);
   buildProgress();
   if(classicBar){
-    pb.querySelector('.cfill').style.width=n+'%'; pb.querySelector('.orb').style.left=n+'%';
+    pb.querySelector('.cfill').style.width=n+'%';
     pb.setAttribute('aria-valuenow',n); pb.setAttribute('aria-valuetext',n+'% complete. Current page: '+PAGES[cur].t);
     return;
   }
@@ -545,12 +545,12 @@ function mountContact(preset){
   '<form id="f" novalidate aria-labelledby="step-title">'+
     '<div class="field">'+
       '<label for="email">Email address</label>'+
-      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" enterkeyhint="next" autocapitalize="none" spellcheck="false" placeholder="e.g. name@example.com" aria-describedby="email-msg"></div>'+
+      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" enterkeyhint="next" autocapitalize="none" spellcheck="false" '+(SUG?'placeholder="e.g. name@example.com" ':'')+' aria-describedby="email-msg"></div>'+
       '<div id="email-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div class="field">'+
       (HELP?'<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We need a number to reach you about your application, for example to check a detail or confirm your approval.</span></span></div>':'<label for="contact-phone">Phone number</label>')+
-      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" placeholder="e.g. 07700 900123" aria-describedby="phone-msg"></div>'+
+      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" '+(TOL?'placeholder="e.g. 07700 900123" ':'')+' aria-describedby="phone-msg"></div>'+
       '<div id="phone-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div id="form-msg" class="formerr" aria-live="polite"></div>'+
