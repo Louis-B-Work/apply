@@ -352,7 +352,7 @@ const EXPERIMENTS=[
    short:"'See more addresses' makes people give up before they find theirs.",
    hypothesis:"Pagination is what stops people choosing an address: they press 'See more addresses' again and again and give up before they find theirs. One list with every address removes the clicking.",
    control:"Five addresses at a time with a 'See more addresses' button.",
-   variant:"Every address in one scrollable list with a count line ('15 addresses found'). No road headings and no filter box.",
+   variant:"Every address in one scrollable list with a count line ('15 addresses found'). Lists of more than eight addresses also get a type-to-filter box that narrows the list as you type.",
    metric:"Address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
   {id:'addr-cant-see-button',step:'address',on:true,name:"'Can't see your address?' as its own button",
    short:"A small link is missed, so people with a missing address hit a dead end.",
@@ -371,19 +371,7 @@ const EXPERIMENTS=[
    hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking about time at the address on the address screen removes one page.",
    control:"Time at address is a separate page after the address.",
    variant:"Once an address is confirmed (or typed), the time-at-address question appears under it on the same step and the separate page is skipped.",
-   metric:"Completion of the combined address and time-at-address section; total time through it."},
-  {id:'addr-street-groups',step:'address',on:false,needs:'addr-single-list',name:'Road headings in the list',
-   short:"Road headings help people scan to their street (single list only).",
-   hypothesis:"A postcode can cover several streets, so headings per road help people scan to their street faster.",
-   control:"No headings.",
-   variant:"Sticky road headings with a count, only when the postcode covers more than one street.",
-   metric:"Position of the chosen address; time on step; wrong-address changes (address_change_opened)."},
-  {id:'addr-filter',step:'address',on:false,needs:'addr-single-list',name:'Type-to-filter box on long lists',
-   short:"Typing a house number beats scrolling a long list (single list only).",
-   hypothesis:"On a long list, typing a house number to narrow it gets people to their address faster than scrolling.",
-   control:"No filter box.",
-   variant:"A filter box above lists of more than eight addresses. The list narrows as you type and the count updates.",
-   metric:"address_filter_used; time on step; step completion for long lists."}
+   metric:"Completion of the combined address and time-at-address section; total time through it."}
 ];
 const X={};
 (function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
@@ -803,7 +791,7 @@ function mountAddress(preset){
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=xOn('addr-cant-see-button'), MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
-  const GRP=ONE&&xOn('addr-street-groups'), FLT=ONE&&xOn('addr-filter');
+  const FLT=ONE;   // the single list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=5;   // the live page shows this many addresses at a time
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
   let seq=0, timer=null;
@@ -940,10 +928,7 @@ function mountAddress(preset){
     const g=filtered(), lb=$('#lb'), f=FLT?S.filter.trim():'', total=S.list.length, items=ONE?g.items:g.items.slice(0,S.shown);
     $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+qlabel());
     const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(a.line1,f)+'</span></div>';
-    if(GRP){   // optional: road headings, only when the postcode covers more than one street
-      const multi=g.groups.length>1;
-      lb.innerHTML=g.groups.map(([street,arr])=>'<div role="group" aria-label="'+esc(street)+'">'+(multi?'<div class="grp" aria-hidden="true">'+esc(street)+' · '+arr.length+'</div>':'')+arr.map(opt).join('')+'</div>').join('');
-    } else lb.innerHTML=items.map(opt).join('');
+    lb.innerHTML=items.map(opt).join('');
     lb.removeAttribute('aria-activedescendant');
     const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0;
     if(!g.items.length) nm.textContent='No addresses match "'+S.filter+'". Check the number, or enter your address manually.';
@@ -1033,13 +1018,11 @@ const CHANGES={
   "address/results":[
     ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-single-list"],
     ["Count confirms the search worked","Removes the doubt that makes people leave","addr-single-list"],
-    ["Grouped by street","Easier to scan","addr-street-groups"],
-    ["Filter box to jump to a house number","A long list becomes a few rows","addr-filter"],
+        ["Filter box to jump to a house number","A long list becomes a few rows"],
     ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-cant-see-button"]],
   "address/filtered":[
-    ["List narrows as you type, matches in bold","Reach your address faster","addr-filter"],
-    ["Count updates: 'Showing 8 of 15'","Shows the filter is working","addr-filter"],
-    ["Still grouped by street","Stays easy to scan","addr-street-groups"]],
+    ["List narrows as you type, matches in bold","Reach your address faster"],
+    ["Count updates: 'Showing 8 of 15'","Shows the filter is working"]],
   "address/selected":[
     ["Chosen address shown as a summary card","Confirms the right address is used"],
     ["'Is this your address?' above it, title unchanged","Makes the confirm step obvious"],
@@ -1133,7 +1116,7 @@ const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   
 const ROUTES={
   'address/default':()=>mountAddress(),
   'address/results':()=>mountAddress({postcode:'CR0 3AG',lookup:true}),
-  'address/filtered':force(['addr-single-list','addr-street-groups','addr-filter'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
+  'address/filtered':force(['addr-single-list'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
   'address/selected':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'}),
   'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
   'address/moved':force(['addr-one-screen'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'})),
