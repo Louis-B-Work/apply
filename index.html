@@ -1094,19 +1094,17 @@ const SUMMARY={
            why:"People worried about unwanted calls get an answer at the moment they hesitate, without a box adding to the page. Fewer people should drop out of a page where everything else is already filled in."}
 };
 
-function xList(step){
-  const ex=EXPERIMENTS.filter(e=>e.step===step); if(!ex.length) return '';
-  return '<p class="n-sub" style="margin-top:14px">Experiments on this step</p><ul class="x-list">'+ex.map(e=>'<li><b>'+esc(e.id)+'</b><i class="'+(X[e.id]?'on':'off')+'">'+(X[e.id]?'variant on':'control (live)')+'</i><span>'+esc(e.hypothesis)+'</span></li>').join('')+'</ul>';
-}
 function paintNotes(k){
   const btn=$('#dev-notes');
   if(btn){ btn.setAttribute('aria-checked',String(notesOn)); }
   document.body.classList.toggle('notes-on',notesOn); document.body.classList.toggle('shot',SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], list=(CHANGES[k]||[]).filter(p=>(dobHelp||!/^Example shown|confirms the date/.test(p[0]))&&(!p[2]||X[p[2]]));
+  const step=k.split('/')[0], list=(CHANGES[k]||[]).filter(p=>(dobHelp||!/^Example shown|confirms the date/.test(p[0]))&&(!p[2]||X[p[2]]))
+    // an experiment that is switched on but has no line of its own on this state still shows up in the list
+    .concat(EXPERIMENTS.filter(e=>e.step===step&&X[e.id]&&!(CHANGES[k]||[]).some(p=>p[2]===e.id)).map(e=>[e.name,e.short,e.id]));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+(p[2]?'<span class="xid">'+esc(p[2])+'</span>':'')+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>'+xList(step);
+    '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+(p[2]?'<span class="xid">'+esc(p[2])+'</span>':'')+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>';
   const sm=SUMMARY[step];
   $('#summary').innerHTML='<h3>Summary</h3><p class="s-what"><b>What changed</b>'+esc(sm.what)+'</p><p class="s-why"><b>Why it should reduce abandoned sessions</b>'+esc(sm.why)+'</p><p class="s-note">Expected effect, not a measured result.</p>';
 }
@@ -1177,7 +1175,6 @@ if(!SHOT){
        '<div class="dv-row"><span class="dv-label">Step</span><div class="dv-steps"></div></div>'+
      '</div>'+
      '<div class="dv-side">'+
-       '<button type="button" class="dv-switch" id="dev-notes" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Annotations</button>'+
        '<button type="button" class="dv-switch" id="dev-dobhelp" role="switch" aria-checked="true" hidden><span class="dv-track"><span class="dv-knob"></span></span>Example and age line</button>'+
        '<button type="button" class="dv-switch" id="dev-bar" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Classic progress bar</button>'+
        '</div>'+
@@ -1196,7 +1193,6 @@ if(!SHOT){
     if(e.target.closest('[data-xclose]')) openX(false);
   });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&xp&&!xp.hidden) openX(false); });
-  $('#dev-notes').addEventListener('click',()=>{ notesOn=!notesOn; route(); });
   $('#dev-dobhelp').addEventListener('click',()=>{ dobHelp=!dobHelp; route(); });
   $('#dev-bar').addEventListener('click',()=>{ classicBar=!classicBar; route(); });
 }
