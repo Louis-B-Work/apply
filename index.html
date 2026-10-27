@@ -235,7 +235,12 @@ body.notes-on #summary{display:none}
 body.notes-on #side{flex:1 1 580px;max-width:620px;min-width:0}
 body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-exp{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:0 0 10px;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
-.n-exp b{grid-column:1/-1;font-size:15px;line-height:20px}
+.n-sw{grid-column:1/-1;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;font:inherit;font-size:15px;line-height:20px;font-weight:700;text-align:left;color:#111;cursor:pointer}
+.n-sw .dv-track{flex:none;background:#B8BCC6}
+.n-sw[aria-checked=true] .dv-track{background:var(--purple)}
+.n-sw[aria-checked=true] .dv-knob{left:19px}
+.n-sw:focus-visible{outline:2px solid var(--purple);outline-offset:3px;border-radius:4px}
+.n-exp.off p{opacity:.55}
 .n-exp p{margin:0;font-size:14px;line-height:20px;color:#1F2937}
 .n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
 .n-exp p+p i{color:#0B7A55}
@@ -1128,7 +1133,7 @@ function paintNotes(k){
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?'<p class="n-sub">Experiments switched on</p>'+(on.length?on.map(e=>'<div class="n-exp"><b>'+esc(e.name)+'</b><p><i>Why</i><span>'+esc(e.short)+'</span></p><p><i>Change</i><span>'+esc(e.brief)+'</span></p></div>').join(''):'<p class="n-none">None, so this is the live page.</p>'):'')+
+    (exps.length?'<p class="n-sub">Hypotheses</p>'+exps.map(e=>'<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p><i>Why</i><span>'+esc(e.short)+'</span></p><p><i>Change</i><span>'+esc(e.brief)+'</span></p></div>').join(''):'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
 }
@@ -1172,20 +1177,10 @@ const STATE_LABELS={
   'dob/default':'Empty','dob/picker-year':'Calendar: year','dob/picker-day':'Calendar: day','dob/valid':'Valid','dob/under18':'Under 18',
   'contact/default':'Default','contact/errors':'Errors','contact/suggestion':'Email suggestion','contact/submitting':'Submitting'
 };
-let dev=null, xp=null;
+let dev=null;
 const ORDER=Object.keys(ROUTES);
-function paintX(){
-  const b=$('#dev-x'); if(b) b.textContent='Experiments ('+EXPERIMENTS.filter(e=>X[e.id]).length+' on)';
-  if(!xp) return;
-  const keep=xp.scrollTop, steps=Array.from(new Set(EXPERIMENTS.map(e=>e.step)));
-  xp.innerHTML='<div class="xhead"><b>Experiments</b><button type="button" data-xall="on">All on</button><button type="button" data-xall="off">All off (live)</button><button type="button" data-xclose>Close</button></div>'+
-    steps.map(st=>'<p class="xstep">'+esc(STEP_TITLES[st])+'</p>'+EXPERIMENTS.filter(e=>e.step===st).map(e=>
-      '<div class="xrow"><button type="button" class="dv-switch" role="switch" data-x="'+e.id+'" aria-checked="'+X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p></div>').join('')).join('');
-  xp.scrollTop=keep;
-}
 function paintDev(cur){
   if(!dev) return;
-  paintX();
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
   const hb=dev.querySelector('#dev-dobhelp'); if(hb){ hb.hidden=step!=='dob'; hb.setAttribute('aria-checked',String(dobHelp)); }
   const bb=dev.querySelector('#dev-bar'); if(bb) bb.setAttribute('aria-checked',String(classicBar));
@@ -1202,25 +1197,17 @@ if(!SHOT){
        '<button type="button" class="dv-switch" id="dev-dobhelp" role="switch" aria-checked="true" hidden><span class="dv-track"><span class="dv-knob"></span></span>Example and age line</button>'+
        '<button type="button" class="dv-switch" id="dev-bar" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Classic progress bar</button>'+
        '</div>'+
-     '<div class="dv-compare"><button type="button" class="dv-btn" id="dev-x" aria-expanded="false">Experiments</button><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
+     '<div class="dv-compare"><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
    '</div>';
   document.body.appendChild(dev); document.body.classList.add('has-dev');
   dev.addEventListener('click',e=>{
     const g=e.target.closest('[data-go]'); if(g){ location.hash='#/'+g.dataset.go; return; }
   });
-  xp=document.createElement('div'); xp.className='xpanel'; xp.hidden=true; xp.setAttribute('role','dialog'); xp.setAttribute('aria-label','Experiments'); document.body.appendChild(xp);
-  const openX=on=>{ xp.hidden=!on; $('#dev-x').setAttribute('aria-expanded',String(on)); xp.style.bottom=(dev.offsetHeight+8)+'px'; };
-  $('#dev-x').addEventListener('click',()=>openX(xp.hidden));
-  xp.addEventListener('click',e=>{
-    const t=e.target.closest('[data-x]'); if(t){ X[t.dataset.x]=!X[t.dataset.x]; syncX(); route(); return; }
-    const a=e.target.closest('[data-xall]'); if(a){ EXPERIMENTS.forEach(x=>{ X[x.id]=a.dataset.xall==='on'; }); syncX(); route(); return; }
-    if(e.target.closest('[data-xclose]')) openX(false);
-  });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&xp&&!xp.hidden) openX(false); });
   $('#dev-dobhelp').addEventListener('click',()=>{ dobHelp=!dobHelp; route(); });
   $('#dev-bar').addEventListener('click',()=>{ classicBar=!classicBar; route(); });
 }
 window.addEventListener('hashchange',route);
+$('#notes').addEventListener('click',e=>{ const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; X[t.dataset.x]=!X[t.dataset.x]; syncX(); route(); window.scrollTo(0,y); });
 route();
 })();
 </script>
