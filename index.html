@@ -443,7 +443,7 @@ const ty=TODAY.getFullYear(), tm=TODAY.getMonth(), td=TODAY.getDate();
 const MAXY=ty-18, MINY=ty-100;
 const ageOn=(y,m,d)=>{ let a=ty-y; if(tm<m||(tm===m&&td<d)) a--; return a; };
 const dim=(y,m)=>new Date(y,m+1,0).getDate();
-const DOBMSG={incomplete:'Enter your full date of birth',day:'Day must be between 1 and 31',month:'Month must be between 1 and 12',year:'Year must have four numbers, like 1990',future:'Your date of birth must be in the past',tooOld:'Please check the year. That would make you over 100.'};
+const DOBMSG={incomplete:'Enter your full date of birth',day:'Day must be between 1 and 31',month:'Month must be between 1 and 12',year:'Year must have four numbers, like 1990',future:'Your date of birth must be in the past',yearRange:'Please check the year. You need to be between 18 and 100 to apply.',tooOld:'Please check the year. That would make you over 100.'};
 const fmtDate=dt=>dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear();
 
 function validateDob(d,m,y,mode){
@@ -452,6 +452,7 @@ function validateDob(d,m,y,mode){
   if(mode==='submit'&&(!d||!m||!y)) return {field:!d?'day':!m?'month':'year',all:true,msg:DOBMSG.incomplete,type:'incomplete'};
   if(d&&(dn<1||dn>31)) return {field:'day',msg:DOBMSG.day,type:'day'};
   if(m&&(mn<1||mn>12)) return {field:'month',msg:DOBMSG.month,type:'month'};
+  if(y&&y.length===2&&mode!=='live'&&![1900+yn,2000+yn].some(c=>c>=MINY&&c<=MAXY)) return {field:'year',msg:DOBMSG.yearRange,type:'yearRange'};   // 09 to 25: 2009 is too young, 1925 too old
   if(y&&y.length!==4&&mode!=='live') return {field:'year',msg:DOBMSG.year,type:'year'};
   if(!(d&&m&&y.length===4)) return null;
   const dt=new Date(yn,mn-1,dn);
