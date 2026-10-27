@@ -115,6 +115,26 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .card .adr{flex:1;font-weight:500}
 .card .adr b{font-weight:700}
 .card .link{flex:none}
+.confirm-sub{margin:0 0 12px;font-size:18px;line-height:26px;font-weight:700}
+.lbwrap.paged::after{display:none}
+.lbwrap.paged .lb{max-height:none;overflow:visible}
+.lb>.opt:last-child{border-bottom:0}
+.more{margin:16px 0 24px}
+.cant{margin:16px 0 24px}
+.more+.cant{margin-top:-8px}
+.moved{border:0;padding:0;margin:0 0 24px;min-width:0}
+.moved legend{padding:0;margin-bottom:8px;font-weight:700;font-size:16px;line-height:24px}
+.mv-row{display:flex;gap:12px}
+.mv-f{flex:1;min-width:0}
+.mv-f.year{flex:1.5}
+.mv-f label{display:block;font-size:14px;line-height:20px;font-weight:500;color:var(--grey-text);margin-bottom:4px}
+.xid{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;background:#EDE7FD;color:#4a05b0;font-size:11px;line-height:18px;font-weight:700;font-style:normal;vertical-align:1px}
+.x-list{margin:0;padding:0;list-style:none;font-size:13px;line-height:18px}
+.x-list li{margin:8px 0;padding:8px 10px;border-radius:6px;background:#F5F3FB}
+.x-list i{font-style:normal;font-size:11px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:4px}
+.x-list i.on{background:#D6F5EC;color:#0B7A55}
+.x-list i.off{background:#E5E7EB;color:#4B5563}
+.x-list span{display:block;margin-top:2px;color:#374151;font-weight:400}
 .switch{display:inline-block;margin:0 0 24px}
 
 /* step 2 DOB */
@@ -254,6 +274,20 @@ body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:
 .dv-compare{flex:none;display:flex;align-items:center;padding-left:24px;border-left:1px solid #2c2c2c}
 .dv-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:8px;background:#fff;color:#111;font-size:13px;line-height:18px;font-weight:700;text-decoration:none;white-space:nowrap}
 .dv-btn:hover{background:#E5E7EB}
+.dv-compare{gap:10px}
+button.dv-btn{border:0;cursor:pointer;font-family:inherit}
+.xpanel{position:fixed;left:10px;right:10px;bottom:150px;max-width:660px;margin:0 auto;max-height:62vh;overflow:auto;z-index:41;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:12px;padding:14px 16px 6px;box-shadow:0 8px 32px rgba(0,0,0,.45);font-size:13px;line-height:18px}
+.xpanel[hidden]{display:none}
+.xhead{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-bottom:6px}
+.xhead b{font-size:15px}
+.xhead span{flex:1 1 100%;color:#b8bcc6}
+.xhead button{border:1px solid #555;background:transparent;color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer}
+.xstep{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#8A8F99}
+.xrow{padding:10px 0;border-top:1px solid #2c2c2c}
+.xrow .dv-switch{font-size:14px;text-align:left}
+.xrow p{margin:6px 0 0 48px;color:#c7cad1}
+.xrow p b{color:#fff}
+.xrow p.xneeds{color:#8A8F99;font-style:italic}
 @media (max-width:900px){ .dv-in{flex-direction:column;gap:10px} .dv-compare{border-left:0;padding-left:0} .dv-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;border-left:0;padding-left:0} }
 
 /* prototype chrome (never in screenshots) */
@@ -304,6 +338,47 @@ const ic=(id,cls='')=>'<svg class="ic '+cls+'" aria-hidden="true" focusable="fal
 const main=$('#main'), app=$('#app'), bar=$('#bar');
 const track=(name,data)=>{ (window.dataLayer=window.dataLayer||[]).push(Object.assign({event:name},data||{})); console.debug('[track]',name,data||''); };
 const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.className='note'; n.textContent=msg; document.body.appendChild(n); setTimeout(()=>n.remove(),3000); };
+/* ============================== EXPERIMENTS ==============================
+   Every change that could move drop-off on its own is a switch with the hypothesis it tests, so each can be A/B tested alone.
+   Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
+const EXPERIMENTS=[
+  {id:'addr-postcode-first',step:'address',on:true,name:'Postcode-first search and wording',
+   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious.",
+   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name.",
+   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup.",
+   metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
+  {id:'addr-single-list',step:'address',on:true,name:'One list of every address, no pagination',
+   hypothesis:"Pagination is what stops people choosing an address: they press 'See more addresses' again and again and give up before they find theirs. One list with every address removes the clicking.",
+   control:"Five addresses at a time with a 'See more addresses' button.",
+   variant:"Every address in one scrollable list with a count line ('15 addresses found'). No road headings and no filter box.",
+   metric:"Address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
+  {id:'addr-cant-see-button',step:'address',on:true,name:"'Can't see your address?' as its own button",
+   hypothesis:"When an address is missing (new builds are common), a small text link under the search box is easy to miss, so people reach a dead end and leave. A clear button where they are looking gives them a visible way on.",
+   control:"A small 'Manually enter address details' text link under the search box.",
+   variant:"A 'Can't see your address? Enter it manually' button under the results, and in the no-results and error messages. The small link is removed.",
+   metric:"address_manual_opened and completion of people who open it; abandonment after no results."},
+  {id:'addr-one-screen',step:'address',on:false,name:"'When did you move in?' on the same step",
+   hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking when they moved in on the address screen removes one page.",
+   control:"Time at address is a separate page after the address.",
+   variant:"Once an address is confirmed (or typed), 'When did you move in?' (month and year) appears on the same step, and the separate time-at-address page is skipped.",
+   metric:"Completion of the combined address and move-in section; total time through it; move-in validation errors."},
+  {id:'addr-street-groups',step:'address',on:false,needs:'addr-single-list',name:'Road headings in the list',
+   hypothesis:"A postcode can cover several streets, so headings per road help people scan to their street faster.",
+   control:"No headings.",
+   variant:"Sticky road headings with a count, only when the postcode covers more than one street.",
+   metric:"Position of the chosen address; time on step; wrong-address changes (address_change_opened)."},
+  {id:'addr-filter',step:'address',on:false,needs:'addr-single-list',name:'Type-to-filter box on long lists',
+   hypothesis:"On a long list, typing a house number to narrow it gets people to their address faster than scrolling.",
+   control:"No filter box.",
+   variant:"A filter box above lists of more than eight addresses. The list narrows as you type and the count updates.",
+   metric:"address_filter_used; time on step; step completion for long lists."}
+];
+const X={};
+(function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
+const xOn=id=>!!X[id];
+const syncX=()=>{ try{ const u=new URL(location.href); u.searchParams.set('x',EXPERIMENTS.filter(e=>X[e.id]).map(e=>e.id).join(',')||'none'); history.replaceState(null,'',u); }catch(e){} };
+const trackExposure=step=>EXPERIMENTS.filter(e=>e.step===step).forEach(e=>track('experiment_exposure',{id:e.id,variant:X[e.id]?'variant':'control'}));
+
 /* every page of the live "direct" flow (15 pages), in order. We only redesign three of them. */
 const PAGES=[
   {k:'finance-details',t:'Finance details'},{k:'vehicle-found',t:'Vehicle'},{k:'driving-licence',t:'Driving licence'},
@@ -349,10 +424,10 @@ const wireBack=()=>{ $('#back').addEventListener('click',e=>{e.preventDefault();
 const DOMAIN_FIX={'gmial.com':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gmil.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','hotmial.com':'hotmail.com','hotmal.com':'hotmail.com','hotmail.con':'hotmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yahoo.con':'yahoo.com','outlok.com':'outlook.com','outlook.con':'outlook.com','icloud.co':'icloud.com','icloud.con':'icloud.com'};
 const validEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 const stripPhone=v=>v.replace(/\(0\)/g,'').replace(/[\s\-().]/g,'');
-const normPhone=v=>{ let p=stripPhone(v); if(p.indexOf('+44')===0)p='0'+p.slice(3); else if(p.indexOf('0044')===0)p='0'+p.slice(4); else if(/^[1237]\d{9}$/.test(p)) p='0'+p;   /* 10 digits typed without the leading 0 */ return p; };
+const normPhone=v=>{ let p=stripPhone(v); if(p.indexOf('+44')===0)p='0'+p.slice(3); else if(p.indexOf('0044')===0)p='0'+p.slice(4); else if(/^440\d{10}$/.test(p)) p=p.slice(2); else if(/^44[1237]\d{9}$/.test(p)) p='0'+p.slice(2); else if(/^[1237]\d{9}$/.test(p)) p='0'+p;   /* 44 typed in front, or 10 digits typed without the leading 0 */ return p; };
 const isIntl=v=>/^(\+|00)(?!44)\d{8,15}$/.test(stripPhone(v));   // a non-UK number, so nobody is locked out
 const validPhone=v=>/^0[1237]\d{8,9}$/.test(normPhone(v))||isIntl(v);
-const fmtPhone=v=>{ const p=normPhone(v); if(/^07\d{9}$/.test(p)) return p.replace(/^(07\d{3})(\d{6})$/,'$1 $2'); if(isIntl(v)) return v.trim().replace(/^00/,'+'); if(/^[1237]\d{9}$/.test(stripPhone(v))) return '0'+v.trim(); return v.trim(); };
+const fmtPhone=v=>{ const p=normPhone(v); if(/^07\d{9}$/.test(p)) return p.replace(/^(07\d{3})(\d{6})$/,'$1 $2'); if(isIntl(v)) return v.trim().replace(/^00/,'+'); if(/^[1237]\d{9}$/.test(stripPhone(v))) return '0'+v.trim(); if(/^(\+44|0044|44)/.test(stripPhone(v))&&/^0[1237]\d{8,9}$/.test(p)) return p; return v.trim(); };
 function emailSuggestion(v){
   v=v.trim(); const at=v.lastIndexOf('@'); if(at<1||!validEmail(v)) return null;
   const local=v.slice(0,at); let dom=v.slice(at+1).toLowerCase(); const orig=dom;
@@ -369,12 +444,12 @@ function mountContact(preset){
   '<form id="f" novalidate aria-labelledby="step-title">'+
     '<div class="field">'+
       '<label for="email">Email address</label>'+
-      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="e.g. name@example.com" aria-describedby="email-msg"></div>'+
+      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" enterkeyhint="next" autocapitalize="none" spellcheck="false" placeholder="e.g. name@example.com" aria-describedby="email-msg"></div>'+
       '<div id="email-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div class="field">'+
       '<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We need a number to reach you about your application, for example to check a detail or confirm your approval.</span></span></div>'+
-      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 07700 900123" aria-describedby="phone-msg"></div>'+
+      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" placeholder="e.g. 07700 900123" aria-describedby="phone-msg"></div>'+
       '<div id="phone-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div id="form-msg" class="formerr" aria-live="polite"></div>'+
@@ -413,6 +488,7 @@ function mountContact(preset){
   }
   email.addEventListener('blur',()=>{ if(email.value.trim()){ touched.email=true; paint('email'); } });
   email.addEventListener('input',()=>{ if(touched.email) paint('email'); });
+  email.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); phone.focus(); } });   // Enter moves on to the phone box
   phone.addEventListener('blur',()=>{ if(phone.value.trim()){ touched.phone=true; if(validPhone(phone.value)) phone.value=fmtPhone(phone.value); paint('phone'); } });
   phone.addEventListener('input',()=>{ if(touched.phone) paint('phone'); });
 
@@ -499,7 +575,7 @@ function mountDob(preset){
   '<form id="f" novalidate aria-labelledby="step-title">'+
     '<label class="sr" for="dob">Date of birth</label>'+
     '<div class="dob-row">'+
-      '<div class="seg" id="seg"><div class="control"><input class="input" id="dob" type="text" inputmode="numeric" autocomplete="bday" autocapitalize="off" spellcheck="false" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg"><div class="mask" id="dob-mask" aria-hidden="true"></div>'+ic('i-tick','tick')+'</div></div>'+
+      '<div class="seg" id="seg"><div class="control"><input class="input" id="dob" type="text" inputmode="numeric" autocomplete="bday" enterkeyhint="go" autocapitalize="off" spellcheck="false" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg"><div class="mask" id="dob-mask" aria-hidden="true"></div>'+ic('i-tick','tick')+'</div></div>'+
       '<button type="button" class="calbtn" id="calbtn" aria-haspopup="dialog" aria-label="Choose your date of birth from a calendar">'+ic('i-cal')+'</button>'+
     '</div>'+
     '<div class="dobmsg" id="dob-msg" aria-live="polite"></div>'+
@@ -641,71 +717,92 @@ function mockLookup(pc,instant){
 }
 const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowerCase()); if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+f.length))+'</mark>'+esc(t.slice(i+f.length)); };
 
+function mockSearch(text,instant){
+  // a postcode looks up its addresses; anything else is a street or address search across the sample addresses
+  const clean=text.replace(/[^A-Za-z0-9]/g,'');
+  if(UK_PC.test(clean)) return mockLookup(fmtPC(text),instant);
+  const t=text.trim().toLowerCase();
+  return mockLookup('CR0 3AG',instant).then(list=>list.filter(a=>a.line1.toLowerCase().indexOf(t)>-1));
+}
+
 function mountAddress(preset){
   preset=preset||{};
   setProgress('address-add');
-  const S={postcode:'',status:'idle',list:[],filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''}};
+  trackExposure('address');
+  // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
+  const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=xOn('addr-cant-see-button'), MOV=xOn('addr-one-screen');
+  const GRP=ONE&&xOn('addr-street-groups'), FLT=ONE&&xOn('addr-filter');
+  const PAGE=5;   // the live page shows this many addresses at a time
+  const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{m:'',y:''}};
   let seq=0, timer=null;
   main.innerHTML=backLink+
-  '<h1 id="step-title">Next, what\'s your postcode?</h1>'+
+  '<h1 id="step-title">'+(PF?'Next, what\'s your postcode?':'Next, where do you live?')+'</h1>'+
   '<button type="button" class="why" id="why" aria-expanded="false" aria-controls="why-panel">'+ic('chevron-right')+'<span>Why do we ask this?</span></button>'+
   '<div class="why-panel" id="why-panel" hidden>Lenders use your address to confirm who you are and check you\'re eligible for finance.</div>'+
-  '<form id="f" novalidate aria-labelledby="step-title"><div id="zone"></div><div id="cont-msg" aria-live="polite"></div>'+
+  '<form id="f" novalidate aria-labelledby="step-title"><div id="zone"></div><div id="moved"></div><div id="cont-msg" aria-live="polite"></div>'+
   '<button type="submit" class="btn" id="cont" hidden>Continue'+ic('arrow-right')+'</button></form>';
   wireBack();
   const zone=$('#zone'), cont=$('#cont');
   $('#why').addEventListener('click',e=>{ const b=e.currentTarget, open=b.getAttribute('aria-expanded')!=='true'; b.setAttribute('aria-expanded',open); $('#why-panel').hidden=!open; });
+  zone.addEventListener('click',e=>{ if(e.target.closest('[data-manual]')) goManual(false); });   // every 'enter it manually' button
 
-  const sortAddr=(a,b)=>a.n-b.n||a.sub.localeCompare(b.sub);
+  const sortAddr=(a,b)=>a.street.localeCompare(b.street)||a.n-b.n||a.sub.localeCompare(b.sub);
+  const cleanPc=v=>v.replace(/[^A-Za-z0-9]/g,'');
+  const looksPc=v=>UK_PC.test(cleanPc(v));
+  const qlabel=()=>S.isPc?S.postcode:'“'+S.postcode.trim()+'”';
   function filtered(){
-    const f=S.filter.trim().toLowerCase();
+    const f=FLT?S.filter.trim().toLowerCase():'';
     const items=S.list.filter(a=>!f||a.line1.toLowerCase().indexOf(f)>-1).sort(sortAddr);
     const by=new Map(); items.forEach(a=>{ if(!by.has(a.street)) by.set(a.street,[]); by.get(a.street).push(a); });
     return {items:items,groups:Array.from(by).sort((a,b)=>a[0].localeCompare(b[0]))};
   }
+  const visible=()=>{ const g=filtered(); return ONE?g.items:g.items.slice(0,S.shown); };
   function updateCont(){ cont.hidden=!(S.selected||S.manual||S.status==='results'); }
 
   function drawZone(){
     if(S.selected){
       const a=S.selected;
-      zone.innerHTML='<div class="card">'+ic('location','pin')+'<div class="adr"><b>'+esc(a.line1)+'</b><br>'+esc(a.town)+'<br>'+esc(a.postcode)+'</div><button type="button" class="link" id="change" aria-label="Change address">Change</button></div>';
-      $('#change').addEventListener('click',()=>{ S.selected=null; drawZone(); const t=$('#flt')||$('#lb')||$('#pc'); if(t) t.focus(); });
+      zone.innerHTML='<p class="confirm-sub" id="confirm-sub">Is this your address?</p><div class="card">'+ic('location','pin')+'<div class="adr"><b>'+esc(a.line1)+'</b><br>'+esc(a.town)+'<br>'+esc(a.postcode)+'</div><button type="button" class="link" id="change" aria-label="Change address">Change</button></div>';
+      $('#change').addEventListener('click',()=>{ track('address_change_opened'); goManual(true); });   // straight to the form, filled in: often only one field needs editing
     } else if(S.manual){
       drawManual();
     } else drawSearch();
-    updateCont();
+    drawMoved(); wireEnter(); updateCont();
   }
 
-  /* --- postcode search --- */
+  /* --- search box: postcode only (variant) or the live 'address or street name' box (control) --- */
   function drawSearch(){
     zone.innerHTML=
-    '<div class="field" id="pc-field"><label for="pc">Postcode</label>'+
-      '<div class="control"><input class="input" id="pc" type="text" maxlength="14" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" placeholder="e.g. CR0 3AG" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
+    '<div class="field" id="pc-field"><label for="pc">'+(PF?'Postcode':'Search for your address')+'</label>'+
+      '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
-    '<button type="button" class="btn secondary" id="find">Find address</button>'+
+    (PF?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+
+    (CSB?'':'<button type="button" class="link manual" data-manual>Manually enter address details</button>')+
     '<div id="results"></div>';
     const pc=$('#pc');
     pc.addEventListener('input',()=>{
-      S.postcode=pc.value.toUpperCase(); pc.value=S.postcode;
+      S.postcode=PF?pc.value.toUpperCase():pc.value; if(PF) pc.value=S.postcode;
       clearTimeout(timer); seq++;
-      if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; paint(); }
-      if(UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''))) timer=setTimeout(()=>lookup('auto'),400);
+      if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; paint(); }
+      if(PF?looksPc(S.postcode):S.postcode.trim().length>=3) timer=setTimeout(()=>lookup('auto'),400);
     });
-    pc.addEventListener('blur',()=>{ const f=fmtPC(pc.value); if(UK_PC.test(f.replace(/\s/g,''))&&f!==pc.value){ pc.value=f; S.postcode=f; } });
+    pc.addEventListener('blur',()=>{ if(!looksPc(pc.value)) return; const f=fmtPC(pc.value); if(f!==pc.value){ pc.value=f; S.postcode=f; } });
     pc.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(timer); lookup('button'); } });
-    $('#find').addEventListener('click',()=>{ clearTimeout(timer); lookup('button'); });
+    const find=$('#find'); if(find) find.addEventListener('click',()=>{ clearTimeout(timer); lookup('button'); });
     paint();
   }
   function lookup(source,instant){
     if(S.status==='loading') return;
-    if(!S.postcode.trim()||!UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''))){ S.status='invalid'; return paint(); }
-    S.postcode=fmtPC(S.postcode); const pcEl=$('#pc'); if(pcEl) pcEl.value=S.postcode;   // tidy what was typed or pasted
+    const txt=S.postcode.trim();
+    if(!txt||(PF?!looksPc(txt):txt.length<3&&!looksPc(txt))){ S.status='invalid'; return paint(); }
+    S.isPc=looksPc(txt);
+    if(S.isPc){ S.postcode=fmtPC(S.postcode); const el=$('#pc'); if(el) el.value=S.postcode; }   // tidy what was typed or pasted
     const my=++seq; S.status='loading'; paint(); track('address_lookup_started',{source:source});
     // never leave a spinner running: after LOOKUP_TIMEOUT fall back to the manual route
     const to=setTimeout(()=>{ if(my===seq&&S.status==='loading'){ seq++; S.status='error'; paint(); track('address_lookup_timeout'); } },LOOKUP_TIMEOUT);
-    return mockLookup(S.postcode,instant).then(list=>{
+    return mockSearch(S.postcode,instant).then(list=>{
       clearTimeout(to); if(my!==seq) return;
-      S.list=list; S.status=list.length?'results':'empty'; S.filter=''; S.active=null;
+      S.list=list; S.status=list.length?'results':'empty'; S.filter=''; S.active=null; S.shown=PAGE;
       if(list.length===1){ S.selected=list[0]; drawZone(); track('address_selected',{position:1}); return; }
       paint();
       if(list.length){ track('address_results_shown',{count:list.length}); const c=$('#count'); if(c&&!instant) c.focus(); }
@@ -715,35 +812,35 @@ function mountAddress(preset){
     const pc=$('#pc'); if(!pc) return;
     const msg=$('#pc-msg'), find=$('#find'), res=$('#results');
     $('#pc-spin').hidden=S.status!=='loading';
-    find.hidden=S.status==='results'; find.disabled=S.status==='loading';
+    if(find){ find.hidden=S.status==='results'; find.disabled=S.status==='loading'; }
     pc.classList.toggle('err',S.status==='invalid'||S.status==='empty'||S.status==='error');
     pc.setAttribute('aria-invalid',pc.classList.contains('err')?'true':'false');
     let m='';
-    if(S.status==='invalid') m=errHTML(S.postcode.trim()?'Enter a full UK postcode, like CR0 3AG':'Enter your postcode');
-    if(S.status==='empty') m=errHTML('We couldn\'t find any addresses for '+S.postcode+'. Check the postcode, or enter your address manually.')+'<button type="button" class="link manual" id="manual-link">Enter your address manually</button>';
-    if(S.status==='error') m=errHTML('Our address finder isn\'t working right now. Please enter your address manually.')+'<div style="margin-top:16px"><button type="button" class="btn secondary" id="manual-link">Enter address manually</button></div>';
+    if(S.status==='invalid') m=errHTML(PF?(S.postcode.trim()?'Enter a full UK postcode, like CR0 3AG':'Enter your postcode'):'Enter your postcode or street name');
+    if(S.status==='empty') m=errHTML('We couldn\'t find any addresses for '+qlabel()+'. '+(S.isPc?'Check the postcode':'Check what you typed')+', or enter your address manually.')+(CSB?'<button type="button" class="link manual" data-manual>Enter your address manually</button>':'');
+    if(S.status==='error') m=errHTML('Our address finder isn\'t working right now. Please enter your address manually.')+(CSB?'<div style="margin-top:16px"><button type="button" class="btn secondary" data-manual>Enter address manually</button></div>':'');
     msg.innerHTML=m;
     if(S.status==='invalid') track('address_validation_error');
-    const ml=$('#manual-link'); if(ml&&S.status!=='results') ml.addEventListener('click',goManual);
     if(S.status==='results') drawResults(); else res.innerHTML='';
     updateCont();
   }
 
-  /* --- results: one scroll container, grouped by street, typeahead filter --- */
+  /* --- results: one scroll container (single list) or five at a time (live) --- */
   function drawResults(){
     const res=$('#results'), many=S.list.length>8;
     res.innerHTML=
-      '<p class="count" id="count" tabindex="-1" aria-live="polite"></p>'+
-      (many?'<div class="control filter">'+ic('search')+'<input class="input" id="flt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your house number or name" aria-label="Filter addresses" aria-controls="lb" value="'+esc(S.filter)+'"></div>':'')+
-      '<div class="lbwrap" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(S.postcode)+'"></div></div>'+
+      '<p class="count'+(ONE?'':' sr')+'" id="count" tabindex="-1" aria-live="polite"></p>'+
+      (FLT&&many?'<div class="control filter">'+ic('search')+'<input class="input" id="flt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your house number or name" aria-label="Filter addresses" aria-controls="lb" value="'+esc(S.filter)+'"></div>':'')+
+      '<div class="lbwrap'+(ONE?'':' paged')+'" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(qlabel())+'"></div></div>'+
       '<p class="nomatch" id="nomatch" hidden></p>'+
-      '<button type="button" class="link manual" id="manual-link">Can\'t see your address? Enter it manually</button>'+
+      (ONE?'':'<button type="button" class="btn secondary more" id="more">See more addresses</button>')+
+      (CSB?'<button type="button" class="btn secondary cant" data-manual>Can\'t see your address? Enter it manually</button>':'')+
       '<div id="sel-msg" aria-live="polite"></div>';
-    const lb=$('#lb'), flt=$('#flt');
+    const lb=$('#lb'), flt=$('#flt'), more=$('#more');
     lb.addEventListener('scroll',atEnd);
     lb.addEventListener('click',e=>{ const o=e.target.closest('.opt'); if(o) choose(o.dataset.id); });
     lb.addEventListener('keydown',e=>{
-      const items=filtered().items; if(!items.length) return;
+      const items=visible(); if(!items.length) return;
       let i=items.findIndex(a=>a.id===S.active);
       if(e.key==='ArrowDown'){ e.preventDefault(); i=Math.min(items.length-1,i+1); }
       else if(e.key==='ArrowUp'){ e.preventDefault(); i=Math.max(0,i<0?0:i-1); }
@@ -756,9 +853,9 @@ function mountAddress(preset){
     });
     if(flt){
       flt.addEventListener('input',()=>{ S.filter=flt.value; S.active=null; drawList(); if(S.filter.trim()) track('address_filter_used'); });
-      flt.addEventListener('keydown',e=>{ if(e.key==='ArrowDown'){ e.preventDefault(); const it=filtered().items[0]; lb.focus(); if(it) setActive(it.id); } if(e.key==='Enter') e.preventDefault(); });
+      flt.addEventListener('keydown',e=>{ if(e.key==='ArrowDown'){ e.preventDefault(); const it=visible()[0]; lb.focus(); if(it) setActive(it.id); } if(e.key==='Enter') e.preventDefault(); });
     }
-    $('#manual-link').addEventListener('click',goManual);
+    if(more) more.addEventListener('click',()=>{ S.shown+=PAGE; track('address_see_more',{shown:S.shown}); drawList(); });
     drawList();
   }
   function setActive(id){
@@ -768,30 +865,36 @@ function mountAddress(preset){
   }
   function atEnd(){ const lb=$('#lb'); if(!lb) return; $('#lbwrap').classList.toggle('at-end',lb.scrollTop+lb.clientHeight>=lb.scrollHeight-4); }
   function drawList(){
-    const g=filtered(), lb=$('#lb'), f=S.filter.trim(), multi=g.groups.length>1, total=S.list.length;
-    $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+S.postcode);
-    lb.innerHTML=g.groups.map(([street,arr])=>'<div role="group" aria-label="'+esc(street)+'">'+(multi?'<div class="grp" aria-hidden="true">'+esc(street)+' · '+arr.length+'</div>':'')+
-      arr.map(a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(a.line1,f)+'</span></div>').join('')+'</div>').join('');
+    const g=filtered(), lb=$('#lb'), f=FLT?S.filter.trim():'', total=S.list.length, items=ONE?g.items:g.items.slice(0,S.shown);
+    $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+qlabel());
+    const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(a.line1,f)+'</span></div>';
+    if(GRP){   // optional: road headings, only when the postcode covers more than one street
+      const multi=g.groups.length>1;
+      lb.innerHTML=g.groups.map(([street,arr])=>'<div role="group" aria-label="'+esc(street)+'">'+(multi?'<div class="grp" aria-hidden="true">'+esc(street)+' · '+arr.length+'</div>':'')+arr.map(opt).join('')+'</div>').join('');
+    } else lb.innerHTML=items.map(opt).join('');
     lb.removeAttribute('aria-activedescendant');
     const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0;
     if(!g.items.length) nm.textContent='No addresses match "'+S.filter+'". Check the number, or enter your address manually.';
+    const more=$('#more'); if(more) more.hidden=g.items.length<=S.shown;
     lb.scrollTop=0; atEnd();
   }
   function choose(id){
     S.selected=S.list.find(a=>a.id===id); S.manual=false; $('#cont-msg').innerHTML='';
     track('address_selected',{position:S.list.indexOf(S.selected)+1});
-    drawZone(); cont.focus();
+    drawZone(); const mv=$('#mv-m'); (mv||cont).focus();
   }
-  function goManual(){
-    track('address_manual_opened',{reason:S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
-    S.manual=true; S.selected=null; S.man.pc=S.postcode; drawZone(); const n=$('#man-n'); if(n) n.focus();
+  function goManual(fromSelected){
+    track('address_manual_opened',{reason:fromSelected?'change_address':S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
+    if(fromSelected&&S.selected){ const a=S.selected; S.man={n:(a.sub?a.sub+', ':'')+a.n,street:a.street,town:a.town,pc:a.postcode}; }   // the chosen address, ready to edit
+    else if(S.isPc) S.man.pc=S.postcode;
+    S.manual=true; S.selected=null; drawZone(); const n=$('#man-n'); if(n) n.focus();
   }
 
   /* --- manual entry --- */
   function drawManual(){
     const F=[['n','Flat, house name or number','man-n','address-line1','Enter your flat, house name or number'],['street','Street','man-street','address-line2','Enter your street'],['town','Town or city','man-town','address-level2','Enter your town or city'],['pc','Postcode','man-pc','postal-code','Enter a full UK postcode, like CR0 3AG']];
     zone.innerHTML=F.map(f=>'<div class="field"><label for="'+f[2]+'">'+f[1]+'</label><div class="control"><input class="input" id="'+f[2]+'" data-k="'+f[0]+'" type="text" autocomplete="'+f[3]+'" value="'+esc(S.man[f[0]])+'"'+(f[0]==='pc'?' maxlength="14" autocapitalize="characters"':'')+'></div><div id="'+f[2]+'-msg" aria-live="polite"></div></div>').join('')+
-      '<button type="button" class="link switch" id="to-search">Search by postcode instead</button>';
+      '<button type="button" class="link switch" id="to-search">'+(PF?'Search by postcode instead':'Search for your address instead')+'</button>';
     $$('input',zone).forEach(i=>i.addEventListener('input',()=>{ S.man[i.dataset.k]=i.dataset.k==='pc'?i.value.toUpperCase():i.value; if(i.dataset.k==='pc') i.value=S.man.pc; if(i.classList.contains('err')) manualCheck(i,F); }));
     $('#to-search').addEventListener('click',()=>{ S.manual=false; drawZone(); const p=$('#pc'); if(p) p.focus(); });
     zone._F=F;
@@ -804,11 +907,61 @@ function mountAddress(preset){
     return !bad;
   }
 
+  /* --- optional: 'When did you move in?' on the same step (addr-one-screen) --- */
+  function drawMoved(){
+    const el=$('#moved');
+    if(!MOV||!(S.selected||S.manual)){ el.innerHTML=''; return; }
+    el.innerHTML='<fieldset class="moved"><legend>When did you move in?</legend><div class="mv-row">'+
+      '<div class="mv-f"><label for="mv-m">Month</label><input class="input" id="mv-m" type="text" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="MM" aria-describedby="mv-msg" value="'+esc(S.mv.m)+'"></div>'+
+      '<div class="mv-f year"><label for="mv-y">Year</label><input class="input" id="mv-y" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="YYYY" aria-describedby="mv-msg" value="'+esc(S.mv.y)+'"></div>'+
+      '</div><div id="mv-msg" aria-live="polite"></div></fieldset>';
+    const m=$('#mv-m'), y=$('#mv-y'), digits=el=>{ el.value=el.value.replace(/\D/g,''); };
+    m.addEventListener('input',()=>{ digits(m); if(m.value.length===1&&+m.value>1) m.value='0'+m.value; S.mv.m=m.value; if(m.value.length===2&&!movedError(false)) y.focus(); movedCheck(false); });
+    y.addEventListener('input',()=>{ digits(y); S.mv.y=y.value; movedCheck(false); });
+    m.addEventListener('blur',()=>{ if(m.value.length===1){ m.value='0'+m.value; S.mv.m=m.value; } movedCheck(false); });
+    y.addEventListener('blur',()=>{ if(y.value) movedCheck(false,true); });
+  }
+  function movedError(final,yblur){
+    const m=S.mv.m, y=S.mv.y, ty=TODAY.getFullYear(), tmo=TODAY.getMonth()+1;
+    if(final&&m.length===1) S.mv.m=m='0'+m;
+    if(m.length===2&&(+m<1||+m>12)) return {f:'m',msg:'Month must be between 1 and 12'};
+    if(y&&y.length!==4&&(final||yblur)) return {f:'y',msg:'Year must have four numbers, like 2019'};
+    if(y.length===4){
+      if(+y>ty||(+y===ty&&m.length===2&&+m>tmo)) return {f:'y',msg:'The date you moved in must be in the past'};
+      if(+y<ty-100) return {f:'y',msg:'Please check the year'};
+    }
+    if(final){
+      if(!m&&!y) return {f:'m',msg:'Enter the month and year you moved in'};
+      if(!m) return {f:'m',msg:'Enter the month you moved in'};
+      if(!y) return {f:'y',msg:'Enter the year you moved in'};
+    }
+    return null;
+  }
+  function movedCheck(final,yblur){
+    const e=movedError(final,yblur), m=$('#mv-m'), y=$('#mv-y'), msg=$('#mv-msg'); if(!m) return e;
+    if(final&&m.value!==S.mv.m) m.value=S.mv.m;
+    m.classList.toggle('err',!!e&&e.f==='m'); y.classList.toggle('err',!!e&&e.f==='y');
+    m.setAttribute('aria-invalid',String(!!e&&e.f==='m')); y.setAttribute('aria-invalid',String(!!e&&e.f==='y'));
+    msg.innerHTML=e?errHTML(e.msg):'';
+    if(e&&(final||yblur)) track('address_moved_validation_error');
+    return e;
+  }
+
+  /* --- the keyboard's Enter key goes to the next field, and submits on the last one --- */
+  function wireEnter(){
+    const ins=$$('#zone input[data-k], #moved input');
+    ins.forEach((el,i)=>{
+      el.enterKeyHint=i<ins.length-1?'next':'go';
+      el.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; e.preventDefault(); if(i<ins.length-1) ins[i+1].focus(); else $('#f').requestSubmit(); });
+    });
+  }
+
   $('#f').addEventListener('submit',e=>{
     e.preventDefault();
-    if(S.selected){ note('Prototype: this goes to the next step.'); return; }
-    if(S.manual){ const F=zone._F; let first=null; F.forEach(f=>{ const i=$('#'+f[2]); if(!manualCheck(i,F)&&!first) first=i; }); if(first){ first.focus(); return; } note('Prototype: this goes to the next step.'); return; }
-    $('#cont-msg').innerHTML='<div style="margin-bottom:16px">'+errHTML('Choose your address from the list to continue')+'</div>'; const t=$('#lb'); if(t) t.focus();
+    if(!S.selected&&!S.manual){ $('#cont-msg').innerHTML='<div style="margin-bottom:16px">'+errHTML('Choose your address from the list to continue')+'</div>'; const t=$('#lb'); if(t) t.focus(); return; }
+    if(S.manual){ const F=zone._F; let first=null; F.forEach(f=>{ const i=$('#'+f[2]); if(!manualCheck(i,F)&&!first) first=i; }); if(first){ first.focus(); if(MOV) movedCheck(true); return; } }
+    if(MOV){ const err=movedCheck(true); if(err){ $(err.f==='m'?'#mv-m':'#mv-y').focus(); return; } track('address_moved_in_entered'); }
+    note('Prototype: this goes to the next step.');
   });
 
   /* --- presets for screenshots --- */
@@ -816,9 +969,9 @@ function mountAddress(preset){
   if(preset.postcode){ S.postcode=preset.postcode; $('#pc').value=preset.postcode; }
   // the lookup is async even when instant, so apply the rest of the preset once it has resolved
   Promise.resolve(preset.lookup?lookup('button',true):null).then(()=>{
-    if(preset.filter){ S.filter=preset.filter; const fl=$('#flt'); if(fl) fl.value=preset.filter; drawList(); }
+    if(preset.filter&&FLT){ S.filter=preset.filter; const fl=$('#flt'); if(fl) fl.value=preset.filter; drawList(); }
     if(preset.select){ S.selected=S.list.find(a=>a.line1===preset.select); drawZone(); }
-    if(preset.manual){ goManual(); }
+    if(preset.manual){ goManual(false); }
   });
 }
 
@@ -830,29 +983,36 @@ let dobHelp=qs.get('dobhelp')!=='0';   // the 'For example' line and the 'That m
 const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact:'Step 3: Contact details'};
 const CHANGES={
   "address/default":[
-    ["Postcode first, nothing else to fill in","Easy to start: everyone knows their postcode"],
-    ["Search runs by itself once the postcode is valid","One less tap"],
-    ["'Find address' button kept as a backup","Still works if the search doesn't start"],
+    ["Postcode first, nothing else to fill in","Easy to start: everyone knows their postcode","addr-postcode-first"],
+    ["Search runs by itself once the postcode is valid","One less tap","addr-postcode-first"],
+    ["'Find address' button kept as a backup","Still works if the search doesn't start","addr-postcode-first"],
+    ["Keyboard Enter key searches, and moves between fields","Fewer taps with the keyboard open"],
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
   "address/results":[
-    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address"],
-    ["Grouped by street","Easier to scan"],
-    ["Filter box to jump to a house number","A long list becomes a few rows"],
-    ["Count confirms the search worked","Removes the doubt that makes people leave"],
-    ["'Enter it manually' always under the list","No dead end if your address is missing"]],
+    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-single-list"],
+    ["Count confirms the search worked","Removes the doubt that makes people leave","addr-single-list"],
+    ["Grouped by street","Easier to scan","addr-street-groups"],
+    ["Filter box to jump to a house number","A long list becomes a few rows","addr-filter"],
+    ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-cant-see-button"]],
   "address/filtered":[
-    ["List narrows as you type, matches in bold","Reach your address faster"],
-    ["Count updates: 'Showing 8 of 15'","Shows the filter is working"],
-    ["Still grouped by street","Stays easy to scan"]],
+    ["List narrows as you type, matches in bold","Reach your address faster","addr-filter"],
+    ["Count updates: 'Showing 8 of 15'","Shows the filter is working","addr-filter"],
+    ["Still grouped by street","Stays easy to scan","addr-street-groups"]],
   "address/selected":[
     ["Chosen address shown as a summary card","Confirms the right address is used"],
-    ["'Change' link to pick again","A mistake is fixed in one tap"],
+    ["'Is this your address?' above it, title unchanged","Makes the confirm step obvious"],
+    ["'Change' opens the form with the address filled in","Fixing one field is one edit, not a new search"],
     ["Continue appears once an address is chosen","A clear next step, nothing to puzzle over"]],
   "address/manual":[
     ["Short form, four fields","Quick for people whose address isn't listed"],
     ["Postcode carried over from the search","Less retyping"],
-    ["'Search by postcode instead' link back","Manual entry is never a trap"]],
+    ["Starts filled in when you press Change","Edit the one field that is wrong"],
+    ["Enter moves to the next field","Fewer taps with the keyboard open"],
+    ["Link back to the search","Manual entry is never a trap"]],
+  "address/moved":[
+    ["'When did you move in?' on the same step, month and year","One fewer screen in the address section","addr-one-screen"],
+    ["Month moves on to year by itself, Enter continues","Quick to fill in on a phone","addr-one-screen"]],
   "address/error":[
     ["Error says what to fix, with an example","Fewer repeat errors"],
     ["Field and message turn red together","Easy to see what to fix"]],
@@ -861,6 +1021,7 @@ const CHANGES={
     ["Slashes added as you type","Fewer format mistakes"],
     ["Rest of the date stays in grey as you type","Shows what is still to come"],
     ["Numeric keypad on mobile","Faster on a phone"],
+    ["Keyboard shows a Go key","Enter sends the page"],
     ["Calendar button as a second way in","A route for people who dislike typing"],
     ["Example shown under the question","No guessing the format"],
     ["A two-digit year like 77 is read as 1977","No error for a common way of typing a date"],
@@ -884,6 +1045,8 @@ const CHANGES={
     ["Intro line and field hints removed","Less to read, and the fields sit higher up"],
     ["'?' next to the phone number explains why it's needed","Answers the spam worry on hover or tap, without adding a box"],
     ["Button now says 'See my results'","Matches the headline and what you get"],
+    ["Enter moves from email to phone, then sends","Fewer taps with the keyboard open"],
+    ["A number typed with 44 at the start is corrected to start with 0","Fewer rejected numbers"],
     ["Phone accepts spaces, brackets, +44, a missing leading 0 and non-UK numbers","Fewer phone validation failures"]],
   "contact/errors":[
     ["Plain errors with an example, for email and phone","Fewer repeat errors"]],
@@ -895,7 +1058,7 @@ const CHANGES={
     ["Fields lock while it sends","Stops double taps"]]
 };
 const SUMMARY={
-  address:{what:"The single 'address or street name' box is now a postcode-first search. 'See more addresses' is replaced by one scrollable, filterable list, with a way to enter the address manually if it is missing.",
+  address:{what:"The single 'address or street name' box is now a postcode-first search, 'See more addresses' is one scrollable list, and a clear 'Can't see your address?' button replaces the small manual link. After choosing, 'Is this your address?' confirms it and Change opens the form with the address filled in. Each of these is a separate switch so it can be A/B tested alone.",
            why:"There is less to decide before the first tap, no repeated clicking to find an address deep in the list, and no dead end for people whose address is not listed."},
   dob:{what:"Three separate boxes are now one box that adds the slashes for you, with a calendar that goes year, then month, then day as a second way in. Tapping the day finishes it.",
        why:"It is faster and less fiddly on a phone, and typing mistakes are caught straight away. A collapsed 'Why do we ask this?' line under the heading answers the doubt behind the leaving."},
@@ -903,26 +1066,32 @@ const SUMMARY={
            why:"People worried about unwanted calls get an answer at the moment they hesitate, without a box adding to the page. Fewer people should drop out of a page where everything else is already filled in."}
 };
 
+function xList(step){
+  const ex=EXPERIMENTS.filter(e=>e.step===step); if(!ex.length) return '';
+  return '<p class="n-sub" style="margin-top:14px">Experiments on this step</p><ul class="x-list">'+ex.map(e=>'<li><b>'+esc(e.id)+'</b><i class="'+(X[e.id]?'on':'off')+'">'+(X[e.id]?'variant on':'control (live)')+'</i><span>'+esc(e.hypothesis)+'</span></li>').join('')+'</ul>';
+}
 function paintNotes(k){
   const btn=$('#dev-notes');
   if(btn){ btn.setAttribute('aria-checked',String(notesOn)); }
   document.body.classList.toggle('notes-on',notesOn); document.body.classList.toggle('shot',SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], list=(CHANGES[k]||[]).filter(p=>dobHelp||!/^Example shown|confirms the date/.test(p[0]));
+  const step=k.split('/')[0], list=(CHANGES[k]||[]).filter(p=>(dobHelp||!/^Example shown|confirms the date/.test(p[0]))&&(!p[2]||X[p[2]]));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>';
+    '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+(p[2]?'<span class="xid">'+esc(p[2])+'</span>':'')+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>'+xList(step);
   const sm=SUMMARY[step];
   $('#summary').innerHTML='<h3>Summary</h3><p class="s-what"><b>What changed</b>'+esc(sm.what)+'</p><p class="s-why"><b>Why it should reduce abandoned sessions</b>'+esc(sm.why)+'</p><p class="s-note">Expected effect, not a measured result.</p>';
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
+const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   // a state that only makes sense with some switches on
 const ROUTES={
   'address/default':()=>mountAddress(),
   'address/results':()=>mountAddress({postcode:'CR0 3AG',lookup:true}),
-  'address/filtered':()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'}),
+  'address/filtered':force(['addr-single-list','addr-street-groups','addr-filter'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
   'address/selected':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'}),
   'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
+  'address/moved':force(['addr-one-screen'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'})),
   'address/error':()=>mountAddress({postcode:'CR0 3A',lookup:true}),
   'dob/default':()=>mountDob(),
   'dob/picker-year':()=>mountDob({picker:{y:null,m:null,d:null,view:'year'}}),
@@ -948,14 +1117,25 @@ const STEPS=[
   {key:'contact',n:3,label:'Contact details'}
 ];
 const STATE_LABELS={
-  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error',
+  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error','address/moved':'Moved in',
   'dob/default':'Empty','dob/picker-year':'Calendar: year','dob/picker-day':'Calendar: day','dob/valid':'Valid','dob/under18':'Under 18',
   'contact/default':'Default','contact/errors':'Errors','contact/suggestion':'Email suggestion','contact/submitting':'Submitting'
 };
-let dev=null;
+let dev=null, xp=null;
 const ORDER=Object.keys(ROUTES);
+function paintX(){
+  const b=$('#dev-x'); if(b) b.textContent='Experiments ('+EXPERIMENTS.filter(e=>X[e.id]).length+' on)';
+  if(!xp) return;
+  const keep=xp.scrollTop, steps=Array.from(new Set(EXPERIMENTS.map(e=>e.step)));
+  xp.innerHTML='<div class="xhead"><b>Experiments</b><button type="button" data-xall="on">All on</button><button type="button" data-xall="off">All off (live site)</button><button type="button" data-xclose>Close</button><span>Each switch is one change with one hypothesis. Off is what the live site does today.</span></div>'+
+    steps.map(st=>'<p class="xstep">'+esc(STEP_TITLES[st])+'</p>'+EXPERIMENTS.filter(e=>e.step===st).map(e=>
+      '<div class="xrow"><button type="button" class="dv-switch" role="switch" data-x="'+e.id+'" aria-checked="'+X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button>'+
+      '<p><b>Hypothesis.</b> '+esc(e.hypothesis)+'</p><p><b>Off (live):</b> '+esc(e.control)+'</p><p><b>On:</b> '+esc(e.variant)+'</p>'+(e.needs?'<p class="xneeds">Applies to the single list ('+e.needs+').</p>':'')+'</div>').join('')).join('');
+  xp.scrollTop=keep;
+}
 function paintDev(cur){
   if(!dev) return;
+  paintX();
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
   const hb=dev.querySelector('#dev-dobhelp'); if(hb){ hb.hidden=step!=='dob'; hb.setAttribute('aria-checked',String(dobHelp)); }
   const bb=dev.querySelector('#dev-bar'); if(bb) bb.setAttribute('aria-checked',String(classicBar));
@@ -973,12 +1153,21 @@ if(!SHOT){
        '<button type="button" class="dv-switch" id="dev-dobhelp" role="switch" aria-checked="true" hidden><span class="dv-track"><span class="dv-knob"></span></span>Example and age line</button>'+
        '<button type="button" class="dv-switch" id="dev-bar" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Classic progress bar</button>'+
        '</div>'+
-     '<div class="dv-compare"><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
+     '<div class="dv-compare"><button type="button" class="dv-btn" id="dev-x" aria-expanded="false">Experiments</button><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
    '</div>';
   document.body.appendChild(dev); document.body.classList.add('has-dev');
   dev.addEventListener('click',e=>{
     const g=e.target.closest('[data-go]'); if(g){ location.hash='#/'+g.dataset.go; return; }
   });
+  xp=document.createElement('div'); xp.className='xpanel'; xp.hidden=true; xp.setAttribute('role','dialog'); xp.setAttribute('aria-label','Experiments'); document.body.appendChild(xp);
+  const openX=on=>{ xp.hidden=!on; $('#dev-x').setAttribute('aria-expanded',String(on)); xp.style.bottom=(dev.offsetHeight+8)+'px'; };
+  $('#dev-x').addEventListener('click',()=>openX(xp.hidden));
+  xp.addEventListener('click',e=>{
+    const t=e.target.closest('[data-x]'); if(t){ X[t.dataset.x]=!X[t.dataset.x]; syncX(); route(); return; }
+    const a=e.target.closest('[data-xall]'); if(a){ EXPERIMENTS.forEach(x=>{ X[x.id]=a.dataset.xall==='on'; }); syncX(); route(); return; }
+    if(e.target.closest('[data-xclose]')) openX(false);
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&xp&&!xp.hidden) openX(false); });
   $('#dev-notes').addEventListener('click',()=>{ notesOn=!notesOn; route(); });
   $('#dev-dobhelp').addEventListener('click',()=>{ dobHelp=!dobHelp; route(); });
   $('#dev-bar').addEventListener('click',()=>{ classicBar=!classicBar; route(); });
