@@ -173,11 +173,12 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .lblrow{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .lblrow label{display:block;font-weight:700;font-size:16px;line-height:24px}
 .tip{display:inline-flex}
-.tipbtn{width:22px;height:22px;padding:0;border-radius:50%;border:1.5px solid var(--purple);background:#fff;color:var(--purple);font-size:13px;line-height:1;font-weight:700;cursor:pointer;display:grid;place-items:center}
+.tipbtn{position:relative;width:22px;height:22px;padding:0;border-radius:50%;border:1.5px solid var(--purple);background:#fff;color:var(--purple);font-size:13px;line-height:1;font-weight:700;cursor:pointer;display:grid;place-items:center}
+.tipbtn::before{content:"";position:absolute;inset:-11px}   /* 44px tap area around the 22px circle */
 .tipbtn:hover,.tipbtn[aria-expanded=true]{background:var(--purple);color:#fff}
-.tipbox{position:absolute;left:0;top:32px;z-index:20;width:min(320px,100%);box-sizing:border-box;padding:10px 12px;border-radius:8px;background:#111;color:#fff;font-size:14px;line-height:20px;font-weight:400;display:none}
+.tipbox{pointer-events:none;position:absolute;left:0;bottom:calc(100% + 12px);z-index:20;width:min(320px,100%);box-sizing:border-box;padding:10px 12px;border-radius:8px;background:#111;color:#fff;font-size:14px;line-height:20px;font-weight:400;display:none}
 .tipbox.show{display:block}
-.tipbox::before{content:"";position:absolute;left:calc(var(--arrow,140px) - 5px);top:-5px;width:10px;height:10px;background:#111;transform:rotate(45deg)}
+.tipbox::before{content:"";position:absolute;left:calc(var(--arrow,140px) - 5px);bottom:-5px;width:10px;height:10px;background:#111;transform:rotate(45deg)}
 .formerr{margin:0 0 16px}
 .formerr:empty{margin:0}
 
@@ -347,9 +348,11 @@ const wireBack=()=>{ $('#back').addEventListener('click',e=>{e.preventDefault();
 /* ============================== STEP 3: CONTACT ============================== */
 const DOMAIN_FIX={'gmial.com':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gmil.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','hotmial.com':'hotmail.com','hotmal.com':'hotmail.com','hotmail.con':'hotmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yahoo.con':'yahoo.com','outlok.com':'outlook.com','outlook.con':'outlook.com','icloud.co':'icloud.com','icloud.con':'icloud.com'};
 const validEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
-const normPhone=v=>{ let p=v.replace(/\(0\)/g,'').replace(/[\s\-()]/g,''); if(p.indexOf('+44')===0)p='0'+p.slice(3); else if(p.indexOf('0044')===0)p='0'+p.slice(4); return p; };
-const validPhone=v=>/^0[1237]\d{8,9}$/.test(normPhone(v));
-const fmtPhone=v=>{ const p=normPhone(v); return /^07\d{9}$/.test(p)?p.replace(/^(07\d{3})(\d{6})$/,'$1 $2'):v.trim(); };
+const stripPhone=v=>v.replace(/\(0\)/g,'').replace(/[\s\-().]/g,'');
+const normPhone=v=>{ let p=stripPhone(v); if(p.indexOf('+44')===0)p='0'+p.slice(3); else if(p.indexOf('0044')===0)p='0'+p.slice(4); else if(/^[1237]\d{9}$/.test(p)) p='0'+p;   /* 10 digits typed without the leading 0 */ return p; };
+const isIntl=v=>/^(\+|00)(?!44)\d{8,15}$/.test(stripPhone(v));   // a non-UK number, so nobody is locked out
+const validPhone=v=>/^0[1237]\d{8,9}$/.test(normPhone(v))||isIntl(v);
+const fmtPhone=v=>{ const p=normPhone(v); if(/^07\d{9}$/.test(p)) return p.replace(/^(07\d{3})(\d{6})$/,'$1 $2'); if(isIntl(v)) return v.trim().replace(/^00/,'+'); if(/^[1237]\d{9}$/.test(stripPhone(v))) return '0'+v.trim(); return v.trim(); };
 function emailSuggestion(v){
   v=v.trim(); const at=v.lastIndexOf('@'); if(at<1||!validEmail(v)) return null;
   const local=v.slice(0,at); let dom=v.slice(at+1).toLowerCase(); const orig=dom;
@@ -370,7 +373,7 @@ function mountContact(preset){
       '<div id="email-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div class="field">'+
-      '<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We\'ll only use your number if we need to check a detail to finalise your application.</span></span></div>'+
+      '<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We need a number to reach you about your application, for example to check a detail or confirm your approval.</span></span></div>'+
       '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 07700 900123" aria-describedby="phone-msg"></div>'+
       '<div id="phone-msg" aria-live="polite"></div>'+
     '</div>'+
@@ -393,7 +396,7 @@ function mountContact(preset){
   const touched={email:false,phone:false}; let submitting=false, shownSuggestion=null;
 
   function emailError(){ const v=email.value.trim(); if(!v) return 'Enter your email address'; if(!validEmail(v)) return 'Enter an email address in the right format, like name@example.com'; return ''; }
-  function phoneError(){ const v=phone.value.trim(); if(!v) return 'Enter your phone number'; if(!validPhone(v)) return 'Enter a UK phone number, like 07700 900123'; return ''; }
+  function phoneError(){ const v=phone.value.trim(); if(!v) return 'Enter your phone number'; if(!validPhone(v)) return 'Enter a phone number, like 07700 900123'; return ''; }
   function paint(which){
     const el=which==='email'?email:phone, msg=$('#'+which+'-msg');
     const e=touched[which]?(which==='email'?emailError():phoneError()):'';
@@ -504,11 +507,12 @@ function mountDob(preset){
   wireBack();
   $('#why').addEventListener('click',e=>{ const b=e.currentTarget, open=b.getAttribute('aria-expanded')!=='true'; b.setAttribute('aria-expanded',open); $('#why-panel').hidden=!open; });
   const inp=$('#dob'), seg=$('#seg'), msg=$('#dob-msg'), cal=$('#calbtn');
-  const mask=$('#dob-mask'), TEMPLATE='DD'+SEP+'MM'+SEP+'YYYY';
+  const mask=$('#dob-mask'), TEMPLATE='DD'+SEP+'MM'+SEP+'YYYY', MAXLEN=[2,2,4];
+  const isFullDate=str=>str.split(SEP).length===3;   // both separators are present, exactly as drawn
+  function placeCaret(v,digits){ let n=0,i=0; while(i<v.length&&n<digits){ if(v[i]>='0'&&v[i]<='9') n++; i++; } try{ inp.setSelectionRange(i,i); }catch(e){} }
   // typed digits in black, the rest of the template in grey; the real input sits underneath, so a click anywhere in the box types
-  function paintMask(){ const v=inp.value; mask.innerHTML='<span class="typed">'+esc(v)+'</span><span class="rest">'+esc(TEMPLATE.slice(v.length))+'</span>'; }
-  inp.addEventListener('click',()=>{ const l=inp.value.length; if(inp.selectionStart===inp.selectionEnd) inp.setSelectionRange(l,l); });
-  const parts=()=>parseDob(inp.value,false);
+  function paintMask(){ const v=inp.value; mask.innerHTML='<span class="typed">'+esc(v)+'</span><span class="rest">'+esc(isFullDate(v)?'YYYY'.slice((v.split(/\D+/)[2]||'').length):TEMPLATE.slice(v.length))+'</span>'; }
+    const parts=()=>parseDob(inp.value,false);
   let prev='';
 
   function clearState(){ inp.classList.remove('err'); inp.removeAttribute('aria-invalid'); seg.classList.remove('ok'); msg.innerHTML=''; }
@@ -524,12 +528,22 @@ function mountDob(preset){
   }
   function setValue(v){ inp.value=v; prev=v; paintMask(); }
   inp.addEventListener('input',()=>{
-    const raw=inp.value, typing=raw.length>prev.length;
+    const raw=inp.value, caret=inp.selectionStart==null?raw.length:inp.selectionStart, typing=raw.length>prev.length;
+    // editing inside a complete date: change that one part (a typed digit overwrites the next one) and leave the others alone
+    if(caret<raw.length&&isFullDate(prev)){
+      if(!isFullDate(raw)){ setValue(prev); placeCaret(prev,raw.slice(0,caret).replace(/\D/g,'').length); return; }   // a separator was deleted: put it back
+      const toks=raw.split(/\D+/), before=raw.slice(0,caret).split(/\D+/), ti=Math.min(before.length-1,2), idx=before[ti].length;
+      const fixed=toks.map((t,i)=>{ if(i===ti&&t.length>MAXLEN[i]){ const excess=t.length-MAXLEN[i]; t=t.slice(0,idx)+t.slice(idx+excess); } return t.slice(0,MAXLEN[i]); });
+      const nv=fixed.join(SEP); setValue(nv); placeCaret(nv,fixed.slice(0,ti).reduce((a,t)=>a+t.length,0)+Math.min(idx,fixed[ti].length)); evaluate('live'); return;
+    }
     const v=renderDob(parseDob(raw,typing),typing);
     setValue(v); try{ inp.setSelectionRange(v.length,v.length); }catch(e){}
     evaluate('live');
   });
-  inp.addEventListener('blur',()=>evaluate('blur'));
+  inp.addEventListener('blur',()=>{   // tidy a part typed as one digit (5 becomes 05)
+    if(isFullDate(inp.value)){ const p=parseDob(inp.value,false); if(p.d&&p.m&&p.y){ const nv=renderDob(p,false); if(nv!==inp.value) setValue(nv); } }
+    evaluate('blur');
+  });
   $('#f').addEventListener('submit',e=>{
     e.preventDefault();
     const r=evaluate('submit');
@@ -603,7 +617,8 @@ function mountDob(preset){
 
 /* ============================== STEP 1: ADDRESS ============================== */
 const UK_PC=/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
-const fmtPC=v=>{ const p=v.replace(/\s+/g,'').toUpperCase(); return UK_PC.test(p)?p.slice(0,-3)+' '+p.slice(-3):v.toUpperCase().trim(); };
+const LOOKUP_TIMEOUT=Number(qs.get('lt'))||10000;   // ms; ?lt=1500 shortens it for testing
+const fmtPC=v=>{ const p=v.replace(/[^A-Za-z0-9]/g,'').toUpperCase(); return UK_PC.test(p)?p.slice(0,-3)+' '+p.slice(-3):v.toUpperCase().trim(); };
 const STREETS=[
   {street:'Factory Lane',items:[[1],[2],[3],[4],[5],[6],[7],[8,'Flat 1'],[8,'Flat 2']]},
   {street:'Morland Road',items:[[10],[12],[14],[16],[18,'Flat A'],[18,'Flat B']]}
@@ -612,7 +627,7 @@ function mockLookup(pc,instant){
   const key=pc.replace(/\s/g,'');
   const run=()=>{ if(key==='XX11XX') throw new Error('api'); if(key==='ZZ11ZZ') return []; let k=0;
     return STREETS.flatMap(s=>s.items.map(it=>({id:'a'+(++k),n:it[0],sub:it[1]||'',street:s.street,line1:(it[1]?it[1]+', ':'')+it[0]+' '+s.street,town:'Croydon',postcode:pc}))); };
-  return new Promise((res,rej)=>{ const go=()=>{ try{res(run());}catch(e){rej(e);} }; instant?go():setTimeout(go,550); });
+  return new Promise((res,rej)=>{ const go=()=>{ try{res(run());}catch(e){rej(e);} }; if(key==='TM11ME') return;   /* TM1 1ME never answers: tests the timeout */ instant?go():setTimeout(go,550); });
 }
 const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowerCase()); if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+f.length))+'</mark>'+esc(t.slice(i+f.length)); };
 
@@ -655,7 +670,7 @@ function mountAddress(preset){
   function drawSearch(){
     zone.innerHTML=
     '<div class="field" id="pc-field"><label for="pc">Postcode</label>'+
-      '<div class="control"><input class="input" id="pc" type="text" maxlength="8" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" placeholder="e.g. CR0 3AG" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
+      '<div class="control"><input class="input" id="pc" type="text" maxlength="14" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" placeholder="e.g. CR0 3AG" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
     '<button type="button" class="btn secondary" id="find">Find address</button>'+
     '<div id="results"></div>';
@@ -664,7 +679,7 @@ function mountAddress(preset){
       S.postcode=pc.value.toUpperCase(); pc.value=S.postcode;
       clearTimeout(timer); seq++;
       if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; paint(); }
-      if(UK_PC.test(S.postcode.trim())) timer=setTimeout(()=>lookup('auto'),400);
+      if(UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''))) timer=setTimeout(()=>lookup('auto'),400);
     });
     pc.addEventListener('blur',()=>{ const f=fmtPC(pc.value); if(UK_PC.test(f.replace(/\s/g,''))&&f!==pc.value){ pc.value=f; S.postcode=f; } });
     pc.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(timer); lookup('button'); } });
@@ -673,15 +688,18 @@ function mountAddress(preset){
   }
   function lookup(source,instant){
     if(S.status==='loading') return;
-    if(!S.postcode.trim()||!UK_PC.test(S.postcode.replace(/\s/g,'').trim())){ S.status='invalid'; return paint(); }
-    S.postcode=fmtPC(S.postcode); const my=++seq; S.status='loading'; paint(); track('address_lookup_started',{source:source});
+    if(!S.postcode.trim()||!UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''))){ S.status='invalid'; return paint(); }
+    S.postcode=fmtPC(S.postcode); const pcEl=$('#pc'); if(pcEl) pcEl.value=S.postcode;   // tidy what was typed or pasted
+    const my=++seq; S.status='loading'; paint(); track('address_lookup_started',{source:source});
+    // never leave a spinner running: after LOOKUP_TIMEOUT fall back to the manual route
+    const to=setTimeout(()=>{ if(my===seq&&S.status==='loading'){ seq++; S.status='error'; paint(); track('address_lookup_timeout'); } },LOOKUP_TIMEOUT);
     return mockLookup(S.postcode,instant).then(list=>{
-      if(my!==seq) return;
+      clearTimeout(to); if(my!==seq) return;
       S.list=list; S.status=list.length?'results':'empty'; S.filter=''; S.active=null;
       if(list.length===1){ S.selected=list[0]; drawZone(); track('address_selected',{position:1}); return; }
       paint();
       if(list.length){ track('address_results_shown',{count:list.length}); const c=$('#count'); if(c&&!instant) c.focus(); }
-    }).catch(()=>{ if(my!==seq) return; S.status='error'; paint(); });
+    }).catch(()=>{ clearTimeout(to); if(my!==seq) return; S.status='error'; paint(); });
   }
   function paint(){
     const pc=$('#pc'); if(!pc) return;
@@ -762,7 +780,7 @@ function mountAddress(preset){
   /* --- manual entry --- */
   function drawManual(){
     const F=[['n','Flat, house name or number','man-n','address-line1','Enter your flat, house name or number'],['street','Street','man-street','address-line2','Enter your street'],['town','Town or city','man-town','address-level2','Enter your town or city'],['pc','Postcode','man-pc','postal-code','Enter a full UK postcode, like CR0 3AG']];
-    zone.innerHTML=F.map(f=>'<div class="field"><label for="'+f[2]+'">'+f[1]+'</label><div class="control"><input class="input" id="'+f[2]+'" data-k="'+f[0]+'" type="text" autocomplete="'+f[3]+'" value="'+esc(S.man[f[0]])+'"'+(f[0]==='pc'?' maxlength="8" autocapitalize="characters"':'')+'></div><div id="'+f[2]+'-msg" aria-live="polite"></div></div>').join('')+
+    zone.innerHTML=F.map(f=>'<div class="field"><label for="'+f[2]+'">'+f[1]+'</label><div class="control"><input class="input" id="'+f[2]+'" data-k="'+f[0]+'" type="text" autocomplete="'+f[3]+'" value="'+esc(S.man[f[0]])+'"'+(f[0]==='pc'?' maxlength="14" autocapitalize="characters"':'')+'></div><div id="'+f[2]+'-msg" aria-live="polite"></div></div>').join('')+
       '<button type="button" class="link switch" id="to-search">Search by postcode instead</button>';
     $$('input',zone).forEach(i=>i.addEventListener('input',()=>{ S.man[i.dataset.k]=i.dataset.k==='pc'?i.value.toUpperCase():i.value; if(i.dataset.k==='pc') i.value=S.man.pc; if(i.classList.contains('err')) manualCheck(i,F); }));
     $('#to-search').addEventListener('click',()=>{ S.manual=false; drawZone(); const p=$('#pc'); if(p) p.focus(); });
@@ -855,7 +873,7 @@ const CHANGES={
     ["Intro line and field hints removed","Less to read, and the fields sit higher up"],
     ["'?' next to the phone number explains why it's needed","Answers the spam worry on hover or tap, without adding a box"],
     ["Button now says 'See my results'","Matches the headline and what you get"],
-    ["Phone accepts spaces, brackets and +44","Fewer phone validation failures"]],
+    ["Phone accepts spaces, brackets, +44, a missing leading 0 and non-UK numbers","Fewer phone validation failures"]],
   "contact/errors":[
     ["Plain errors with an example, for email and phone","Fewer repeat errors"]],
   "contact/suggestion":[
