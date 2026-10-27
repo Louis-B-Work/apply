@@ -419,8 +419,8 @@ const EXPERIMENTS=[
   {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' outside the list, always visible",
    short:"At the end of a long list it is out of sight, so people with a missing address may never find a way on.",
    hypothesis:"The 'Can't see your address? Enter address manually' link only appears at the very end of the list, so people whose address is missing have to scroll through every row (and press 'Show more addresses') to find a way on, and some give up. Placing it outside the list, permanently visible, gives them a way out straight away.",
-   control:"Inside the dropdown, at the very end of the list, after 'Show more addresses'. A small 'Manually enter address details' link also sits under the search box until results appear.",
-   variant:"Outside the list, directly below it, always visible without scrolling. The small link under the search box is removed.",
+   control:"Inside the dropdown, at the very end of the list, after 'Show more addresses'. ",
+   variant:"Outside the list, directly below it, always visible without scrolling. The small link under the search box stays as it is.",
    metric:"address_manual_opened; abandonment after results are shown; step completion."},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave.",
@@ -1021,7 +1021,7 @@ function mountAddress(preset){
       '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
     (PF?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+
-    (CSB?'':'<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>')+
+    '<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>'+
     '<div id="results"></div>';
     const pc=$('#pc');
     pc.addEventListener('input',()=>{
@@ -1065,7 +1065,7 @@ function mountAddress(preset){
     if(S.status==='error') m=errHTML('Our address finder isn\'t working right now. Please enter your address manually.')+(CSB?'<div style="margin-top:16px"><button type="button" class="btn secondary" data-manual>Enter address manually</button></div>':'');
     msg.innerHTML=m;
     if(S.status==='invalid') track('address_validation_error');
-    const tm=$('#top-manual'); if(tm) tm.style.display=S.status==='results'?'none':'';   // the live dropdown covers the link
+    const tm=$('#top-manual'); if(tm) tm.style.display=(S.status==='results'||(CSB&&(S.status==='empty'||S.status==='error')))?'none':'';   // the live dropdown covers it; the no-results messages carry their own link when the prompt is outside
     if(S.status==='results') drawResults(); else res.innerHTML='';
     updateCont();
   }
