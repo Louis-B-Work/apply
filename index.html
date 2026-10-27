@@ -373,10 +373,10 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:false,name:'Postcode-first search and wording',
    short:"People stall on the open search box because they don't know what to type.",
-   brief:"A Postcode box that searches by itself, with 'Find address' as a backup.",
-   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious.",
-   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name.",
-   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup.",
+   brief:"A Postcode box that searches by itself, plus a clear 'Can't see your address?' button.",
+   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious, and a clear button for a missing address beats a small link people miss.",
+   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
+   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. A clear 'Can't see your address? Enter it manually' button sits under the results, instead of the small link.",
    metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
   {id:'addr-single-list',step:'address',on:false,name:'One list of every address, no pagination',
    short:"'See more addresses' makes people give up before they find theirs.",
@@ -385,13 +385,6 @@ const EXPERIMENTS=[
    control:"Five addresses at a time with a 'See more addresses' button.",
    variant:"Every address in one scrollable list with a count line ('15 addresses found'). Lists of more than eight addresses also get a type-to-filter box that narrows the list as you type.",
    metric:"Address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
-  {id:'addr-cant-see-button',step:'address',on:false,name:"'Can't see your address?' as its own button",
-   short:"A small link is missed, so people with a missing address hit a dead end.",
-   brief:"A clear 'Can't see your address?' button under the results.",
-   hypothesis:"When an address is missing (new builds are common), a small text link under the search box is easy to miss, so people reach a dead end and leave. A clear button where they are looking gives them a visible way on.",
-   control:"A small 'Manually enter address details' text link under the search box.",
-   variant:"A 'Can't see your address? Enter it manually' button under the results, and in the no-results and error messages. The small link is removed.",
-   metric:"address_manual_opened and completion of people who open it; abandonment after no results."},
   {id:'addr-move-in-date',step:'address',on:false,name:"Ask 'When did you move in?', not 'How long?'",
    short:"A date is easier to answer than a duration, and the system does the maths.",
    brief:"'When did you move in?' with month and year; the system works out the length.",
@@ -824,7 +817,7 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=xOn('addr-cant-see-button'), MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
+  const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=PF, MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
   const FLT=ONE;   // the single list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=5;   // the live page shows this many addresses at a time
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
@@ -1053,7 +1046,7 @@ const CHANGES={
     ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-single-list"],
     ["Count confirms the search worked","Removes the doubt that makes people leave","addr-single-list"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
-    ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-cant-see-button"]],
+    ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-postcode-first"]],
   "address/filtered":[
     ["List narrows as you type, matches in bold","Reach your address faster"],
     ["Count updates: 'Showing 8 of 15'","Shows the filter is working"]],
