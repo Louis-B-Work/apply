@@ -219,10 +219,19 @@ body.notes-on #summary{display:block;flex:none;width:340px;background:#fff;borde
 #summary ul{margin:0;padding-left:20px}
 #summary li{margin:0 0 9px;padding-left:2px}
 #summary li:last-child{margin-bottom:0}
+#summary .s-exp{margin:0 0 18px;padding-top:16px;border-top:1px solid #E8EAEF}
+#summary .s-exp h4{margin:0 0 10px;font-size:15px;line-height:21px;color:#111}
+#summary .s-exp p{margin:0 0 10px}
+#summary .s-exp p:last-child{margin-bottom:0}
+#summary .s-exp b{display:block;margin-bottom:2px;font-size:11px;line-height:16px;letter-spacing:.06em;text-transform:uppercase}
+#summary .s-h b{color:var(--purple)}
+#summary .s-c b{color:#0B7A55}
+#summary .s-empty{margin:0 0 18px;color:#4B5563}
 #summary .s-note{margin:0;padding-top:14px;border-top:1px solid #E8EAEF;font-size:12px;line-height:17px;color:#6B7280}
 body.notes-on .sheet,body.notes-on .backdrop{position:absolute}
 body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px 18px;font-size:14px;line-height:20px;color:#111}
 @media (max-width:1360px){ body.notes-on #side{flex-direction:column} body.notes-on #summary{width:340px} }
+@media (min-width:781px){ body.notes-on #summary,body.notes-on #notes{max-height:calc(100vh - 190px);overflow:auto} }
 @media (max-width:780px){ body.notes-on #stage{flex-direction:column;align-items:center} body.notes-on #screen{flex:none;width:100%} body.notes-on #side{position:static;width:100%;max-width:640px} body.notes-on #notes,body.notes-on #summary{width:100%} }
 .n-head{margin:0 0 2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--purple)}
 #notes h2{margin:0 0 16px;font-size:20px;line-height:26px;font-weight:700}
@@ -1121,7 +1130,15 @@ function paintNotes(k){
     .concat(EXPERIMENTS.filter(e=>e.step===step&&X[e.id]&&!(CHANGES[k]||[]).some(p=>p[2]===e.id)).map(e=>[e.name,e.short,e.id]));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
     '<p class="n-sub">What changed</p><ul class="c-list">'+list.map(p=>'<li>'+esc(p[0])+(p[2]?'<span class="xid">'+esc(p[2])+'</span>':'')+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>';
-  const sb=SUMBULLETS[step];
+  const sb=SUMBULLETS[step], exps=EXPERIMENTS.filter(e=>e.step===step);
+  if(exps.length){   // steps with experiments: each switched-on one, with its hypothesis and the change it brings
+    const on=exps.filter(e=>X[e.id]), always=sb.what.filter(p=>!p[1]);
+    $('#summary').innerHTML='<h3>Summary</h3>'+
+      (on.length?on.map(e=>'<div class="s-exp"><h4>'+esc(e.name)+'</h4><p class="s-h"><b>Hypothesis</b>'+esc(e.hypothesis)+'</p><p class="s-c"><b>What changes</b>'+esc(e.variant)+'</p></div>').join(''):'<p class="s-empty">No experiments are switched on, so this is the live page.</p>')+
+      '<div class="s-block s-what"><h4>Always on, no hypothesis</h4>'+sumList(always)+'</div>'+
+      '<p class="s-note">Expected effect, not a measured result.</p>';
+    return;
+  }
   $('#summary').innerHTML='<h3>Summary</h3><div class="s-block s-what"><h4>What changed</h4>'+sumList(sb.what)+'</div><div class="s-block s-why"><h4>Why it should reduce abandoned sessions</h4>'+sumList(sb.why)+'</div><p class="s-note">Expected effect, not a measured result.</p>';
 }
 
