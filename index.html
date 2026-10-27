@@ -232,16 +232,15 @@ body.notes-on .sheet,body.notes-on .backdrop{position:absolute}
 body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px 18px;font-size:14px;line-height:20px;color:#111}
 @media (max-width:1360px){ body.notes-on #side{flex-direction:column} body.notes-on #summary{width:340px} }
 body.notes-on #summary{display:none}
-body.notes-on #notes{width:380px}
-.n-exp{margin:0 0 12px;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
-.n-exp b{display:block;margin-bottom:6px;font-size:15px;line-height:20px}
-.n-exp p{display:grid;grid-template-columns:58px 1fr;gap:6px;margin:0 0 4px;font-size:14px;line-height:20px;color:#1F2937}
-.n-exp p:last-child{margin:0}
-.n-exp i{font-style:normal;font-size:11px;line-height:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+body.notes-on #side{flex:1 1 580px;max-width:620px;min-width:0}
+body.notes-on #notes{width:100%;box-sizing:border-box}
+.n-exp{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:0 0 10px;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
+.n-exp b{grid-column:1/-1;font-size:15px;line-height:20px}
+.n-exp p{margin:0;font-size:14px;line-height:20px;color:#1F2937}
+.n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
 .n-exp p+p i{color:#0B7A55}
 .n-none{margin:0 0 14px;color:#4B5563}
 .n-foot{margin:16px 0 0;font-size:12px;line-height:17px;color:#6B7280}
-@media (min-width:781px){ body.notes-on #summary,body.notes-on #notes{max-height:calc(100vh - 190px);overflow:auto} }
 @media (max-width:780px){ body.notes-on #stage{flex-direction:column;align-items:center} body.notes-on #screen{flex:none;width:100%} body.notes-on #side{position:static;width:100%;max-width:640px} body.notes-on #notes,body.notes-on #summary{width:100%} }
 .n-head{margin:0 0 2px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--purple)}
 #notes h2{margin:0 0 16px;font-size:20px;line-height:26px;font-weight:700}
