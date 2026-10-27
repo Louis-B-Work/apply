@@ -372,19 +372,12 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:false,name:'Postcode-first search and wording',
-   short:"People stall on the open search box because they don't know what to type.",
-   brief:"A Postcode box that searches by itself, plus a clear 'Can't see your address?' button.",
-   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious, and a clear button for a missing address beats a small link people miss.",
-   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
-   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. A clear 'Can't see your address? Enter it manually' button sits under the results, instead of the small link.",
-   metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
-  {id:'addr-single-list',step:'address',on:false,name:'One list of every address, no pagination',
-   short:"'See more addresses' makes people give up before they find theirs.",
-   brief:"Every address in one scrollable list, with a filter box on long lists.",
-   hypothesis:"Pagination is what stops people choosing an address: they press 'See more addresses' again and again and give up before they find theirs. One list with every address removes the clicking.",
-   control:"Five addresses at a time with a 'See more addresses' button.",
-   variant:"Every address in one scrollable list with a count line ('15 addresses found'). Lists of more than eight addresses also get a type-to-filter box that narrows the list as you type.",
-   metric:"Address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
+   short:"People stall on the open search box and on 'See more addresses', so a postcode box with one full list gets them to their address.",
+   brief:"A Postcode box, one list of every address, and a clear 'Can't see your address?' button.",
+   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious, a single list of every address removes the repeated 'See more addresses' clicking, and a clear button for a missing address beats a small link people miss.",
+   control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it. Results show five addresses at a time with a 'See more addresses' button.",
+   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup. Every address is in one scrollable list with a count line ('15 addresses found'), and lists of more than eight also get a type-to-filter box. A clear 'Can't see your address? Enter it manually' button sits under the results, instead of the small link.",
+   metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
   {id:'addr-move-in-date',step:'address',on:false,name:"Ask 'When did you move in?', not 'How long?'",
    short:"A date is easier to answer than a duration, and the system does the maths.",
    brief:"'When did you move in?' with month and year; the system works out the length.",
@@ -817,7 +810,7 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ONE=xOn('addr-single-list'), CSB=PF, MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
+  const PF=xOn('addr-postcode-first'), ONE=PF, CSB=PF, MOV=xOn('addr-one-screen'), MDATE=xOn('addr-move-in-date');
   const FLT=ONE;   // the single list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=5;   // the live page shows this many addresses at a time
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
@@ -1043,8 +1036,8 @@ const CHANGES={
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
   "address/results":[
-    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-single-list"],
-    ["Count confirms the search worked","Removes the doubt that makes people leave","addr-single-list"],
+    ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-postcode-first"],
+    ["Count confirms the search worked","Removes the doubt that makes people leave","addr-postcode-first"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
     ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-postcode-first"]],
   "address/filtered":[
@@ -1139,7 +1132,7 @@ const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   
 const ROUTES={
   'address/default':()=>mountAddress(),
   'address/results':()=>mountAddress({postcode:'CR0 3AG',lookup:true}),
-  'address/filtered':force(['addr-single-list'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
+  'address/filtered':force(['addr-postcode-first'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
   'address/selected':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'}),
   'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
   'address/moved':force(['addr-one-screen'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'})),
