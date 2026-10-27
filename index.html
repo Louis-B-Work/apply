@@ -459,16 +459,16 @@ const EXPERIMENTS=[
    control:"Digits only: 11 digits starting 0. Spaces, brackets and +44 are rejected. Error: 'Enter a valid UK phone number'.",
    variant:"Accepts spaces, brackets, +44 and 0044, a missing leading 0 and non-UK numbers, and tidies UK mobiles to 07700 900123. Error: 'Enter a phone number, like 07700 900123'.",
    metric:"contact_validation_error{field: phone}; final page to submitted rate."},
-  {id:'contact-email-suggestion',step:'contact',on:false,name:"'Did you mean ...?' email suggestion",
-   short:"A typo that passes validation still loses the customer; one tap fixes it.",
-   hypothesis:"A mistyped email domain (gmial.com) can pass validation and then the quote never arrives. Offering the likely correction saves those customers.",
-   control:"No suggestion.",
-   variant:"'Did you mean name@gmail.com?' for common domain typos, one tap to accept.",
-   metric:"contact_email_suggestion_shown and _accepted; emails that bounce."},
+  {id:'contact-ghost-text',step:'contact',on:false,name:'Example text in both boxes',
+   short:"Grey example text shows what to type and the format, so people hesitate less and make fewer format mistakes.",
+   hypothesis:"Empty boxes give no hint of the format, so people hesitate or type a number or email in a way that fails. Grey example text in the boxes shows what to type and how.",
+   control:"Empty boxes.",
+   variant:"Grey example text in both boxes: 'e.g. name@example.com' and 'e.g. 07700 900123'.",
+   metric:"contact_validation_error by field; time to first input; final page to submitted rate."},
   {id:'global-stepper',step:'all',on:false,name:'Four-stage progress stepper',
    short:"Labelled stages show where you are and what is left, which reduces uncertainty in the long middle of the form.",
    hypothesis:"The form has 15 pages but only a plain bar, so people cannot tell how far they are or what is left. A stepper with labelled stages makes progress visible, which reduces uncertainty and abandoning in the long middle.",
-   control:"The plain progress bar with a small dot marking where you are.",
+   control:"The plain progress bar.",
    variant:"A numbered stepper in four stages (Vehicle, Details, Employment, Finance) that ends on Your results.",
    metric:"Drop-off through the middle stages; completion of the form."}
 ];
@@ -544,19 +544,19 @@ function mountContact(preset){
   preset=preset||{};
   setProgress('contact-details-p2'); trackExposure('contact');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PROMISE=xOn('contact-results-promise'), HELP=xOn('contact-phone-help-icon'), TOL=xOn('contact-phone-tolerance'), SUG=xOn('contact-email-suggestion');
+  const PROMISE=xOn('contact-results-promise'), HELP=xOn('contact-phone-help-icon'), TOL=xOn('contact-phone-tolerance'), GHOST=xOn('contact-ghost-text');
   const BTN=PROMISE?'See my results':'Get my quote';
   main.innerHTML=backLink+
   '<h1 id="step-title">'+(PROMISE?'Last step, then see your results':'And finally, where should we send your quote?')+'</h1>'+
   '<form id="f" novalidate aria-labelledby="step-title">'+
     '<div class="field">'+
       '<label for="email">Email address</label>'+
-      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" enterkeyhint="next" autocapitalize="none" spellcheck="false" '+(SUG?'placeholder="e.g. name@example.com" ':'')+' aria-describedby="email-msg"></div>'+
+      '<div class="control"><input class="input" id="email" type="email" inputmode="email" autocomplete="email" enterkeyhint="next" autocapitalize="none" spellcheck="false" '+(GHOST?'placeholder="e.g. name@example.com" ':'')+' aria-describedby="email-msg"></div>'+
       '<div id="email-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div class="field">'+
       (HELP?'<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We need a number to reach you about your application, for example to check a detail or confirm your approval.</span></span></div>':'<label for="contact-phone">Phone number</label>')+
-      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" '+(TOL?'placeholder="e.g. 07700 900123" ':'')+' aria-describedby="phone-msg"></div>'+
+      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" '+(GHOST?'placeholder="e.g. 07700 900123" ':'')+' aria-describedby="phone-msg"></div>'+
       '<div id="phone-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div id="form-msg" class="formerr" aria-live="polite"></div>'+
@@ -592,7 +592,7 @@ function mountContact(preset){
     el.classList.toggle('err',!!e); el.setAttribute('aria-invalid',e?'true':'false');
     if(e){ msg.innerHTML=errHTML(e); track('contact_validation_error',{field:which}); return; }
     if(which==='email'){
-      const s=(SUG&&touched.email)?emailSuggestion(email.value):null;
+      const s=null;   // the 'Did you mean ...?' suggestion is no longer part of the prototype
       if(s){ msg.innerHTML='<div class="suggest">Did you mean <button type="button" class="link" id="sugg">'+esc(s)+'</button>?</div>';
         if(shownSuggestion!==s){ shownSuggestion=s; track('contact_email_suggestion_shown'); }
         $('#sugg').addEventListener('click',()=>{ email.value=s; track('contact_email_suggestion_accepted'); shownSuggestion=null; paint('email'); phone.focus(); });
@@ -1232,9 +1232,6 @@ const CHANGES={
     ["Phone accepts spaces, brackets, +44, a missing leading 0 and non-UK numbers","Fewer phone validation failures"]],
   "contact/errors":[
     ["Plain errors with an example, for email and phone","Fewer repeat errors"]],
-  "contact/suggestion":[
-    ["'Did you mean ...@gmail.com?' for common typos","Saves customers who would be lost to a typo"],
-    ["One tap to fix it","Quick to correct"]],
   "contact/submitting":[
     ["Spinner and 'Taking you to your results...'","Shows it is working"],
     ["Fields lock while it sends","Stops double taps"]]
@@ -1281,7 +1278,6 @@ const ROUTES={
   'dob/under18':()=>mountDob({values:['10','10','2010']}),
   'contact/default':()=>mountContact(),
   'contact/errors':()=>mountContact({email:'alex.smith@example',phone:'07700 9001'}),
-  'contact/suggestion':force(['contact-email-suggestion'],()=>mountContact({email:'alex.smith@gmial.com',phone:'07700 900123'})),
   'contact/submitting':()=>mountContact({email:'alex.smith@gmail.com',phone:'07700 900123',submitting:true,hold:true})
 };
 function route(){
@@ -1301,7 +1297,7 @@ const STEPS=[
 const STATE_LABELS={
   'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error','address/moved':'Same step','address/time':'Time at address',
   'dob/default':'Empty','dob/picker-year':'Calendar: year','dob/picker-day':'Calendar: day','dob/valid':'Valid','dob/under18':'Under 18',
-  'contact/default':'Default','contact/errors':'Errors','contact/suggestion':'Email suggestion','contact/submitting':'Submitting'
+  'contact/default':'Default','contact/errors':'Errors','contact/submitting':'Submitting'
 };
 let dev=null;
 const ORDER=Object.keys(ROUTES);
