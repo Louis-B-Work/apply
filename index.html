@@ -527,6 +527,14 @@ function mountDob(preset){
     return r;
   }
   function setValue(v){ inp.value=v; prev=v; paintMask(); }
+  // a two-digit year (77) becomes four digits when only one reading is between 18 and 100 years ago (1977); otherwise it is left for the error
+  function expandYear(){
+    if(!isFullDate(inp.value)) return;
+    const p=parts(); if(p.y.length!==2) return;
+    const yy=+p.y, c=[1900+yy,2000+yy].filter(y=>y>=MINY&&y<=MAXY);
+    if(c.length!==1) return;
+    p.y=String(c[0]); setValue(renderDob(p,false)); track('dob_year_expanded');
+  }
   inp.addEventListener('input',()=>{
     const raw=inp.value, caret=inp.selectionStart==null?raw.length:inp.selectionStart, typing=raw.length>prev.length;
     // editing inside a complete date: change that one part (a typed digit overwrites the next one) and leave the others alone
@@ -540,12 +548,13 @@ function mountDob(preset){
     setValue(v); try{ inp.setSelectionRange(v.length,v.length); }catch(e){}
     evaluate('live');
   });
-  inp.addEventListener('blur',()=>{   // tidy a part typed as one digit (5 becomes 05)
+  inp.addEventListener('blur',()=>{   // tidy a part typed as one digit (5 becomes 05) and a two-digit year (77 becomes 1977)
+    expandYear();
     if(isFullDate(inp.value)){ const p=parseDob(inp.value,false); if(p.d&&p.m&&p.y){ const nv=renderDob(p,false); if(nv!==inp.value) setValue(nv); } }
     evaluate('blur');
   });
   $('#f').addEventListener('submit',e=>{
-    e.preventDefault();
+    e.preventDefault(); expandYear();
     const r=evaluate('submit');
     if(!r||!r.ok){ inp.focus(); return; }
     note('Prototype: this goes to the next step.');
@@ -853,6 +862,7 @@ const CHANGES={
     ["Numeric keypad on mobile","Faster on a phone"],
     ["Calendar button as a second way in","A route for people who dislike typing"],
     ["Example shown under the question","No guessing the format"],
+    ["A two-digit year like 77 is read as 1977","No error for a common way of typing a date"],
     ["'Why do we ask this?' added, collapsed","Answers the doubt that makes people leave"]],
   "dob/picker-year":[
     ["Calendar picks year first, then month, then day","Three taps, no scrolling back from today"],
