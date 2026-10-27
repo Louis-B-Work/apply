@@ -253,7 +253,8 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-child{grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #D3CAEE;display:grid;gap:6px}
 .n-child.off p{opacity:.55}
 .n-child .n-idle{opacity:1;font-size:13px;line-height:18px;font-style:italic;color:#6B7280}
-.n-child.idle .n-sw{opacity:.75}
+.n-child.idle .n-sw{opacity:.6;cursor:not-allowed}
+.n-sw[disabled]{cursor:not-allowed}
 .n-child p{margin:0}
 .n-exp p{margin:0;font-size:14px;line-height:20px;color:#1F2937}
 .n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
@@ -474,6 +475,7 @@ const EXPERIMENTS=[
 const X={};
 (function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
 const PARENT={}; EXPERIMENTS.forEach(e=>{ if(e.parent) PARENT[e.id]=e.parent; });
+EXPERIMENTS.forEach(e=>{ if(e.parent&&!X[e.parent]) X[e.id]=false; });
 const xOn=id=>!!X[id]&&(!PARENT[id]||!!X[PARENT[id]]);   // a branch only counts while its parent is on
 const syncX=()=>{ try{ const u=new URL(location.href); u.searchParams.set('x',EXPERIMENTS.filter(e=>X[e.id]).map(e=>e.id).join(',')||'none'); history.replaceState(null,'',u); }catch(e){} };
 const trackExposure=step=>EXPERIMENTS.filter(e=>e.step===step||e.step==='all').forEach(e=>track('experiment_exposure',{id:e.id,variant:xOn(e.id)?'variant':'control'}));
@@ -1255,7 +1257,7 @@ function paintNotes(k){
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
     (exps.length?(on.length||xOn('global-stepper')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')?', plus the progress stepper.':'.'):'The progress stepper is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
-    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p>'+(x.parent&&!X[x.parent]?'<p class="n-idle">Only applies when "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" is on.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
+    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(x.parent&&!X[x.parent]?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p>'+(x.parent&&!X[x.parent]?'<p class="n-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
 }
@@ -1326,7 +1328,7 @@ if(!SHOT){
 }
 window.addEventListener('hashchange',route);
 if(dev) $('#dev-stepper').addEventListener('click',()=>{ X['global-stepper']=!X['global-stepper']; syncX(); $('#dev-stepper').setAttribute('aria-checked',String(xOn('global-stepper'))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
-$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; const id=t.dataset.x; X[id]=!X[id]; syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { route(); window.scrollTo(0,y); } });
+$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { route(); window.scrollTo(0,y); } });
 route();
 })();
 </script>
