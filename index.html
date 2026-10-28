@@ -1504,11 +1504,11 @@ function paintNotes(k){
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
   const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step), on=exps.filter(e=>xOn(e.id));
-  const barOn=xOn('global-stepper')||xOn('global-orb'), anyOn=on.length>0||barOn, allOn=on.length===exps.length&&xOn('global-stepper');
+  const barOn=xOn('global-stepper')||xOn('global-orb'), anyOn=on.length>0||barOn, globalAll=EXPERIMENTS.every(e=>e.id==='global-orb'||xOn(e.id)), globalAny=EXPERIMENTS.some(e=>xOn(e.id));   // the version switch is for every step
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?'<div class="n-state '+(anyOn?'redesign':'live')+'">'+(anyOn?'<b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(barOn?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span>':'<b>Current live version</b><span>All switches are off, so this is what customers see today.</span>')+'<div class="n-ver"><button type="button" class="ver-lab'+(!anyOn?' on':'')+'" data-xoff="1">Live version</button><button type="button" class="ver-sw" role="switch" aria-checked="'+allOn+'" aria-label="Full redesign" '+(allOn?'data-xoff':'data-xall')+'="1"><span class="ver-knob"></span></button><button type="button" class="ver-lab'+(allOn?' on':'')+'" data-xall="1">Full redesign</button></div></div>':'')+
+    (exps.length?'<div class="n-state '+(anyOn?'redesign':'live')+'">'+(anyOn?'<b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(barOn?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span>':'<b>Current live version</b><span>All switches are off, so this is what customers see today.</span>')+'<div class="n-ver"><button type="button" class="ver-lab'+(!globalAny?' on':'')+'" data-xoff="1">Live version</button><button type="button" class="ver-sw" role="switch" aria-checked="'+globalAll+'" aria-label="Full redesign" '+(globalAll?'data-xoff':'data-xall')+'="1"><span class="ver-knob"></span></button><button type="button" class="ver-lab'+(globalAll?' on':'')+'" data-xall="1">Full redesign</button></div></div>':'')+
     (exps.length?'<p class="n-sub h-headrow">Hypotheses<span>'+on.length+' of '+exps.length+' on</span></p><div class="h-list">'+(()=>{
       const row=(x,child)=>{ const idle=x.parent&&!X[x.parent], open=hypOpen.has(x.id);
         return '<div class="h-row'+(child?' child':'')+(X[x.id]?'':' off')+(idle?' idle':'')+'"><div class="h-line"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(idle?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button>'+
@@ -1641,7 +1641,7 @@ $('#notes').addEventListener('click',e=>{
   if(hm){ const id=hm.dataset.hyp; if(hypOpen.has(id)) hypOpen.delete(id); else hypOpen.add(id); paintNotes(lastKey); const nb=document.querySelector('[data-hyp="'+id+'"]'); if(nb) nb.focus(); return; }
   const all=e.target.closest('[data-xall]'), off=e.target.closest('[data-xoff]');
   if(all||off){   // Full redesign: every change on this step on; Live version: every switch off. Either way the step starts again.
-    const go=()=>{ if(all){ EXPERIMENTS.forEach(x=>{ if(x.step===st) X[x.id]=true; }); X['global-stepper']=true; X['global-orb']=false; } else EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); carry=null; hypOpen.clear(); goStepDefault(st); };
+    const go=()=>{ EXPERIMENTS.forEach(x=>{ X[x.id]=all?x.id!=='global-orb':false; }); syncX(); carry=null; hypOpen.clear(); goStepDefault(st); };
     const vs=$('.ver-sw');
     if(vs){   // slide the version switch and every switch in the list, then restart the step
       vs.setAttribute('aria-checked',String(!!all));
