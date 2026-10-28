@@ -431,6 +431,8 @@ body.notes-on:not(.shot) #notes{position:sticky;top:12px;align-self:flex-start;m
 .h-name{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:none;padding:2px 0;font:inherit;font-size:14px;line-height:20px;font-weight:700;color:#111;text-align:left;cursor:pointer}
 .h-row.off .h-name{font-weight:600;color:#4B5563}
 .h-row.idle .h-name{opacity:.6}
+.h-name.plain{cursor:pointer}
+.h-row.idle .h-name.plain{cursor:not-allowed}
 .h-name svg{flex:none;width:16px;height:16px;color:var(--purple);transition:transform .15s}
 .h-name[aria-expanded=true] svg{transform:rotate(90deg)}
 .h-name:focus-visible{outline:2px solid var(--purple);outline-offset:2px;border-radius:4px}
@@ -1531,10 +1533,10 @@ function paintNotes(k){
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p>'+
     (exps.length?'<p class="n-sub h-headrow">Changes to test</p><div class="h-list">'+(()=>{
-      const row=(x,child)=>{ const idle=x.parent&&!X[x.parent], open=hypOpen.has(x.id);
+      const row=(x,child)=>{ const idle=x.parent&&!X[x.parent], open=mode==='explore'&&hypOpen.has(x.id);
         return '<div class="h-row'+(child?' child':'')+(X[x.id]?'':' off')+(idle?' idle':'')+'"'+(x.alt?' data-alt="1"':'')+'><div class="h-line">'+
           '<button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'" aria-label="'+esc(x.name)+'"'+(idle?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span></button>'+
-          '<button type="button" class="h-name" data-hyp="'+x.id+'" aria-expanded="'+open+'" aria-controls="hyp-'+x.id+'"><span>'+esc(x.name)+(x.alt?'<em class="h-tag">alternative</em>':'')+'</span>'+ic('chevron-right')+'</button></div>'+
+          (mode==='compare'?'<span class="h-name plain"'+(idle?'':' data-x="'+x.id+'"')+'><span>'+esc(x.name)+(x.alt?'<em class="h-tag">alternative</em>':'')+'</span></span></div>':'<button type="button" class="h-name" data-hyp="'+x.id+'" aria-expanded="'+open+'" aria-controls="hyp-'+x.id+'"><span>'+esc(x.name)+(x.alt?'<em class="h-tag">alternative</em>':'')+'</span>'+ic('chevron-right')+'</button></div>')+
           (idle?'<p class="h-idle">Needs "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" on first.</p>':'')+
           (x.id==='addr-number-first'&&xOn('addr-postcode-first')&&xOn('addr-show-all')?'<p class="h-idle">No visible difference while "Postcode-first" and "Show every address" are both on: that list already starts with the number.</p>':'')+
           (open?'<div class="h-detail" id="hyp-'+x.id+'">'+hypHTML(x)+onScreen(x)+'</div>':'')+'</div>'; };
@@ -1702,7 +1704,8 @@ function drawCompare(){
       '<div class="cmp-phones"><figure class="cmp-ph live"><figcaption>Live site</figcaption><iframe id="cmp-live" title="Live site"></iframe></figure>'+
       '<figure class="cmp-ph with"><figcaption id="cmp-cap">With your changes</figcaption><iframe id="cmp-with" title="Form with your changes"></iframe></figure></div>';
     const fitFrames=()=>{
-      const fr=[$('#cmp-live',host),$('#cmp-with',host)], hs=fr.map(i=>{ try{ const d=i.contentDocument; return d&&d.body?Math.ceil(d.body.getBoundingClientRect().height):0; }catch(e){ return 0; } });
+      const fr=[$('#cmp-live',host),$('#cmp-with',host)]; if(!fr[0]||!fr[1]) return;
+      const hs=fr.map(i=>{ try{ const d=i.contentDocument; return d&&d.body?Math.ceil(d.body.getBoundingClientRect().height):0; }catch(e){ return 0; } });
       const h=Math.max(560,...hs); fr.forEach(i=>{ i.style.height=h+'px'; });
     };
     $$('iframe',host).forEach(i=>i.addEventListener('load',()=>{ fitFrames(); try{ new ResizeObserver(()=>requestAnimationFrame(fitFrames)).observe(i.contentDocument.body); }catch(e){} }));
