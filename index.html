@@ -340,6 +340,20 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .dv-compare{flex:none;display:flex;align-items:center;padding-left:24px;border-left:1px solid #2c2c2c}
 .dv-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:8px;background:#fff;color:#111;font-size:13px;line-height:18px;font-weight:700;text-decoration:none;white-space:nowrap}
 .dv-btn:hover{background:#E5E7EB}
+button.dv-btn.alt{background:transparent;color:#fff;border:1px solid #666}
+button.dv-btn.alt:hover{background:#2a2a2a}
+.intro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(17,17,17,.62);overflow:auto}
+.intro-card{position:relative;width:100%;max-width:600px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
+.intro-card h2{margin:0 36px 8px 0;font-size:24px;line-height:30px;font-weight:700}
+.intro-card .lead{margin:0 0 18px;color:#374151}
+.intro-card ol{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
+.intro-card li{position:relative;margin:0 0 12px;padding-left:40px;counter-increment:s}
+.intro-card li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:14px;line-height:26px;font-weight:700;text-align:center}
+.intro-card li b{display:block}
+.intro-tip{margin:0 0 20px;padding:12px 14px;border-radius:8px;background:#F1EBFE;color:#3b0a96;font-size:15px;line-height:22px}
+.intro-x{position:absolute;top:14px;right:14px;width:36px;height:36px;border:0;border-radius:50%;background:#F3F4F6;font-size:22px;line-height:36px;cursor:pointer;color:#111}
+.intro-go{display:flex;align-items:center;justify-content:center;width:100%;height:52px;border:0;border-radius:6px;background:var(--green);color:var(--btn-ink);font-size:18px;font-weight:700;cursor:pointer}
+.intro-go:focus-visible,.intro-x:focus-visible{outline:3px solid #000;outline-offset:2px}
 .dv-compare{gap:10px}
 button.dv-btn{border:0;cursor:pointer;font-family:inherit}
 .xpanel{position:fixed;left:10px;right:10px;bottom:150px;max-width:660px;margin:0 auto;max-height:62vh;overflow:auto;z-index:41;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:12px;padding:14px 16px 6px;box-shadow:0 8px 32px rgba(0,0,0,.45);font-size:13px;line-height:18px}
@@ -1394,7 +1408,7 @@ if(!SHOT){
        '<div class="dv-row"><span class="dv-label">Step</span><div class="dv-steps"></div></div>'+
      '</div>'+
      '<div class="dv-side"><div class="dv-seg" id="dev-bar3" role="radiogroup" aria-label="Progress bar (all steps)"><span class="dv-seglabel">Progress bar</span><button type="button" role="radio" data-bar="live" aria-checked="true">Live</button><button type="button" role="radio" data-bar="orb" aria-checked="false">Marker</button><button type="button" role="radio" data-bar="stepper" aria-checked="false">Stages</button></div></div>'+
-     '<div class="dv-compare"><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
+     '<div class="dv-compare"><button type="button" class="dv-btn alt" id="dev-help">How to use</button><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
    '</div>';
   document.body.appendChild(dev); document.body.classList.add('has-dev');
   dev.addEventListener('click',e=>{
@@ -1402,6 +1416,42 @@ if(!SHOT){
   });
 }
 window.addEventListener('hashchange',route);
+/* ---- introduction overlay: shown once per browser tab, and from the 'How to use' button ---- */
+function showIntro(){
+  if($('#intro')) return;
+  const o=document.createElement('div'); o.id='intro'; o.className='intro';
+  o.innerHTML='<div class="intro-card" role="dialog" aria-modal="true" aria-labelledby="intro-title">'+
+    '<button type="button" class="intro-x" id="intro-x" aria-label="Close">&times;</button>'+
+    '<h2 id="intro-title">Car Finance 247 apply form: redesign prototype</h2>'+
+    '<p class="lead">An interactive prototype of three steps of the apply form where the most people leave: <b>address</b>, <b>date of birth</b> and the <b>final contact page</b>. Each change is a switch with the hypothesis it would test, so it can be A/B tested on its own. It is for exploring ideas: it collects nothing and everything in it is sample data.</p>'+
+    '<ol>'+
+      '<li><b>It starts as the live form.</b>With every switch off, each page is the current live version.</li>'+
+      '<li><b>Switch changes on one at a time.</b>The <i>Hypotheses</i> card beside each page has a switch for every change. Flip one and the page updates to show it, with the reason it could reduce drop-off.</li>'+
+      '<li><b>Move between steps.</b>Use the Address, Date of birth and Contact details buttons in the bar at the bottom.</li>'+
+      '<li><b>Try the progress bar.</b>The Live, Marker and Stages selector at the bottom changes the progress bar on every step.</li>'+
+      '<li><b>Compare.</b>"Compare with current" shows the live and redesigned pages side by side.</li>'+
+    '</ol>'+
+    '<p class="intro-tip">Tip: on the address step, type <b>CR0 3AG</b> to see a list of sample addresses. The form is designed for a phone, so a narrow window shows it best. The web address records which switches are on, so you can share a setup.</p>'+
+    '<button type="button" class="intro-go" id="intro-go">Start exploring</button>'+
+  '</div>';
+  document.body.appendChild(o);
+  const back=document.activeElement, parts=[app,dev].filter(Boolean); parts.forEach(p=>{ p.inert=true; });
+  const go=$('#intro-go'), x=$('#intro-x');
+  function onKey(e){
+    if(e.key==='Escape'){ e.preventDefault(); close(); }
+    else if(e.key==='Tab'){ const a=document.activeElement; if(e.shiftKey&&a===x){ e.preventDefault(); go.focus(); } else if(!e.shiftKey&&a===go){ e.preventDefault(); x.focus(); } }
+  }
+  function close(){ o.remove(); document.removeEventListener('keydown',onKey); parts.forEach(p=>{ p.inert=false; }); try{ sessionStorage.setItem('introSeen','1'); }catch(e){} if(back&&back.focus) back.focus(); }
+  go.addEventListener('click',close); x.addEventListener('click',close);
+  o.addEventListener('click',e=>{ if(e.target===o) close(); });
+  document.addEventListener('keydown',onKey);
+  go.focus();
+}
+if(dev){
+  $('#dev-help').addEventListener('click',showIntro);
+  let seen=false; try{ seen=sessionStorage.getItem('introSeen')==='1'; }catch(e){}
+  if(qs.get('intro')!=='0'&&!seen) setTimeout(showIntro,0);   // ?intro=0 skips it
+}
 if(dev) $('#dev-bar3').addEventListener('click',e=>{ const b=e.target.closest('[data-bar]'); if(!b) return; X['global-stepper']=b.dataset.bar==='stepper'; X['global-orb']=b.dataset.bar==='orb'; syncX(); dev.querySelectorAll('#dev-bar3 [data-bar]').forEach(x=>x.setAttribute('aria-checked',String(x===b))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
 $('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ carry=liveSnap?liveSnap():null; const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; if(carry) carry.reveal=id; else revealNext=id; route(); window.scrollTo(0,y); } });
 route();
