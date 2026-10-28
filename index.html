@@ -256,7 +256,7 @@ body.notes-on .sheet,body.notes-on .backdrop{position:absolute}
 body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:1px solid #DDE0E6;border-radius:12px;padding:20px 22px 18px;font-size:14px;line-height:20px;color:#111}
 @media (max-width:1360px){ body.notes-on #side{flex-direction:column} body.notes-on #summary{width:340px} }
 body.notes-on #summary{display:none}
-body.notes-on #side{flex:1 1 780px;max-width:900px;min-width:0}
+body.notes-on #side{flex:1 1 380px;max-width:900px;min-width:320px}
 body.notes-on:not(.shot) #stage{align-items:stretch}
 @media (min-width:781px){ body.notes-on:not(.shot) #screen{align-self:flex-start;min-height:calc(100vh - 180px)} body.notes-on:not(.shot) #screen.stick{position:sticky;top:12px} }   /* grows with its content; pinned only while it fits in the window */
 body.notes-on:not(.shot) #side{position:static;align-items:stretch}
@@ -410,6 +410,8 @@ button.dv-btn.alt:hover{background:#2a2a2a}
 body.mode-compare #screen{display:none}
 body.mode-compare .cmpframes{display:block;flex:1 1 560px;min-width:0}
 body.mode-compare #side{flex:0 1 380px;min-width:300px}
+body.notes-on:not(.shot) #notes{position:sticky;top:12px;align-self:flex-start;max-height:calc(100vh - var(--bar,0px) - 24px);overflow-y:auto}   /* follows the page; scrolls inside itself only if it is taller than the window */
+@media (max-width:780px){ body.notes-on:not(.shot) #notes{position:static;max-height:none;overflow:visible} }
 .cmpx-top{display:flex;justify-content:flex-end;margin:0 0 10px}
 .cmp-tabs{display:flex;gap:6px}
 .cmp-tabs button,.cmp-tog button{border:1px solid #DDE0E6;background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;line-height:20px;font-weight:600;color:#374151;cursor:pointer}
@@ -1598,6 +1600,7 @@ function paintDev(cur){
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
   dev.querySelector('.dv-steps').innerHTML=STEPS.map(s=>'<button type="button" class="dv-step" data-go="'+s.key+'/default" aria-pressed="'+(s.key===step)+'"><b>'+s.n+'</b><span>'+s.label+'</span></button>').join('');
   document.body.style.paddingBottom=(dev.offsetHeight+8)+'px';   // make room for the bar's real height
+  document.documentElement.style.setProperty('--bar',dev.offsetHeight+'px');
 }
 if(!SHOT){
   dev=document.createElement('div'); dev.className='dev';
@@ -1620,7 +1623,7 @@ if(!SHOT){
     const ss=e.target.closest('[data-show-set]'); if(ss&&!ss.disabled){ showSet(ss.dataset.showSet); return; }
   });
 }
-window.addEventListener('resize',()=>{ if(dev) document.body.style.paddingBottom=(dev.offsetHeight+8)+'px'; });
+window.addEventListener('resize',()=>{ if(dev){ document.body.style.paddingBottom=(dev.offsetHeight+8)+'px'; document.documentElement.style.setProperty('--bar',dev.offsetHeight+'px'); } });
 const stickCheck=()=>{ const sc=$('#screen'), ap=$('#app'); if(!sc||!ap) return; sc.classList.toggle('stick',ap.offsetHeight<=innerHeight-(dev?dev.offsetHeight:0)-24); };
 window.addEventListener('resize',stickCheck); try{ new ResizeObserver(stickCheck).observe($('#app')); }catch(e){}
 window.addEventListener('hashchange',route);
