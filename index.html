@@ -920,7 +920,7 @@ const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowe
 /* The time-at-address question. Date mode asks 'When did you move in?' (month and year, the system works out the length);
    otherwise the live 'How long have you lived at this address?' (years and months). */
 function movedWidget(host,v,date,showLegend){
-  const F=date?[{k:'a',id:'mv-a',label:'Month',ph:'MM',max:2},{k:'b',id:'mv-b',label:'Year',ph:'YYYY',max:4,year:true}]
+  const F=date?[{k:'b',id:'mv-b',label:'Year',ph:'YYYY',max:4,year:true},{k:'a',id:'mv-a',label:'Month',ph:'MM',max:2}]   // year first, then month
               :[{k:'a',id:'mv-a',label:'Years',ph:'0',max:2},{k:'b',id:'mv-b',label:'Months',ph:'0',max:2}];
   const title=date?'When did you move in?':'How long have you lived at this address?';
   host.innerHTML='<fieldset class="moved"><legend'+(showLegend?'':' class="sr"')+'>'+title+'</legend><div class="mv-row">'+
@@ -958,8 +958,8 @@ function movedWidget(host,v,date,showLegend){
     if(e&&(final||bblur)) track('address_moved_validation_error');
     return e;
   }
-  a.addEventListener('input',()=>{ digits(a); if(date&&a.value.length===1&&+a.value>1) a.value='0'+a.value; v.a=a.value; if(date&&a.value.length===2&&!error(false)) b.focus(); check(false); });
-  b.addEventListener('input',()=>{ digits(b); v.b=b.value; check(false); });
+  a.addEventListener('input',()=>{ digits(a); if(date&&a.value.length===1&&+a.value>1) a.value='0'+a.value; v.a=a.value; check(false); });
+  b.addEventListener('input',()=>{ digits(b); v.b=b.value; if(date&&b.value.length===4&&!error(false)) a.focus(); check(false); });   // a full year moves on to the month
   a.addEventListener('blur',()=>{ if(date&&a.value.length===1){ a.value='0'+a.value; v.a=a.value; } check(false); });
   b.addEventListener('blur',()=>{ if(b.value) check(false,true); });
   return {check:check};
@@ -1155,7 +1155,7 @@ function mountAddress(preset){
   function choose(id){
     S.selected=S.list.find(a=>a.id===id); S.manual=false; $('#cont-msg').innerHTML='';
     track('address_selected',{position:S.list.indexOf(S.selected)+1});
-    drawZone(); const mv=$('#mv-a'); (mv||cont).focus();
+    drawZone(); const mv=MDATE?$('#mv-b'):$('#mv-a'); (mv||cont).focus();
   }
   function goManual(fromSelected){
     track('address_manual_opened',{reason:fromSelected?'change_address':S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
