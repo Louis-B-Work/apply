@@ -295,11 +295,16 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 .n-state.live span{flex:1 1 auto}
-.n-seg{display:flex;flex:1 0 100%;margin-top:8px;padding:4px;gap:2px;border-radius:12px;background:#ECEDF0}
-.n-state .n-seg button{flex:1;border:0;border-radius:9px;background:transparent;color:#5B616E;padding:10px 12px;font-size:15px;line-height:20px;font-weight:600}
-.n-state .n-seg button:not([aria-pressed=true]):hover{color:#111;background:rgba(255,255,255,.7)}
-.n-state .n-seg button[aria-pressed=true]{background:#252525;color:#fff;font-weight:700;cursor:default;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.n-state .n-seg button:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.n-ver{display:flex;flex:1 0 100%;align-items:center;justify-content:center;gap:14px;margin-top:8px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #E1E3E8}
+.n-state .n-ver .ver-lab{border:0;border-radius:0;background:none;padding:0;font-size:15px;line-height:20px;font-weight:600;color:#6B7280;cursor:pointer}
+.n-state .n-ver .ver-lab.on{color:#111;font-weight:700}
+.n-state .ver-sw{position:relative;flex:none;width:52px;height:30px;border:0;border-radius:15px;padding:0;background:#B8BCC6;cursor:pointer;transition:background .15s}
+.n-state .ver-sw .ver-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+.n-state .ver-sw[aria-checked=true]{background:#6905F2}
+.n-state .ver-sw[aria-checked=true] .ver-knob{left:25px}
+.n-state .ver-sw[aria-checked=mixed]{background:#A77BF7}
+.n-state .ver-sw[aria-checked=mixed] .ver-knob{left:14px}
+.n-state .ver-sw:focus-visible,.n-state .ver-lab:focus-visible{outline:2px solid var(--purple);outline-offset:3px}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
 .n-state.live::before{content:"";width:10px;height:10px;border-radius:50%;background:#0E9F6E;flex:none}
 .n-state.redesign{background:#F1EBFE;border:1px solid #D8CBF8;color:#4a05b0}
@@ -1504,7 +1509,7 @@ function paintNotes(k){
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?'<div class="n-state '+(anyOn?'redesign':'live')+'">'+(anyOn?'<b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(barOn?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span>':'<b>Current live version</b><span>All switches are off, so this is what customers see today.</span>')+'<div class="n-seg" role="group" aria-label="Version"><button type="button" data-xoff="1" aria-pressed="'+!anyOn+'">Live version</button><button type="button" data-xall="1" aria-pressed="'+allOn+'">Full redesign</button></div></div>':'')+
+    (exps.length?'<div class="n-state '+(anyOn?'redesign':'live')+'">'+(anyOn?'<b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(barOn?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span>':'<b>Current live version</b><span>All switches are off, so this is what customers see today.</span>')+'<div class="n-ver"><button type="button" class="ver-lab'+(!anyOn?' on':'')+'" data-xoff="1">Live version</button><button type="button" class="ver-sw" role="switch" aria-checked="'+(allOn?'true':anyOn?'mixed':'false')+'" aria-label="Full redesign" '+(allOn?'data-xoff':'data-xall')+'="1"><span class="ver-knob"></span></button><button type="button" class="ver-lab'+(allOn?' on':'')+'" data-xall="1">Full redesign</button></div></div>':'')+
     (exps.length?'<p class="n-sub h-headrow">Hypotheses<span>'+on.length+' of '+exps.length+' on</span></p><div class="h-list">'+(()=>{
       const row=(x,child)=>{ const idle=x.parent&&!X[x.parent], open=hypOpen.has(x.id);
         return '<div class="h-row'+(child?' child':'')+(X[x.id]?'':' off')+(idle?' idle':'')+'"><div class="h-line"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(idle?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button>'+
