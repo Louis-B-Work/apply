@@ -651,6 +651,10 @@ function mountContact(preset){
   if(preset.email!==undefined){ email.value=preset.email; touched.email=true; paint('email'); }
   if(preset.phone!==undefined){ phone.value=preset.phone; touched.phone=true; paint('phone'); }
   if(preset.submitting) startSubmit();
+  // a switch was just flipped: show what it changes
+  const rv=revealNext; revealNext=null;
+  if(rv==='contact-phone-help-icon'&&tipBtn) tipBtn.click();
+  else if(rv==='contact-phone-tolerance'){ phone.value='+44 7700 900123'; phone.dispatchEvent(new Event('blur')); }
 }
 
 /* ============================== STEP 2: DATE OF BIRTH ============================== */
@@ -875,6 +879,15 @@ function mountDob(preset){
   paintMask();
   if(preset.values){ setValue(preset.values.join(SEP)); evaluate('live'); }
   if(preset.picker) openPicker(preset.picker);
+  // a switch was just flipped: show what it changes
+  const rv=revealNext; revealNext=null;
+  if(rv==='dob-calendar'&&cal) openPicker();
+  else if(rv==='dob-why-we-ask'&&why) why.click();
+  else if(rv==='dob-two-digit-year'||rv==='dob-example-line'){
+    setValue(rv==='dob-example-line'?'10  /  10  /  2000':'07  /  07  /  77');   // a valid date for the age line; a two-digit year for the year rule
+    if(!ONE&&rv==='dob-two-digit-year'){ boxes[0].value='07'; boxes[1].value='07'; boxes[2].value='77'; }
+    expandYear(); evaluate('blur');
+  }
 }
 
 /* ============================== STEP 1: ADDRESS ============================== */
@@ -973,8 +986,9 @@ function mountAddress(preset){
   const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
   let seq=0, timer=null;
   liveSnap=()=>({postcode:S.postcode,status:S.status==='results'?'results':'idle',list:S.list,shown:S.shown,filter:S.filter,selected:S.selected,manual:S.manual,man:S.man});
+  let revealId=null;
   if(carry){   // a switch was flipped: come back to the same place
-    const c=carry; carry=null;
+    const c=carry; carry=null; revealId=c.reveal||null;
     S.postcode=c.postcode; S.isPc=UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''));
     if(PF&&S.isPc) S.postcode=fmtPC(S.postcode);
     S.list=c.list; S.status=c.status; S.shown=c.shown; S.filter=c.filter; S.selected=c.selected; S.manual=c.manual; S.man=c.man;
@@ -1161,8 +1175,6 @@ function mountAddress(preset){
     MVW=movedWidget(el,S.mv,MDATE,true);
   }
   const movedCheck=final=>MVW?MVW.check(final):null;
-  // switching the wording on or off redraws just this question (its boxes mean something different, so they start empty); the rest of the step stays as it is
-  liveHooks['addr-move-in-date']=()=>{ MDATE=xOn('addr-move-in-date'); S.mv={a:'',b:''}; if(MOV) drawMoved(); };
 
   /* --- the keyboard's Enter key goes to the next field, and submits on the last one --- */
   function wireEnter(){
@@ -1189,7 +1201,21 @@ function mountAddress(preset){
     if(preset.filter&&FLT){ S.filter=preset.filter; const fl=$('#flt'); if(fl) fl.value=preset.filter; drawList(); }
     if(preset.select){ S.selected=S.list.find(a=>a.line1===preset.select); drawZone(); }
     if(preset.manual){ goManual(false); }
+    if(revealId) return reveal(revealId);
   });
+  // show what a switch changes: the open list for the list switches, a chosen address (with the time-at-address question) for the others
+  function ensureList(){
+    if(S.list.length) return Promise.resolve();
+    if(!S.postcode.trim()||(PF&&!looksPc(S.postcode))){ S.postcode='CR0 3AG'; const el=$('#pc'); if(el) el.value=S.postcode; }
+    return Promise.resolve(lookup('button',true));
+  }
+  async function reveal(id){
+    if(id==='addr-show-all'||id==='addr-manual-outside'){ S.selected=null; S.manual=false; drawZone(); await ensureList(); }
+    else if(id==='addr-one-screen'||id==='addr-move-in-date'){
+      if(!S.selected&&!S.manual){ await ensureList(); if(S.status==='results'&&S.list.length){ S.selected=S.list[1]||S.list[0]; drawZone(); } }
+    }
+    const t=id==='addr-show-all'||id==='addr-manual-outside'?$('#lbwrap'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
 }
 
 /* ============================== DESIGN NOTES (annotations) ==============================
@@ -1298,7 +1324,7 @@ function paintNotes(k){
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
-let liveHooks={}, lastKey='', carry=null, liveSnap=null;   // carry: what the step hands to its own re-mount when a switch is flipped   // switches a step can apply without re-mounting
+let liveHooks={}, lastKey='', carry=null, liveSnap=null, revealNext=null;   // revealNext: the switch just flipped, for steps that do not carry state   // carry: what the step hands to its own re-mount when a switch is flipped   // switches a step can apply without re-mounting
 const force=(ids,fn)=>()=>{ ids.forEach(i=>{ X[i]=true; }); syncX(); fn(); };   // a state that only makes sense with some switches on
 const ROUTES={
   'address/default':()=>mountAddress(),
@@ -1362,7 +1388,7 @@ if(!SHOT){
 }
 window.addEventListener('hashchange',route);
 if(dev) $('#dev-stepper').addEventListener('click',()=>{ X['global-stepper']=!X['global-stepper']; syncX(); $('#dev-stepper').setAttribute('aria-checked',String(xOn('global-stepper'))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
-$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ carry=liveSnap?liveSnap():null; const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; route(); window.scrollTo(0,y); } });
+$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ carry=liveSnap?liveSnap():null; const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; if(carry) carry.reveal=id; else revealNext=id; route(); window.scrollTo(0,y); } });
 route();
 })();
 </script>
