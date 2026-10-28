@@ -295,9 +295,13 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 .n-state.live span{flex:1 1 auto}
-.n-seg{display:inline-flex;border:1px solid #4a05b0;border-radius:999px;overflow:hidden;background:#fff}
-.n-state .n-seg button{border:0;border-radius:0;background:#fff;color:#4a05b0;padding:4px 14px}
-.n-state .n-seg button[aria-pressed=true]{background:#4a05b0;color:#fff}
+.n-seg{display:flex;flex:1 0 100%;margin-top:6px;padding:3px;border-radius:999px;background:#fff;border:1px solid #C9CDD6}
+.n-state .n-seg button{flex:1;border:0;border-radius:999px;background:transparent;color:#4B5563;padding:8px 12px;font-size:14px;line-height:20px;font-weight:700}
+.n-state .n-seg button:not([aria-pressed=true]):hover{background:#F1EBFE;color:#4a05b0}
+.n-state .n-seg button[aria-pressed=true]{color:#fff;cursor:default}
+.n-state .n-seg button[aria-pressed=true]::before{content:"\2713\00a0"}
+.n-state .n-seg button[data-xoff][aria-pressed=true]{background:#0E9F6E}
+.n-state .n-seg button[data-xall][aria-pressed=true]{background:#6905F2}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
 .n-state.live::before{content:"";width:10px;height:10px;border-radius:50%;background:#0E9F6E;flex:none}
 .n-state.redesign{background:#F1EBFE;border:1px solid #D8CBF8;color:#4a05b0}
@@ -1639,7 +1643,7 @@ $('#notes').addEventListener('click',e=>{
   if(off){ EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); carry=null; goStepDefault(st); return; }
   const t=e.target.closest('[data-x]'); if(!t||t.disabled) return;
   const y=window.scrollY, id=t.dataset.x; X[id]=!X[id];
-  if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; });
+  EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=X[id]; });   // a branch goes on and off with its parent (it can then be flipped on its own)
   syncX();
   if(!X[id]){ carry=null; goStepDefault(st); return; }   // switched off: back to the live page
   hypOpen.clear(); hypOpen.add(id);   // the switch just turned on shows its hypothesis
