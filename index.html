@@ -1533,7 +1533,7 @@ function paintNotes(k){
       return exps.filter(e=>!e.parent).map(e=>row(e,false)+exps.filter(c=>c.parent===e.id).map(c=>row(c,true)).join('')).join('');
     })()+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'');
-  const vt=$('#vertop'); if(vt) vt.innerHTML='<div class="badge '+(onN?'on':'live')+'"><b>'+(onN?'With '+onN+' change'+(onN===1?'':'s'):'Live site')+'</b><span>'+(onN?'Everything else is as it is today.':'This is what customers see today.')+'</span></div>';   // one clear label for what you are looking at
+  const vt=$('#vertop'); if(vt) vt.innerHTML='<div class="badge '+(onN?'on':'live')+'"><b>'+(showState()==='all'?'All changes':onN?'With '+onN+' change'+(onN===1?'':'s'):'Live site')+'</b><span>'+(showState()==='all'?'The complete redesign: every recommended change is on.':onN?'Everything else is as it is today.':'This is what customers see today.')+'</span></div>';   // one clear label for what you are looking at
   drawCompare();
 }
 
