@@ -290,6 +290,8 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .hyp p{margin:0 0 6px;font-size:14px;line-height:20px;color:#1F2937}
 .hyp p:last-child{margin:0}
 .hyp b{color:var(--purple);font-weight:700}
+.hyp b.h-because{color:var(--err)}
+.hyp b.h-result{color:#0B7A55}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
@@ -626,7 +628,7 @@ const EXPERIMENTS=[
 ];
 const HYP_LABELS=[['because','Because'],['believe','We believe'],['result','Will result in'],['measure','Which we will measure by']];
 const hypText=(x,k)=>k==='because'?x.because.replace('{fig}',typeof HYP_FIG!=='undefined'&&HYP_FIG[x.step]||''):x[k];   // the figures exist only in the internal version
-const hypHTML=x=>'<div class="hyp">'+HYP_LABELS.map(l=>'<p><b>'+l[1]+'</b> '+esc(hypText(x,l[0]))+'</p>').join('')+'</div>';
+const hypHTML=x=>'<div class="hyp">'+HYP_LABELS.map(l=>'<p><b class="h-'+l[0]+'">'+l[1]+'</b> '+esc(hypText(x,l[0]))+'</p>').join('')+'</div>';
 const X={};
 (function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
 const PARENT={}; EXPERIMENTS.forEach(e=>{ if(e.parent) PARENT[e.id]=e.parent; });
