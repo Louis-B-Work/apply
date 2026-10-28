@@ -444,8 +444,8 @@ body.cmp-open #dev-bar3{opacity:.4;pointer-events:none}   /* the progress bar ch
 .cmp-hyps{display:grid;gap:10px}
 .cmp.wide .cmp-phones{flex-wrap:nowrap;gap:20px}
 .cmp.wide .cmp-ph{flex:1 1 0;min-width:0;max-width:760px}
-.cmp.wide .cmp-ph iframe{width:100%;height:calc(100vh - 150px)}
-@media (min-width:1101px){ .cmp-view{position:sticky;top:12px} }
+.cmp.wide .cmp-ph iframe{width:100%}
+@media (min-width:1101px){ .cmp-side{position:sticky;top:12px} }   /* the list stays in view while the tall forms scroll */
 .cmp-hyp{padding:14px 16px;border-radius:10px;background:#fff;border:1px solid #DDE0E6}
 .cmp-hyp h3{margin:0 0 8px;font-size:15px;line-height:20px;font-weight:700}
 .cmp-hyp p,.cmp-hyp li{font-size:14px;line-height:20px;color:#1F2937}
@@ -458,7 +458,7 @@ body.cmp-open #dev-bar3{opacity:.4;pointer-events:none}   /* the progress bar ch
 .cmp-ph{margin:0}
 .cmp-ph figcaption{margin:0 0 8px;text-align:center;font-size:13px;line-height:18px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:#4B5563}
 .cmp-ph.with figcaption{color:var(--purple)}
-.cmp-ph iframe{display:block;width:375px;max-width:100%;height:min(calc(100vh - 150px),800px);border:1px solid #D9DCE3;border-radius:12px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.cmp-ph iframe{display:block;width:375px;max-width:100%;height:700px;border:1px solid #D9DCE3;border-radius:12px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08)}
 .cmp-tog{display:none;justify-content:center;gap:8px;margin:0 0 12px}
 .cmp-view{grid-column:1;grid-row:1}
 .cmp-side{grid-column:2;grid-row:1}
@@ -1721,6 +1721,11 @@ function openCompare(pick){
     '<div class="cmp-view"><div class="cmp-tog" role="group" aria-label="Show"><button type="button" data-tog="live" aria-pressed="'+(S.show==='live')+'">Current</button><button type="button" data-tog="with" aria-pressed="'+(S.show==='with')+'">With the changes</button></div>'+
       '<div class="cmp-phones"><figure class="cmp-ph live"><figcaption>Current (live)</figcaption><iframe title="Current form" src="'+cmpSrc([],route)+'"></iframe></figure>'+
       '<figure class="cmp-ph with"><figcaption>'+(chosen.length?'With '+chosen.length+' change'+(chosen.length===1?'':'s')+' stacked':'No changes stacked')+'</figcaption><iframe title="Form with the stacked changes" src="'+cmpSrc(ids,route)+'"></iframe></figure></div></div></div>';
+    const fr=$$('#cmp iframe'), fitFrames=()=>{   // both forms get the height of the taller one
+      const hs=fr.map(i=>{ try{ const d=i.contentDocument; return d&&d.body?Math.ceil(d.body.getBoundingClientRect().height):0; }catch(e){ return 0; } });
+      const h=Math.max(560,...hs); fr.forEach(i=>{ i.style.height=h+'px'; });
+    };
+    fr.forEach(i=>i.addEventListener('load',()=>{ fitFrames(); try{ new ResizeObserver(()=>requestAnimationFrame(fitFrames)).observe(i.contentDocument.body); }catch(e){} }));
     const fe=focus&&o.querySelector(focus); if(fe) fe.focus();
   }
   function close(){ o.remove(); document.removeEventListener('keydown',onKey); window.removeEventListener('resize',fit); window.removeEventListener('hashchange',onHash); document.body.classList.remove('cmp-open'); $('#dev-compare').setAttribute('aria-pressed','false'); parts.forEach(p=>{ p.inert=false; }); if(back&&back.focus) back.focus(); }
