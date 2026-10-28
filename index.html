@@ -979,7 +979,8 @@ function mountAddress(preset){
   setProgress('address-add');
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
-  const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF, MOV=xOn('addr-one-screen');
+  const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF||!ALL,   // with show-all off the list looks exactly like the live one, whatever else is on
+   MOV=xOn('addr-one-screen');
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
