@@ -500,22 +500,14 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Every change that could move drop-off on its own is a switch with the hypothesis it tests, so each can be A/B tested alone.
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
-  {id:'addr-postcode-first',step:'address',on:false,name:'Postcode-first search and wording',
-   short:"People stall on the open search box because they don't know what to type.",
-   because:"{fig}{-people are not sure what to type in the open 'Search for your address' box-} (a postcode, a street or a house number), and {-failed searches lead to manual entry or leaving-}",
-   believe:"asking only for a postcode, in plain words, and searching as soon as a full postcode is typed",
-   result:"{+more people starting the search+} and {+fewer failed searches+}",
+  {id:'addr-postcode-first',step:'address',on:false,name:'House number and postcode first, with a Find address button',
+   short:"People stall on the open search box because they don't know what to type. Asking for the house number and postcode, as Compare the Market does, goes straight to the matching address.",
+   because:"{fig}{-people are not sure what to type in the open 'Search for your address' box-} (a postcode, a street or a house number), {-failed searches lead to manual entry or leaving-}, and {-people have to find their house in a list-} while Compare the Market asks for the house number and postcode together",
+   believe:"asking for the house number and the postcode in plain words, with a Find address button, and going straight to the matching address",
+   result:"{+more people starting the search+}, {+fewer failed searches+} and {+more people reaching 'Is this your address?' without scanning a list+}",
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
-   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, so there is no Find address button.",
-   measure:"address step completion, plus address_lookup_started, address_validation_error and address_manual_opened"},
-  {id:'addr-house-number',step:'address',on:false,parent:'addr-postcode-first',alt:true,name:'House number and postcode, with a Find address button',
-   short:"Ask for the house number beside the postcode, as Compare the Market does, and go straight to the matching address.",
-   because:"{fig}{-people have to find their house in a list-}, and Compare the Market asks for the house number and postcode together",
-   believe:"asking for the house number or name beside the postcode, with a Find address button, and going straight to the matching address",
-   result:"{+more people reaching 'Is this your address?' without scanning a list+}",
-   control:"Postcode only; the search starts by itself and every address in the postcode is listed.",
-   variant:"A 'House number or name' box above the Postcode box and a Find address button; there is no automatic search. One match goes straight to 'Is this your address?'. Several matches are listed. No match lists every address with a note.",
-   measure:"address step completion; time on step; address_house_number_used; position of the chosen address (address_selected)"},
+   variant:"Headed 'Next, what's your address?' with 'House number or name' and 'Postcode' boxes and a Find address button (no automatic search). One match goes straight to 'Is this your address?'. Several matches are listed. No match lists every address with a note.",
+   measure:"address step completion, plus address_lookup_started, address_validation_error, address_manual_opened, address_house_number_used and position of the chosen address (address_selected)"},
   {id:'addr-show-all',step:'address',on:false,name:"Show every address, no 'Show more addresses' button",
    short:"'Show more addresses' looks like just another row, not a button, so people may not realise it expands the list. A list that already holds every address removes that step.",
    because:"{fig}{-the list only shows part of the results behind 'Show more addresses'-}, which looks like another row and not a button, so {-people may not find their address-}",
@@ -1161,7 +1153,7 @@ function mountAddress(preset){
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF||!ALL,   // with show-all off the list looks exactly like the live one, whatever else is on
-   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=xOn('addr-house-number'), NF=xOn('addr-number-first');
+   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF, NF=xOn('addr-number-first');
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
@@ -1219,7 +1211,7 @@ function mountAddress(preset){
     '<div class="field" id="pc-field"><label for="pc">'+(PF?'Postcode':'Search for your address')+'</label>'+
       '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
-    (HN?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+   // the postcode-first search runs by itself, so the button is only for the house-number version, which needs both boxes
+    (HN?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+   // the search waits for both boxes, so it needs the button
     '<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>'+
     '<div id="results"></div>';
     const pc=$('#pc');
@@ -1423,7 +1415,7 @@ function mountAddress(preset){
     else if(id==='addr-one-screen'||id==='addr-move-in-date'||id==='addr-status-same-step'){
       if(!S.selected&&!S.manual){ await ensureList(); if(S.status==='results'&&S.list.length){ S.selected=S.list[1]||S.list[0]; drawZone(); } }
     }
-    const t=id==='addr-show-all'||id==='addr-manual-outside'||id==='addr-number-first'?$('#lbwrap'):id==='addr-house-number'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
+    const t=id==='addr-show-all'||id==='addr-manual-outside'||id==='addr-number-first'?$('#lbwrap'):id==='addr-postcode-first'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 }
 
@@ -1437,9 +1429,7 @@ let dobHelp=false;   // the 'For example' line and the 'That makes you ...' line
 const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact:'Step 3: Contact details'};
 const CHANGES={
   "address/default":[
-    ["Postcode first, nothing else to fill in","Easy to start: everyone knows their postcode","addr-postcode-first"],
-    ["Search runs by itself once the postcode is valid","One less tap","addr-postcode-first"],
-    ["House number and postcode boxes, with a Find address button","Most people know their house number, so they can skip the list","addr-house-number"],
+    ["House number and postcode boxes, with a Find address button","Easy to start: everyone knows them, and most people can skip the list","addr-postcode-first"],
     ["Keyboard Enter key searches, and moves between fields","Fewer taps with the keyboard open"],
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
@@ -1672,7 +1662,7 @@ function showIntro(){
 }
 /* ---- Compare with current: two live copies of the form side by side (?shot=1 gives a plain phone page), the current one and one with the change ---- */
 let cmpLast=null;
-const COMPARE_AT={'addr-postcode-first':'address/default','addr-house-number':'address/default','addr-show-all':'address/results','addr-number-first':'address/results','addr-manual-outside':'address/results','addr-one-screen':'address/selected','addr-move-in-date':'address/selected','addr-status-same-step':'address/selected','dob-calendar':'dob/picker-year','dob-example-line':'dob/valid','dob-two-digit-year':'dob/twodigit','dob-why-we-ask':'dob/why','contact-phone-tolerance':'contact/phone44','contact-phone-help-icon':'contact/help'};   // the page state where each change shows; the rest start on the step's first page
+const COMPARE_AT={'addr-postcode-first':'address/default','addr-show-all':'address/results','addr-number-first':'address/results','addr-manual-outside':'address/results','addr-one-screen':'address/selected','addr-move-in-date':'address/selected','addr-status-same-step':'address/selected','dob-calendar':'dob/picker-year','dob-example-line':'dob/valid','dob-two-digit-year':'dob/twodigit','dob-why-we-ask':'dob/why','contact-phone-tolerance':'contact/phone44','contact-phone-help-icon':'contact/help'};   // the page state where each change shows; the rest start on the step's first page
 const cmpRoute=(step,id)=>COMPARE_AT[id]||step+'/default';
 const cmpSrc=(ids,route)=>location.pathname+'?shot=1&x='+(ids.length?ids.join(','):'none')+'#/'+route;
 const ALLSET=()=>EXPERIMENTS.filter(e=>!e.alt&&e.id!=='global-orb').map(e=>e.id);   // the recommended set: no alternatives, and the Stages progress bar
