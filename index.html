@@ -258,6 +258,7 @@ body.notes-on #notes{display:block;flex:none;width:340px;background:#fff;border:
 body.notes-on #summary{display:none}
 body.notes-on #side{flex:1 1 780px;max-width:900px;min-width:0}
 body.notes-on:not(.shot) #stage{align-items:stretch}
+@media (min-width:781px){ body.notes-on:not(.shot) #screen{position:sticky;top:12px;align-self:flex-start;min-height:calc(100vh - 180px);max-height:calc(100vh - 180px);overflow-y:auto} }   /* stays in view; a page taller than the window scrolls inside it */
 body.notes-on:not(.shot) #side{position:static;align-items:stretch}
 body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-sw{grid-column:1/-1;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;font:inherit;font-size:15px;line-height:20px;font-weight:700;text-align:left;color:#111;cursor:pointer}
@@ -1533,7 +1534,7 @@ function route(){
   liveHooks={}; liveSnap=null;
   const old=$('.backdrop'); if(old) old.remove(); const os=$('.sheet'); if(os) os.remove(); app.inert=false;
   const k=(location.hash||'#/address/default').replace(/^#\//,''); const fn=ROUTES[k]||ROUTES['address/default'];
-  fn(); window.scrollTo(0,0); paintDev(ROUTES[k]?k:'address/default'); lastKey=ROUTES[k]?k:'address/default'; paintNotes(lastKey);
+  fn(); window.scrollTo(0,0); const scr=$('#screen'); if(scr) scr.scrollTop=0; paintDev(ROUTES[k]?k:'address/default'); lastKey=ROUTES[k]?k:'address/default'; paintNotes(lastKey);
   // screenshots should not show a stray focus ring left by a preset
   if(SHOT) setTimeout(()=>{ const a=document.activeElement; if(a&&a!==document.body&&a.blur) a.blur(); },50);
 }
