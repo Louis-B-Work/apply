@@ -500,13 +500,13 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Every change that could move drop-off on its own is a switch with the hypothesis it tests, so each can be A/B tested alone.
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
-  {id:'addr-postcode-first',step:'address',on:false,name:'House number and postcode first, with a Find address button',
-   short:"People stall on the open search box because they don't know what to type. Asking for the house number and postcode, as Compare the Market does, goes straight to the matching address.",
-   because:"{fig}{-people are not sure what to type in the open 'Search for your address' box-} (a postcode, a street or a house number), {-failed searches lead to manual entry or leaving-}, and {-people have to find their house in a list-} while Compare the Market asks for the house number and postcode together",
-   believe:"asking for the house number and the postcode in plain words, with a Find address button, and going straight to the matching address",
-   result:"{+more people starting the search+}, {+fewer failed searches+} and {+more people reaching 'Is this your address?' without scanning a list+}",
+  {id:'addr-postcode-first',step:'address',on:false,name:'House number and postcode first, search runs by itself',
+   short:"People stall on the open search box because they don't know what to type. Two plain boxes and a search that runs by itself leave nothing else to work out.",
+   because:"{fig}{-people are not sure what to type in the open 'Search for your address' box-} (a postcode, a street or a house number), {-failed searches lead to manual entry or leaving-}, and a Find address button beside a search that runs by itself is {-one more thing to work out-}",
+   believe:"asking for the house number and the postcode in plain words, searching as soon as a full postcode is typed with no button to press, and narrowing the results by the house number",
+   result:"{+more people starting the search+}, {+fewer failed searches+} and {+less to think about+} on the first step",
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
-   variant:"Headed 'Next, what's your address?' with 'House number or name' and 'Postcode' boxes and a Find address button (no automatic search). One match goes straight to 'Is this your address?'. Several matches are listed. No match lists every address with a note.",
+   variant:"Headed 'Next, what's your address?' with 'House number or name' and 'Postcode' boxes and no Find address button. The search starts by itself on a full postcode, narrowed by the house number if there is one: a single match goes straight to 'Is this your address?'. A house number typed after the results narrows the list.",
    measure:"address step completion, plus address_lookup_started, address_validation_error, address_manual_opened, address_house_number_used and position of the chosen address (address_selected)"},
   {id:'addr-show-all',step:'address',on:false,name:"Show every address, no 'Show more addresses' button",
    short:"'Show more addresses' looks like just another row, not a button, so people may not realise it expands the list. A list that already holds every address removes that step.",
@@ -1165,7 +1165,7 @@ function mountAddress(preset){
     const c=carry; carry=null; revealId=c.reveal||null;
     S.postcode=c.postcode; S.isPc=UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''));
     if(PF&&S.isPc) S.postcode=fmtPC(S.postcode);
-    S.list=c.list; S.status=c.status; S.shown=c.shown; S.filter=c.filter; S.selected=c.selected; S.manual=c.manual; S.man=c.man; S.house=c.house||'';
+    S.list=c.list; S.status=c.status; S.shown=c.shown; S.filter=c.filter; S.selected=c.selected; S.manual=c.manual; S.man=c.man; S.house=c.house||''; S.full=c.list;
   }
   main.innerHTML=backLink+
   '<h1 id="step-title">'+(HN?'Next, what\'s your address?':PF?'Next, what\'s your postcode?':'Next, where do you live?')+'</h1>'+
@@ -1211,7 +1211,7 @@ function mountAddress(preset){
     '<div class="field" id="pc-field"><label for="pc">'+(PF?'Postcode':'Search for your address')+'</label>'+
       '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
-    (HN?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+   // the search waits for both boxes, so it needs the button
+    
     '<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>'+
     '<div id="results"></div>';
     const pc=$('#pc');
@@ -1219,11 +1219,14 @@ function mountAddress(preset){
       S.postcode=PF?pc.value.toUpperCase():pc.value; if(PF) pc.value=S.postcode;
       clearTimeout(timer); seq++;
       if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; S.note=''; paint(); }
-      if(!HN&&(PF?looksPc(S.postcode):S.postcode.trim().length>=3)) timer=setTimeout(()=>lookup('auto'),400);
+      if(PF?looksPc(S.postcode):S.postcode.trim().length>=3) timer=setTimeout(()=>lookup('auto'),400);
     });
     const hn=$('#hn');
     if(hn){
-      hn.addEventListener('input',()=>{ S.house=hn.value; clearTimeout(timer); seq++; if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; S.note=''; paint(); } });
+      hn.addEventListener('input',()=>{   // a house number typed after the results narrows them; the search itself waits for the postcode
+        S.house=hn.value;
+        if(S.status==='results'&&S.full&&S.full.length){ S.list=narrow(S.full); S.shown=PAGE; S.filter=''; S.active=null; paint(); }
+      });
       hn.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pc.focus(); } });
     }
     pc.addEventListener('blur',()=>{ if(!PF||!looksPc(pc.value)) return; const f=fmtPC(pc.value); if(f!==pc.value){ pc.value=f; S.postcode=f; } });
@@ -1249,7 +1252,7 @@ function mountAddress(preset){
     const to=setTimeout(()=>{ if(my===seq&&S.status==='loading'){ seq++; S.status='error'; paint(); track('address_lookup_timeout'); } },LOOKUP_TIMEOUT);
     return mockSearch(S.postcode,instant).then(found=>{
       clearTimeout(to); if(my!==seq) return;
-      const list=narrow(found);
+      S.full=found; const list=narrow(found);
       S.list=list; S.status=list.length?'results':'empty'; S.filter=''; S.active=null; S.shown=PAGE;
       if(list.length===1){ S.selected=list[0]; drawZone(); track('address_selected',{position:1}); return; }
       paint();
@@ -1429,7 +1432,8 @@ let dobHelp=false;   // the 'For example' line and the 'That makes you ...' line
 const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact:'Step 3: Contact details'};
 const CHANGES={
   "address/default":[
-    ["House number and postcode boxes, with a Find address button","Easy to start: everyone knows them, and most people can skip the list","addr-postcode-first"],
+    ["House number and postcode boxes","Easy to start: everyone knows them, and most people can skip the list","addr-postcode-first"],
+    ["Search runs by itself once the postcode is complete, no Find address button","Nothing to press or work out","addr-postcode-first"],
     ["Keyboard Enter key searches, and moves between fields","Fewer taps with the keyboard open"],
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
