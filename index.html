@@ -332,6 +332,10 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .dv-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
 .dv-switch[aria-checked=true] .dv-track{background:var(--purple)}
 .dv-switch[hidden]{display:none}
+.dv-seg{display:flex;align-items:center;gap:0;border:1px solid #555;border-radius:999px;padding:3px;background:#1f1f1f}
+.dv-seglabel{padding:0 10px 0 12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#8A8F99}
+.dv-seg button{border:0;background:transparent;color:#d1d5db;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;line-height:18px;font-weight:700;cursor:pointer}
+.dv-seg button[aria-checked=true]{background:var(--green);color:#111}
 .dv-switch[aria-checked=true] .dv-knob{left:19px}
 .dv-compare{flex:none;display:flex;align-items:center;padding-left:24px;border-left:1px solid #2c2c2c}
 .dv-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:8px;background:#fff;color:#111;font-size:13px;line-height:18px;font-weight:700;text-decoration:none;white-space:nowrap}
@@ -490,6 +494,12 @@ const EXPERIMENTS=[
    control:"Empty boxes.",
    variant:"Grey example text in both boxes: 'e.g. name@example.com' and 'e.g. 07700 900123'.",
    metric:"contact_validation_error by field; time to first input; final page to submitted rate."},
+  {id:'global-orb',step:'all',on:false,name:'Plain progress bar with a marker at the end',
+   short:"The plain bar shows how full it is but not where you are now; a small marker at the end of the fill says 'you are here'.",
+   hypothesis:"The plain bar shows how much is done but nothing marks where the person is now, so progress can feel easy to miss. A small marker at the end of the fill makes the current position obvious without changing the bar.",
+   control:"The plain progress bar with no marker.",
+   variant:"The same bar with a small round marker at the end of the fill.",
+   metric:"Drop-off through the middle stages; completion of the form."},
   {id:'global-stepper',step:'all',on:false,name:'Four-stage progress stepper',
    short:"Labelled stages show where you are and what is left, which reduces uncertainty in the long middle of the form.",
    hypothesis:"The form has 15 pages but only a plain bar, so people cannot tell how far they are or what is left. A stepper with labelled stages makes progress visible, which reduces uncertainty and abandoning in the long middle.",
@@ -501,6 +511,7 @@ const X={};
 (function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
 const PARENT={}; EXPERIMENTS.forEach(e=>{ if(e.parent) PARENT[e.id]=e.parent; });
 EXPERIMENTS.forEach(e=>{ if(e.parent&&!X[e.parent]) X[e.id]=false; });
+if(X['global-stepper']) X['global-orb']=false;   // the bar choices are alternatives
 const xOn=id=>!!X[id]&&(!PARENT[id]||!!X[PARENT[id]]);   // a branch only counts while its parent is on
 const syncX=()=>{ try{ const u=new URL(location.href); u.searchParams.set('x',EXPERIMENTS.filter(e=>X[e.id]).map(e=>e.id).join(',')||'none'); history.replaceState(null,'',u); }catch(e){} };
 const trackExposure=step=>EXPERIMENTS.filter(e=>e.step===step||e.step==='all').forEach(e=>track('experiment_exposure',{id:e.id,variant:xOn(e.id)?'variant':'control'}));
@@ -523,7 +534,7 @@ const POS=(page,g)=>'calc((100% - '+(GAP*(GROUPS.length-1))+'px) * '+page+' / '+
 let classicBar=true;   // the original plain bar, with an orb at the end of the fill
 function buildProgress(){
   const pb=$('.progress'); pb.classList.toggle('classic',classicBar);
-  if(classicBar){ pb.innerHTML='<i class="cfill"></i>'; return; }   // the live bar: no marker
+  if(classicBar){ pb.innerHTML='<i class="cfill"></i>'+(xOn('global-orb')?'<b class="orb" title="You are here"></b>':''); return; }   // the live bar has no marker
   const names=GROUPS.map(g=>g.label).concat('Results');
   pb.innerHTML=names.map((t,k)=>(k?'<div class="pline"><i></i></div>':'')+
     '<div class="pstep'+(k===names.length-1?' end':'')+'" data-k="'+k+'"'+(k===names.length-1?' title="Your results"':'')+'><span class="pnum">'+(k+1)+'</span><span class="plabel '+(k===0?'first':k===names.length-1?'last':'mid')+'">'+t+'</span></div>').join('');
@@ -535,7 +546,7 @@ const setProgress=key=>{
   const pb=$('.progress'), cur=PAGES.findIndex(p=>p.k===key), n=pct(cur), cg=groupOf(cur);
   buildProgress();
   if(classicBar){
-    pb.querySelector('.cfill').style.width=n+'%';
+    pb.querySelector('.cfill').style.width=n+'%'; const orb=pb.querySelector('.orb'); if(orb) orb.style.left=n+'%';
     pb.setAttribute('aria-valuenow',n); pb.setAttribute('aria-valuetext',n+'% complete. Current page: '+PAGES[cur].t);
     return;
   }
@@ -1316,7 +1327,7 @@ function paintNotes(k){
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?(on.length||xOn('global-stepper')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')?', plus the progress stepper.':'.'):'The progress stepper is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
+    (exps.length?(on.length||xOn('global-stepper')||xOn('global-orb')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')||xOn('global-orb')?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
     (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(x.parent&&!X[x.parent]?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p>'+(x.parent&&!X[x.parent]?'<p class="n-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     (exps.length&&SUMMARY[step]?'<div class="n-reduce"><p class="n-sub">How this should reduce abandoned sessions</p><p>'+esc(SUMMARY[step].why)+'</p></div>':'')+
@@ -1367,7 +1378,7 @@ let dev=null;
 const ORDER=Object.keys(ROUTES);
 function paintDev(cur){
   if(!dev) return;
-  const sb=dev.querySelector('#dev-stepper'); if(sb) sb.setAttribute('aria-checked',String(xOn('global-stepper')));
+  const bm=xOn('global-stepper')?'stepper':xOn('global-orb')?'orb':'live'; dev.querySelectorAll('#dev-bar3 [data-bar]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.bar===bm)));
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
   dev.querySelector('.dv-steps').innerHTML=STEPS.map(s=>'<button type="button" class="dv-step" data-go="'+s.key+'/default" aria-pressed="'+(s.key===step)+'"><b>'+s.n+'</b><span>'+s.label+'</span></button>').join('');
 }
@@ -1378,7 +1389,7 @@ if(!SHOT){
      '<div class="dv-main">'+
        '<div class="dv-row"><span class="dv-label">Step</span><div class="dv-steps"></div></div>'+
      '</div>'+
-     '<div class="dv-side"><button type="button" class="dv-switch" id="dev-stepper" role="switch" aria-checked="false"><span class="dv-track"><span class="dv-knob"></span></span>Four-stage progress stepper (all steps)</button></div>'+
+     '<div class="dv-side"><div class="dv-seg" id="dev-bar3" role="radiogroup" aria-label="Progress bar (all steps)"><span class="dv-seglabel">Progress bar</span><button type="button" role="radio" data-bar="live" aria-checked="true">Live</button><button type="button" role="radio" data-bar="orb" aria-checked="false">With marker</button><button type="button" role="radio" data-bar="stepper" aria-checked="false">Four stages</button></div></div>'+
      '<div class="dv-compare"><a class="dv-btn" href="compare.html">Compare with current</a></div>'+
    '</div>';
   document.body.appendChild(dev); document.body.classList.add('has-dev');
@@ -1387,7 +1398,7 @@ if(!SHOT){
   });
 }
 window.addEventListener('hashchange',route);
-if(dev) $('#dev-stepper').addEventListener('click',()=>{ X['global-stepper']=!X['global-stepper']; syncX(); $('#dev-stepper').setAttribute('aria-checked',String(xOn('global-stepper'))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
+if(dev) $('#dev-bar3').addEventListener('click',e=>{ const b=e.target.closest('[data-bar]'); if(!b) return; X['global-stepper']=b.dataset.bar==='stepper'; X['global-orb']=b.dataset.bar==='orb'; syncX(); dev.querySelectorAll('#dev-bar3 [data-bar]').forEach(x=>x.setAttribute('aria-checked',String(x===b))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
 $('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ carry=liveSnap?liveSnap():null; const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; if(carry) carry.reveal=id; else revealNext=id; route(); window.scrollTo(0,y); } });
 route();
 })();
