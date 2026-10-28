@@ -346,9 +346,9 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 button.dv-btn.alt{background:transparent;color:#fff;border:1px solid #666}
 button.dv-btn.alt:hover{background:#2a2a2a}
 .intro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(17,17,17,.62);overflow:auto}
-.intro-card{position:relative;width:100%;max-width:520px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:22px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
+.intro-card{position:relative;width:100%;max-width:760px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:22px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
 .intro-card h2{margin:0 36px 8px 0;font-size:24px;line-height:30px;font-weight:700}
-.intro-card .lead{margin:0 0 12px;color:#374151}
+.intro-card .lead{margin:0 0 16px;color:#374151}
 .intro-why{margin:0 0 18px;padding:12px 14px;border-radius:8px;background:#F7F7F9;border:1px solid #E7E8EC}
 .intro-why p{margin:0 0 8px;font-size:15px;line-height:22px;color:#374151}
 .intro-why p:last-child{margin:0}
@@ -356,6 +356,17 @@ button.dv-btn.alt:hover{background:#2a2a2a}
 .intro-why .intro-list li{margin:0 0 3px;padding:0;counter-increment:none}
 .intro-why .intro-list li::before{content:none;display:none}
 .intro-why .intro-list b{display:inline;font-size:inherit;line-height:inherit;letter-spacing:0;text-transform:none;color:#111}
+.intro-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:12px 28px;margin:0 0 20px}
+.intro-grid h3{margin:0 0 6px;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--purple)}
+.intro-grid h3:not(:first-child){margin-top:16px}
+.intro-grid p{margin:0 0 8px;font-size:15px;line-height:22px;color:#374151}
+.intro-grid .intro-list{margin:0 0 10px;padding-left:18px;font-size:15px;line-height:22px;color:#374151;list-style:disc}
+.intro-grid .intro-list li{margin:0 0 4px;padding:0;counter-increment:none}
+.intro-grid .intro-list li::before{content:none;display:none}
+.intro-grid b{color:#111}
+.intro-grid .intro-list b{display:inline}
+.intro-grid .intro-tip{margin:0;padding:10px 12px}
+@media (max-width:640px){ .intro-grid{grid-template-columns:1fr} }
 .intro-why b{display:block;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
 .intro-card ol{list-style:none;margin:0 0 14px;padding:0;counter-reset:s}
 .intro-card li{position:relative;margin:0 0 10px;padding-left:40px;counter-increment:s;color:#374151}
@@ -1435,23 +1446,26 @@ function showIntro(){
   o.innerHTML='<div class="intro-card" role="dialog" aria-modal="true" aria-labelledby="intro-title">'+
     '<button type="button" class="intro-x" id="intro-x" aria-label="Close">&times;</button>'+
     '<h2 id="intro-title">Apply form redesign prototype</h2>'+
-    '<p class="lead">Three steps where people leave: address, date of birth and the final contact page.</p>'+
-    '<div class="intro-why">'+
-      '<p><b>What we are testing</b>Whether small fixes reduce abandonment on three steps:</p>'+
-      '<ul class="intro-list">'+
-        '<li><b>Date of birth:</b> most people leave without hitting an error'+FIG('dob')+'.</li>'+
-        '<li><b>Address:</b> building number and manual entry often fail'+FIG('address')+'.</li>'+
-        '<li><b>Final page:</b> the phone number is the biggest failure'+FIG('contact')+'.</li>'+
-      '</ul>'+
-      '<p><b>Why these three</b>They lose the most people in the form.'+FIG('why')+'</p>'+
-      '<p><b>Why small switches</b>One change per hypothesis, so an A/B test shows which change made the difference.</p>'+
+    '<p class="lead">Three steps where people leave. Every change is a switch, so each can be A/B tested alone. Sample data only.</p>'+
+    '<div class="intro-grid">'+
+      '<section>'+
+        '<h3>What we are testing</h3>'+
+        '<p>Whether small fixes reduce abandonment.</p>'+
+        '<ul class="intro-list">'+
+          '<li><b>Date of birth:</b> most people leave without hitting an error'+FIG('dob')+'.</li>'+
+          '<li><b>Address:</b> building number and manual entry often fail'+FIG('address')+'.</li>'+
+          '<li><b>Final page:</b> the phone number is the biggest failure'+FIG('contact')+'.</li>'+
+        '</ul>'+
+        '<p><b>Why these three:</b> they lose the most people in the form.'+FIG('why')+'</p>'+
+      '</section>'+
+      '<section>'+
+        '<h3>Why small switches</h3>'+
+        '<p>One change per hypothesis, so an A/B test shows which change made the difference.</p>'+
+        '<h3>How to use it</h3>'+
+        '<p>All switches off is the live form. Flip switches in the Hypotheses card beside each page. Change step in the bar at the bottom.</p>'+
+        '<p class="intro-tip">Tip: type <b>CR0 3AG</b> on the address step.</p>'+
+      '</section>'+
     '</div>'+
-    '<ol>'+
-      '<li><b>Starts as the live form</b>All switches off = what customers see today.</li>'+
-      '<li><b>Flip a switch</b>Use the Hypotheses card beside each page.</li>'+
-      '<li><b>Change step</b>Address, Date of birth, Contact details (bottom bar).</li>'+
-    '</ol>'+
-    '<p class="intro-tip">Tip: type <b>CR0 3AG</b> on the address step. All data is sample data.</p>'+
     '<button type="button" class="intro-go" id="intro-go">Start exploring</button>'+
   '</div>';
   document.body.appendChild(o);
