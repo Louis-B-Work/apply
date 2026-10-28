@@ -426,7 +426,7 @@ body.notes-on:not(.shot) #notes{position:sticky;top:12px;align-self:flex-start;m
 @media (max-width:820px){ .cmp-tog{display:flex} .cmpframes.show-live .cmp-ph.with,.cmpframes.show-with .cmp-ph.live{display:none} .cmp-ph{max-width:none} .cmpframes.phone .cmp-ph{width:100%} }
 .dev .dv-side{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 14px;padding-left:0;border-left:0}
 @media (min-width:901px){ body .dev{padding-left:10%;padding-right:10%} }   /* the bar keeps 10% clear at each side */
-@media (min-width:1700px){ .dev .dv-in{max-width:none;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:12px 24px} .dev .dv-main,.dev .dv-side{flex:0 0 auto} .dev .dv-side{flex-wrap:nowrap;justify-content:flex-end} }   /* one row across the full width */
+@media (min-width:2050px){ .dev .dv-in{max-width:none;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:12px 24px} .dev .dv-main,.dev .dv-side{flex:0 0 auto} .dev .dv-side{flex-wrap:nowrap;justify-content:flex-end} }   /* one row across the full width */
 .h-line .n-sw{flex:none;width:auto}
 .h-name{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:none;padding:2px 0;font:inherit;font-size:14px;line-height:20px;font-weight:700;color:#111;text-align:left;cursor:pointer}
 .h-row.off .h-name{font-weight:600;color:#4B5563}
@@ -626,6 +626,14 @@ const EXPERIMENTS=[
    control:"Empty boxes.",
    variant:"Grey example text in both boxes: 'e.g. name@example.com' and 'e.g. 07700 900123'.",
    measure:"contact_validation_error by field; time to first input; final page to submitted rate"},
+  {id:'global-grey-continue',step:'all',on:false,name:'Continue button greyed out until the answers are valid',
+   short:"A bright green button invites a tap before the answers are right; grey says 'not yet', green says 'ready'.",
+   because:"a green Continue button on every step invites a tap before the answers are right, and the {-error that follows is a reason to give up-}",
+   believe:"showing Continue greyed out until the answers on the page are valid, then turning it green",
+   result:"{+fewer taps that end in an error+}, {+fewer validation errors+} and people knowing when they are ready to move on",
+   control:"Continue is always green; pressing it with missing or wrong answers shows the errors.",
+   variant:"Continue is grey and cannot be pressed until the answers on the page are valid, then it turns green. Errors still show beside a field as you leave it.",
+   measure:"validation errors per step; step completion; time from first input to Continue"},
   {id:'global-orb',step:'all',on:false,name:'Plain progress bar with a marker at the end',
    short:"The plain bar shows how full it is but not where you are now; a small marker at the end of the fill says 'you are here'.",
    because:"the plain bar shows how much is done but {-nothing marks where the person is now-}",
@@ -725,7 +733,7 @@ function mountContact(preset){
   setProgress('contact-details-p2'); trackExposure('contact');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PROMISE=xOn('contact-results-promise'), HELP=xOn('contact-phone-help-icon'), TOL=xOn('contact-phone-tolerance'), GHOST=xOn('contact-ghost-text');
-  const BTN=PROMISE?'See my results':'Get my quote';
+  const BTN=PROMISE?'See my results':'Get my quote', GREY=xOn('global-grey-continue');
   main.innerHTML=backLink+
   '<h1 id="step-title">'+(PROMISE?'Last step, then see your results':'And finally, where should we send your quote?')+'</h1>'+
   '<form id="f" novalidate aria-labelledby="step-title">'+
@@ -786,6 +794,8 @@ function mountContact(preset){
   phone.addEventListener('blur',()=>{ if(phone.value.trim()){ touched.phone=true; if(phoneOK(phone.value)) phone.value=phoneFmt(phone.value); paint('phone'); } });
   phone.addEventListener('input',()=>{ if(touched.phone) paint('phone'); });
 
+  const refreshCta=()=>{ if(GREY) go.disabled=!!(emailError()||phoneError()); };   // grey until both answers are valid
+  f.addEventListener('input',refreshCta); f.addEventListener('focusout',refreshCta);
   f.addEventListener('submit',e=>{
     e.preventDefault(); if(submitting) return;
     touched.email=touched.phone=true; paint('email'); paint('phone');
@@ -810,6 +820,7 @@ function mountContact(preset){
   const rv=revealNext; revealNext=null;
   if(rv==='contact-phone-help-icon'&&tipBtn) tipBtn.click();
   else if(rv==='contact-phone-tolerance'){ phone.value='+44 7700 900123'; phone.dispatchEvent(new Event('blur')); }
+  refreshCta();
 }
 
 /* ============================== STEP 2: DATE OF BIRTH ============================== */
@@ -868,6 +879,7 @@ function mountDob(preset){
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page: three boxes and nothing else
   const ONE=xOn('dob-single-box'), CAL=xOn('dob-calendar'), WHY=xOn('dob-why-we-ask'), YY=xOn('dob-two-digit-year');
   dobHelp=xOn('dob-example-line');
+  const GREY=xOn('global-grey-continue');
   const BX=[['d','Day','bday-day',2],['m','Month','bday-month',2],['y','Year','bday-year',4]], FIELD_IDX={day:0,month:1,year:2};
   const field=ONE
     ?'<div class="seg" id="seg"><div class="control"><input class="input" id="dob" type="text" inputmode="numeric" autocomplete="bday" enterkeyhint="go" autocapitalize="off" spellcheck="false" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg"><div class="mask" id="dob-mask" aria-hidden="true"></div>'+ic('i-tick','tick')+'</div></div>'
@@ -897,7 +909,11 @@ function mountDob(preset){
   let prev='';
 
   function clearState(){ (ONE?[inp]:boxes).forEach(i=>{ i.classList.remove('err'); i.removeAttribute('aria-invalid'); }); seg.classList.remove('ok'); msg.innerHTML=''; }
-  function evaluate(mode){
+  function refreshCta(){   // grey until the date is complete and valid
+    if(!GREY) return; const b=$('#go'); if(!b) return; const p=parts(), r=validateDob(p.d,p.m,p.y,'submit',YY); b.disabled=!(r&&r.ok);
+  }
+  function evaluate(mode){ const r0=evaluate0(mode); refreshCta(); return r0; }
+  function evaluate0(mode){
     const p=parts(); const r=validateDob(p.d,p.m,p.y,mode, YY);
     clearState();
     if(!r) return null;
@@ -1032,8 +1048,10 @@ function mountDob(preset){
   if(cal) cal.addEventListener('click',()=>openPicker());
 
   paintMask();
+  $('#f').addEventListener('input',refreshCta); $('#f').addEventListener('focusout',refreshCta);
   if(preset.values){ setValue(preset.values.join(SEP)); evaluate('live'); }
   if(preset.picker) openPicker(preset.picker);
+  refreshCta();
   // a switch was just flipped: show what it changes
   const rv=revealNext; revealNext=null;
   if(rv==='dob-why-we-ask'&&why) why.click();   // the calendar button just appears; it is not opened for you
@@ -1120,7 +1138,7 @@ function movedWidget(host,v,date,showLegend){
   b.addEventListener('input',()=>{ digits(b); v.b=b.value; check(false); });
   a.addEventListener('blur',()=>{ normMonth(); check(false,date&&hasLetters(v.a)); });
   b.addEventListener('blur',()=>{ if(b.value) check(false,true); });
-  return {check:check};
+  return {check:check,ok:()=>!error(true)};
 }
 function mountTimeAtAddress(){
   setProgress('address-length'); trackExposure('address');
@@ -1130,6 +1148,8 @@ function mountTimeAtAddress(){
   '<form id="f" novalidate aria-labelledby="step-title"><div id="moved"></div><button type="submit" class="btn" id="cont">Continue'+ic('arrow-right')+'</button></form>';
   wireBack();
   const w=movedWidget($('#moved'),v,date,false);
+  const GREY=xOn('global-grey-continue'), refresh=()=>{ if(GREY) $('#cont').disabled=!w.ok(); };   // grey until the answer is valid
+  $('#f').addEventListener('input',refresh); refresh();
   const ins=$$('#moved input');
   ins.forEach((el,i)=>{ el.enterKeyHint=i<ins.length-1?'next':'go'; el.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; e.preventDefault(); if(i<ins.length-1) ins[i+1].focus(); else $('#f').requestSubmit(); }); });
   $('#f').addEventListener('submit',e=>{ e.preventDefault(); const err=w.check(true); if(err){ $('#mv-'+err.f).focus(); return; } track('address_moved_in_entered'); note('Prototype: this goes to the next step.'); });
@@ -1149,7 +1169,7 @@ function mountAddress(preset){
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF||!ALL,   // with show-all off the list looks exactly like the live one, whatever else is on
-   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF;
+   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF, GREY=xOn('global-grey-continue');
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
@@ -1185,7 +1205,17 @@ function mountAddress(preset){
     return {items:items,groups:Array.from(by).sort((a,b)=>a[0].localeCompare(b[0]))};
   }
   const visible=()=>{ const g=filtered(); return ALL?g.items:g.items.slice(0,S.shown); };
-  function updateCont(){ cont.hidden=!(S.selected||S.manual||S.status==='results'); }
+  function canContinue(){   // the address (picked or typed in full), then the time-at-address and status answers that are on this step
+    if(S.manual){ const F=zone._F; if(!F||!F.every(f=>{ const v=S.man[f[0]].trim(); return f[0]==='pc'?UK_PC.test(v.replace(/\s/g,'')):!!v; })) return false; }
+    else if(!S.selected) return false;
+    if(MOV&&MVW&&!MVW.ok()) return false;
+    if(STAT&&!S.res) return false;
+    return true;
+  }
+  function updateCont(){
+    if(GREY){ cont.hidden=false; cont.disabled=!canContinue(); return; }   // always there, grey until the answers are in
+    cont.hidden=!(S.selected||S.manual||S.status==='results');
+  }
 
   // a flat reads one part per line: flat, building, street address, city, postcode (the live page repeats the flat and runs the building into the street)
   const addrLines=a=>[a.sub,a.building,a.n+' '+a.street,a.town,a.postcode].filter(Boolean);
@@ -1345,7 +1375,7 @@ function mountAddress(preset){
     const F=[['n','Flat, house name or number','man-n','address-line1','Enter your flat, house name or number'],['street','Street','man-street','address-line2','Enter your street'],['town','Town or city','man-town','address-level2','Enter your town or city'],['pc','Postcode','man-pc','postal-code','Enter a full UK postcode, like CR0 3AG']];
     zone.innerHTML=F.map(f=>'<div class="field"><label for="'+f[2]+'">'+f[1]+'</label><div class="control"><input class="input" id="'+f[2]+'" data-k="'+f[0]+'" type="text" autocomplete="'+f[3]+'" value="'+esc(S.man[f[0]])+'"'+(f[0]==='pc'?' maxlength="14" autocapitalize="characters"':'')+'></div><div id="'+f[2]+'-msg" aria-live="polite"></div></div>').join('')+
       '<button type="button" class="link switch" id="to-search">'+(PF?'Search by postcode instead':'Search for your address instead')+'</button>';
-    $$('input',zone).forEach(i=>i.addEventListener('input',()=>{ S.man[i.dataset.k]=i.dataset.k==='pc'?i.value.toUpperCase():i.value; if(i.dataset.k==='pc') i.value=S.man.pc; if(i.classList.contains('err')) manualCheck(i,F); }));
+    $$('input',zone).forEach(i=>i.addEventListener('input',()=>{ S.man[i.dataset.k]=i.dataset.k==='pc'?i.value.toUpperCase():i.value; if(i.dataset.k==='pc') i.value=S.man.pc; if(i.classList.contains('err')) manualCheck(i,F); updateCont(); }));
     $('#to-search').addEventListener('click',()=>{ S.manual=false; drawZone(); const p=$('#pc'); if(p) p.focus(); });
     zone._F=F;
   }
@@ -1393,6 +1423,8 @@ function mountAddress(preset){
     if(STAT&&!S.res){ $('#res-msg').innerHTML=errHTML('Please select an option'); const r=$('input[name=res]'); if(r) r.focus(); track('address_status_validation_error'); return; }
     if(MOV) note('Prototype: this goes to the next step.'); else location.hash='#/address/time';   // the separate time-at-address page
   });
+
+  $('#f').addEventListener('input',()=>updateCont()); $('#f').addEventListener('change',()=>updateCont());
 
   /* --- presets for screenshots --- */
   drawZone();
@@ -1587,6 +1619,7 @@ const ORDER=Object.keys(ROUTES);
 function paintDev(cur){
   if(!dev) return;
   const bm=xOn('global-stepper')?'stepper':xOn('global-orb')?'orb':'live'; dev.querySelectorAll('#dev-bar3 [data-bar]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.bar===bm)));
+  dev.querySelectorAll('#dev-cta [data-cta]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.cta==='grey')===xOn('global-grey-continue'))));
   dev.querySelectorAll('#dev-view [data-view]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.view===mode)));
   const ss=showState(); dev.querySelectorAll('#dev-show [data-show-set]').forEach(b=>{ const v=b.dataset.showSet; b.setAttribute('aria-checked',String(v===ss)); });
   const step=cur.split('/')[0], idx=ORDER.indexOf(cur);
@@ -1605,6 +1638,7 @@ if(!SHOT){
        '<div class="dv-seg" id="dev-view" role="radiogroup" aria-label="View"><span class="dv-seglabel">View</span><button type="button" role="radio" data-view="explore" aria-checked="true">Explore</button><button type="button" role="radio" data-view="compare" aria-checked="false">Compare</button></div>'+
        '<div class="dv-seg" id="dev-show" role="radiogroup" aria-label="Show"><span class="dv-seglabel">Show</span><button type="button" role="radio" data-show-set="live" aria-checked="true">Live site</button><button type="button" role="radio" data-show-set="all" aria-checked="false">All changes</button></div>'+
        '<div class="dv-seg" id="dev-bar3" role="radiogroup" aria-label="Progress bar (all steps)"><span class="dv-seglabel">Progress bar</span><button type="button" role="radio" data-bar="live" aria-checked="true">Live</button><button type="button" role="radio" data-bar="orb" aria-checked="false">Marker</button><button type="button" role="radio" data-bar="stepper" aria-checked="false">Stages</button></div>'+
+       '<div class="dv-seg" id="dev-cta" role="radiogroup" aria-label="Continue button (all steps)"><span class="dv-seglabel">Continue button</span><button type="button" role="radio" data-cta="live" aria-checked="true">Live</button><button type="button" role="radio" data-cta="grey" aria-checked="false">Greyed out</button></div>'+
      '</div>'+
    '</div>';
    '</div>';
@@ -1613,6 +1647,7 @@ if(!SHOT){
     const g=e.target.closest('[data-go]'); if(g){ location.hash='#/'+g.dataset.go; return; }
     const vw=e.target.closest('[data-view]'); if(vw){ setMode(vw.dataset.view); return; }
     const ss=e.target.closest('[data-show-set]'); if(ss&&!ss.disabled){ showSet(ss.dataset.showSet); return; }
+    const ct=e.target.closest('[data-cta]'); if(ct){ X['global-grey-continue']=ct.dataset.cta==='grey'; syncX(); carry=liveSnap?liveSnap():null; route(); return; }   // the same step again, with the button the other way
   });
 }
 window.addEventListener('resize',()=>{ if(dev){ document.body.style.paddingBottom=(dev.offsetHeight+8)+'px'; document.documentElement.style.setProperty('--bar',dev.offsetHeight+'px'); } });
