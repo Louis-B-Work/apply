@@ -316,6 +316,9 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .dv-row{display:flex;align-items:center;gap:12px}
 .dv-label{flex:none;width:54px;font-size:11px;line-height:14px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#8A8F99}
 .dv-steps,.dv-states{display:flex;gap:6px;flex-wrap:wrap}
+.dv-steps{flex-wrap:nowrap}
+.dv-step{white-space:nowrap;flex:0 0 auto}
+@media (max-width:520px){ .dv-row .dv-label{display:none} .dv-steps .dv-step{padding:7px 10px;font-size:12px} .dv-steps .dv-step b{display:none} .dv-steps{gap:4px} }
 .dv-step{display:flex;align-items:center;gap:8px;border:1px solid #444;background:#1f1f1f;color:#d1d5db;border-radius:8px;padding:7px 14px 7px 8px;font-size:13px;line-height:18px;font-weight:700;cursor:pointer}
 .dv-step b{flex:none;width:20px;height:20px;border-radius:50%;background:#444;color:#fff;display:grid;place-items:center;font-size:11px}
 .dv-step[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#111}
