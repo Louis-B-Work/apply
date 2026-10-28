@@ -550,13 +550,13 @@ const EXPERIMENTS=[
    control:"'How long have you lived at this address?' with Years and Months boxes.",
    variant:"'When did you move in?' with a Month box and then a Year box, and 'For example, 09 2019' under the question. A month name such as Sep is accepted. The system works out the length. Only applies when time at address is asked on the same step.",
    measure:"completion and time on the question; validation errors; wrong lengths entered"},
-  {id:'addr-status-same-step',step:'address',on:false,parent:'addr-one-screen',name:'Residential status on the same step',
-   short:"Residential status is another separate page; asking it under time at address removes a second screen.",
+  {id:'addr-status-same-step',step:'address',on:false,name:'Residential status on the same step',
+   short:"Residential status is another separate page; asking it on the address step removes a screen.",
    because:"residential status is asked on yet another page after the address, and {-every extra page is a chance to leave-}",
-   believe:"asking for residential status on the same step, under time at address",
-   result:"{+two fewer pages in the address section+} and {+more people finishing it+}",
+   believe:"asking for residential status on the address step, under the address",
+   result:"{+one fewer page in the address section+} and {+more people finishing it+}",
    control:"Residential status is its own page after the address.",
-   variant:"Under the time-at-address question: 'What is your residential status?' with the live options (Private Tenant, Home Owner, Council Tenant, Living with Parents). Continue needs one chosen.",
+   variant:"Under the address: 'What is your residential status?' with the live options (Private Tenant, Home Owner, Council Tenant, Living with Parents). Continue needs one chosen.",
    measure:"completion of the address section; total time through it; address_status_selected"},
   {id:'dob-single-box',step:'dob',on:false,name:'One date box that adds the slashes',
    short:"Three separate boxes are slow and fiddly on a phone; one box that adds the slashes cuts taps and format mistakes.",
@@ -1365,8 +1365,9 @@ function mountAddress(preset){
   let MVW=null;
   function drawMoved(){
     const el=$('#moved');
-    if(!MOV||!(S.selected||S.manual)){ el.innerHTML=''; $('#res-host').innerHTML=''; MVW=null; return; }
-    MVW=movedWidget(el,S.mv,MDATE,true); drawStatus();
+    const has=S.selected||S.manual;
+    if(MOV&&has) MVW=movedWidget(el,S.mv,MDATE,true); else { el.innerHTML=''; MVW=null; }
+    if(has) drawStatus(); else $('#res-host').innerHTML='';   // the status question does not depend on the time-at-address one
   }
   const RESIDENTIAL=[['31','Private Tenant'],['32','Home Owner'],['33','Council Tenant'],['34','Living with Parents']];   // the live options
   function drawStatus(){
@@ -1447,6 +1448,7 @@ const CHANGES={
     ["List narrows as you type, matches in bold","Reach your address faster"],
     ["Count updates: 'Showing 11 of 21'","Shows the filter is working"]],
   "address/selected":[
+    ["Residential status under the address","One fewer page in the address section","addr-status-same-step"],
     ["Chosen address shown as a summary card","Confirms the right address is used"],
     ["'Is this your address?' above it, title unchanged","Makes the confirm step obvious"],
     ["'Change' opens the form with the address filled in","Fixing one field is one edit, not a new search"],
@@ -1458,7 +1460,7 @@ const CHANGES={
     ["Enter moves to the next field","Fewer taps with the keyboard open"],
     ["Link back to the search","Manual entry is never a trap"]],
   "address/moved":[
-    ["Residential status under time at address","Two fewer pages in the address section","addr-status-same-step"],
+    ["Residential status under the address","One fewer page in the address section","addr-status-same-step"],
     ["Month first, then year, with 'For example, 09 2019' under the question","The UK order, and a hint people can't miss; 'Sep' or 'September' is accepted","addr-move-in-date"],
     ["Time at address on the same step","One fewer screen in the address section","addr-one-screen"],
     ["'When did you move in?', month and year","Easier than working out 'how long'; the system does the maths","addr-move-in-date"],
