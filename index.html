@@ -259,31 +259,36 @@ body.notes-on #summary{display:none}
 body.notes-on #side{flex:1 1 780px;max-width:900px;min-width:0}
 body.notes-on:not(.shot) #stage{align-items:stretch}
 body.notes-on:not(.shot) #side{position:static;align-items:stretch}
-.n-exps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:0 0 4px}
 body.notes-on #notes{width:100%;box-sizing:border-box}
-.n-exp{display:grid;grid-template-columns:1fr;align-content:start;gap:6px;margin:0;padding:12px 14px;border-radius:8px;background:#F7F5FD;border:1px solid #E7E1F8}
 .n-sw{grid-column:1/-1;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;font:inherit;font-size:15px;line-height:20px;font-weight:700;text-align:left;color:#111;cursor:pointer}
 .n-sw .dv-track{flex:none;background:#B8BCC6}
 .n-sw[aria-checked=true] .dv-track{background:var(--purple)}
 .n-sw[aria-checked=true] .dv-knob{left:19px}
 .n-sw:focus-visible{outline:2px solid var(--purple);outline-offset:3px;border-radius:4px}
-.n-exp.off>p,.n-exp.off>.hyp{opacity:.55}
-.n-exp .hyp p{margin:0 0 6px;font-size:14px;line-height:20px;color:#1F2937}
-.n-exp .hyp p:last-child{margin:0}
-.n-exp .hyp b{color:var(--purple);font-weight:700}
-.n-child{grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #D3CAEE;display:grid;gap:6px}
-.n-child.off p{opacity:.55}
-.n-child .n-idle{opacity:1;font-size:13px;line-height:18px;font-style:italic;color:#6B7280}
-.n-child.idle .n-sw{opacity:.6;cursor:not-allowed}
 .n-sw[disabled]{cursor:not-allowed}
-.n-child p{margin:0}
-.n-exp p{margin:0;font-size:14px;line-height:20px;color:#1F2937}
-.n-exp i{display:block;margin-bottom:1px;font-style:normal;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
-.n-exp p+p i{color:#0B7A55}
 .n-none{margin:0 0 14px;color:#4B5563}
 .n-reduce{margin:16px 0 0;padding:14px 16px;border-radius:8px;background:#F0FAF6;border:1px solid #CBEBDD}
 .n-reduce .n-sub{color:#0B7A55;margin-bottom:6px}
 .n-reduce p:last-child{margin:0;font-size:15px;line-height:23px;color:#1F2937}
+.h-headrow{display:flex;justify-content:space-between;align-items:baseline}
+.h-headrow span{font-weight:600;letter-spacing:0;text-transform:none;color:#6B7280}
+.h-list{margin:0 0 4px;border:1px solid #E7E1F8;border-radius:8px;background:#fff;overflow:hidden}
+.h-row{border-top:1px solid #EEE9FA}
+.h-row:first-child{border-top:0}
+.h-row.child{margin-left:18px;border-left:3px solid #D8CBF8}
+.h-line{display:flex;align-items:center;gap:8px;padding:8px 12px}
+.h-line .n-sw{flex:1 1 auto;min-width:0;font-size:14px;line-height:20px}
+.h-row.off .n-sw{font-weight:600;color:#4B5563}
+.h-row.idle .n-sw{opacity:.6;cursor:not-allowed}
+.h-more{flex:none;display:inline-flex;align-items:center;gap:2px;border:0;background:none;padding:4px 2px;font:inherit;font-size:13px;line-height:20px;font-weight:600;color:var(--purple);cursor:pointer}
+.h-more svg{width:16px;height:16px;transition:transform .15s}
+.h-more[aria-expanded=true] svg{transform:rotate(90deg)}
+.h-more:focus-visible{outline:2px solid var(--purple);outline-offset:2px;border-radius:4px}
+.h-idle{margin:-2px 12px 8px 54px;font-size:12px;line-height:16px;font-style:italic;color:#6B7280}
+.h-detail{padding:6px 12px 12px 54px;background:#F7F5FD}
+.hyp p{margin:0 0 6px;font-size:14px;line-height:20px;color:#1F2937}
+.hyp p:last-child{margin:0}
+.hyp b{color:var(--purple);font-weight:700}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
@@ -1388,6 +1393,7 @@ function mountAddress(preset){
 /* ============================== DESIGN NOTES (annotations) ==============================
    Numbered pins and outlines on the phone, plus a panel saying why each change was made and
    how it could reduce drop-off. The drop-off lines are expectations to test, not measured results. */
+const hypOpen=new Set();   // hypotheses whose details are open in the card
 let notesOn=qs.has('notes')?qs.get('notes')==='1':!SHOT;   // on by default; ?notes=0 turns it off
 let dobHelp=false;   // the 'For example' line and the 'That makes you ...' line (dob-example-line)
 const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact:'Step 3: Contact details'};
@@ -1488,7 +1494,14 @@ function paintNotes(k){
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
     (exps.length?(on.length||xOn('global-stepper')||xOn('global-orb')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')||xOn('global-orb')?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
-    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(x.parent&&!X[x.parent]?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button>'+hypHTML(x)+(x.parent&&!X[x.parent]?'<p class="n-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button>'+hypHTML(e)+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
+    (exps.length?'<p class="n-sub h-headrow">Hypotheses<span>'+on.length+' of '+exps.length+' on</span></p><div class="h-list">'+(()=>{
+      const row=(x,child)=>{ const idle=x.parent&&!X[x.parent], open=hypOpen.has(x.id);
+        return '<div class="h-row'+(child?' child':'')+(X[x.id]?'':' off')+(idle?' idle':'')+'"><div class="h-line"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(idle?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button>'+
+          '<button type="button" class="h-more" data-hyp="'+x.id+'" aria-expanded="'+open+'" aria-controls="hyp-'+x.id+'">Details'+ic('chevron-right')+'</button></div>'+
+          (idle?'<p class="h-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+
+          (open?'<div class="h-detail" id="hyp-'+x.id+'">'+hypHTML(x)+'</div>':'')+'</div>'; };
+      return exps.filter(e=>!e.parent).map(e=>row(e,false)+exps.filter(c=>c.parent===e.id).map(c=>row(c,true)).join('')).join('');
+    })()+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     (exps.length&&SUMMARY[step]?'<div class="n-reduce"><p class="n-sub">How this should reduce abandoned sessions</p><p>'+esc(SUMMARY[step].why)+'</p></div>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
@@ -1610,6 +1623,8 @@ if(dev) $('#dev-bar3').addEventListener('click',e=>{ const b=e.target.closest('[
 const goStepDefault=st=>{ const h='#/'+st+'/default'; if(location.hash===h) route(); else location.hash=h; };   // the step starts again, so nothing of the new design is left on screen
 $('#notes').addEventListener('click',e=>{
   const st=location.hash.replace(/^#\//,'').split('/')[0];
+  const hm=e.target.closest('[data-hyp]');
+  if(hm){ const id=hm.dataset.hyp; if(hypOpen.has(id)) hypOpen.delete(id); else hypOpen.add(id); paintNotes(lastKey); const nb=document.querySelector('[data-hyp="'+id+'"]'); if(nb) nb.focus(); return; }
   const off=e.target.closest('[data-xoff]');
   if(off){ EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); carry=null; goStepDefault(st); return; }
   const t=e.target.closest('[data-x]'); if(!t||t.disabled) return;
@@ -1617,6 +1632,7 @@ $('#notes').addEventListener('click',e=>{
   if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; });
   syncX();
   if(!X[id]){ carry=null; goStepDefault(st); return; }   // switched off: back to the live page
+  hypOpen.clear(); hypOpen.add(id);   // the switch just turned on shows its hypothesis
   if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; if(carry) carry.reveal=id; else revealNext=id; route(); window.scrollTo(0,y); }   // switched on: stay where you are so the change can be seen
 });
 route();
