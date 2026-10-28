@@ -418,7 +418,7 @@ const EXPERIMENTS=[
    short:"'Show more addresses' looks like just another row, not a button, so people may not realise it expands the list. A list that already holds every address removes that step.",
    hypothesis:"The address list only shows part of the results and has to be expanded with 'Show more addresses'. That control is styled like one more plain row at the end of the list, with nothing to say it is a button, so people may not realise they can press it to see the rest, and give up when they do not find their address. A list that already holds every address, which they scroll to find, removes the hidden step and could reduce abandonment.",
    control:"A dropdown showing ten addresses, then 'Show more addresses' as a plain text row, styled like the address rows, to press for the rest.",
-   variant:"Every address is in the list from the start with a count line ('15 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
+   variant:"Every address is in the list from the start with a count line ('21 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
    metric:"Step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
   {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' outside the list, always visible",
    short:"At the end of a long list it is out of sight, so people with a missing address may never find a way on.",
@@ -906,12 +906,13 @@ const LOOKUP_TIMEOUT=Number(qs.get('lt'))||10000;   // ms; ?lt=1500 shortens it 
 const fmtPC=v=>{ const p=v.replace(/[^A-Za-z0-9]/g,'').toUpperCase(); return UK_PC.test(p)?p.slice(0,-3)+' '+p.slice(-3):v.toUpperCase().trim(); };
 const STREETS=[
   {street:'Factory Lane',items:[[1],[2],[3],[4],[5],[6],[7],[8,'Flat 1'],[8,'Flat 2']]},
-  {street:'Morland Road',items:[[10],[12],[14],[16],[18,'Flat A'],[18,'Flat B']]}
+  {street:'Morland Road',items:[[10],[12],[14],[16],[18,'Flat A'],[18,'Flat B']]},
+  {street:'Rochford Way',items:[[19],[21],[23,'Flat 1','Rochford House'],[23,'Flat 2','Rochford House'],[23,'Flat 3','Rochford House'],[23,'Flat 4','Rochford House']]}   // [number, flat, building name]
 ];
 function mockLookup(pc,instant){
   const key=pc.replace(/\s/g,'');
   const run=()=>{ if(key==='XX11XX') throw new Error('api'); if(key==='ZZ11ZZ') return []; let k=0;
-    return STREETS.flatMap(s=>s.items.map(it=>({id:'a'+(++k),n:it[0],sub:it[1]||'',street:s.street,line1:(it[1]?it[1]+', ':'')+it[0]+' '+s.street,town:'Croydon',postcode:pc}))); };
+    return STREETS.flatMap(s=>s.items.map(it=>({id:'a'+(++k),n:it[0],sub:it[1]||'',street:s.street,building:it[2]||'',line1:(it[1]?it[1]+', ':'')+(it[2]?it[2]+', ':'')+it[0]+' '+s.street,town:'Croydon',postcode:pc}))); };
   return new Promise((res,rej)=>{ const go=()=>{ try{res(run());}catch(e){rej(e);} }; if(key==='TM11ME') return;   /* TM1 1ME never answers: tests the timeout */ instant?go():setTimeout(go,550); });
 }
 const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowerCase()); if(i<0) return esc(t); return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+f.length))+'</mark>'+esc(t.slice(i+f.length)); };
@@ -1028,10 +1029,12 @@ function mountAddress(preset){
   const visible=()=>{ const g=filtered(); return ALL?g.items:g.items.slice(0,S.shown); };
   function updateCont(){ cont.hidden=!(S.selected||S.manual||S.status==='results'); }
 
+  // a flat reads one part per line: flat, building, street address, city, postcode (the live page repeats the flat and runs the building into the street)
+  const addrLines=a=>[a.sub,a.building,a.n+' '+a.street,a.town,a.postcode].filter(Boolean);
   function drawZone(){
     if(S.selected){
       const a=S.selected;
-      zone.innerHTML='<p class="confirm-sub" id="confirm-sub">Is this your address?</p><div class="card">'+ic('location','pin')+'<div class="adr"><b>'+esc(a.line1)+'</b><br>'+esc(a.town)+'<br>'+esc(a.postcode)+'</div><button type="button" class="link" id="change" aria-label="Change address">Change</button></div>';
+      zone.innerHTML='<p class="confirm-sub" id="confirm-sub">Is this your address?</p><div class="card">'+ic('location','pin')+'<div class="adr">'+addrLines(a).map((l,i)=>(i?'':'<b>')+esc(l)+(i?'':'</b>')).join('<br>')+'</div><button type="button" class="link" id="change" aria-label="Change address">Change</button></div>';
       $('#change').addEventListener('click',()=>{ track('address_change_opened'); goManual(true); });   // straight to the form, filled in: often only one field needs editing
     } else if(S.manual){
       drawManual();
@@ -1156,7 +1159,7 @@ function mountAddress(preset){
   }
   function goManual(fromSelected){
     track('address_manual_opened',{reason:fromSelected?'change_address':S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
-    if(fromSelected&&S.selected){ const a=S.selected; S.man={n:(a.sub?a.sub+', ':'')+a.n,street:a.street,town:a.town,pc:a.postcode}; }   // the chosen address, ready to edit
+    if(fromSelected&&S.selected){ const a=S.selected; S.man={n:(a.sub?a.sub+', ':'')+(a.building?a.building+', ':'')+a.n,street:a.street,town:a.town,pc:a.postcode}; }   // the chosen address, ready to edit
     else if(S.isPc) S.man.pc=S.postcode;
     S.manual=true; S.selected=null; drawZone(); const n=$('#man-n'); if(n) n.focus();
   }
@@ -1250,7 +1253,7 @@ const CHANGES={
     ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-manual-outside"]],
   "address/filtered":[
     ["List narrows as you type, matches in bold","Reach your address faster"],
-    ["Count updates: 'Showing 8 of 15'","Shows the filter is working"]],
+    ["Count updates: 'Showing 11 of 21'","Shows the filter is working"]],
   "address/selected":[
     ["Chosen address shown as a summary card","Confirms the right address is used"],
     ["'Is this your address?' above it, title unchanged","Makes the confirm step obvious"],
@@ -1342,6 +1345,7 @@ const ROUTES={
   'address/results':()=>mountAddress({postcode:'CR0 3AG',lookup:true}),
   'address/filtered':force(['addr-show-all'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,filter:'1'})),
   'address/selected':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'}),
+  'address/flat':()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'Flat 3, Rochford House, 23 Rochford Way'}),
   'address/manual':()=>mountAddress({postcode:'CR0 3AG',manual:true}),
   'address/moved':force(['addr-one-screen'],()=>mountAddress({postcode:'CR0 3AG',lookup:true,select:'4 Factory Lane'})),
   'address/error':()=>mountAddress({postcode:'CR0 3A',lookup:true}),
@@ -1370,7 +1374,7 @@ const STEPS=[
   {key:'contact',n:3,label:'Contact details'}
 ];
 const STATE_LABELS={
-  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/manual':'Manual entry','address/error':'Error','address/moved':'Same step','address/time':'Time at address',
+  'address/default':'Postcode','address/results':'Results','address/filtered':'Filtered','address/selected':'Selected','address/flat':'Selected: flat','address/manual':'Manual entry','address/error':'Error','address/moved':'Same step','address/time':'Time at address',
   'dob/default':'Empty','dob/picker-year':'Calendar: year','dob/picker-day':'Calendar: day','dob/valid':'Valid','dob/under18':'Under 18',
   'contact/default':'Default','contact/errors':'Errors','contact/submitting':'Submitting'
 };
