@@ -295,13 +295,11 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 .n-state.live span{flex:1 1 auto}
-.n-seg{display:flex;flex:1 0 100%;margin-top:6px;padding:3px;border-radius:999px;background:#fff;border:1px solid #C9CDD6}
-.n-state .n-seg button{flex:1;border:0;border-radius:999px;background:transparent;color:#4B5563;padding:8px 12px;font-size:14px;line-height:20px;font-weight:700}
-.n-state .n-seg button:not([aria-pressed=true]):hover{background:#F1EBFE;color:#4a05b0}
-.n-state .n-seg button[aria-pressed=true]{color:#fff;cursor:default}
-.n-state .n-seg button[aria-pressed=true]::before{content:"\2713\00a0"}
-.n-state .n-seg button[data-xoff][aria-pressed=true]{background:#0E9F6E}
-.n-state .n-seg button[data-xall][aria-pressed=true]{background:#6905F2}
+.n-seg{display:flex;flex:1 0 100%;margin-top:8px;padding:4px;gap:2px;border-radius:12px;background:#ECEDF0}
+.n-state .n-seg button{flex:1;border:0;border-radius:9px;background:transparent;color:#5B616E;padding:10px 12px;font-size:15px;line-height:20px;font-weight:600}
+.n-state .n-seg button:not([aria-pressed=true]):hover{color:#111;background:rgba(255,255,255,.7)}
+.n-state .n-seg button[aria-pressed=true]{background:#252525;color:#fff;font-weight:700;cursor:default;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.n-state .n-seg button:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
 .n-state.live::before{content:"";width:10px;height:10px;border-radius:50%;background:#0E9F6E;flex:none}
 .n-state.redesign{background:#F1EBFE;border:1px solid #D8CBF8;color:#4a05b0}
