@@ -343,13 +343,13 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 button.dv-btn.alt{background:transparent;color:#fff;border:1px solid #666}
 button.dv-btn.alt:hover{background:#2a2a2a}
 .intro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(17,17,17,.62);overflow:auto}
-.intro-card{position:relative;width:100%;max-width:600px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
+.intro-card{position:relative;width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
 .intro-card h2{margin:0 36px 8px 0;font-size:24px;line-height:30px;font-weight:700}
 .intro-card .lead{margin:0 0 18px;color:#374151}
 .intro-card ol{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
-.intro-card li{position:relative;margin:0 0 12px;padding-left:40px;counter-increment:s}
+.intro-card li{position:relative;margin:0 0 10px;padding-left:40px;counter-increment:s;color:#374151}
 .intro-card li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:14px;line-height:26px;font-weight:700;text-align:center}
-.intro-card li b{display:block}
+.intro-card li b{display:block;color:#111}
 .intro-tip{margin:0 0 20px;padding:12px 14px;border-radius:8px;background:#F1EBFE;color:#3b0a96;font-size:15px;line-height:22px}
 .intro-x{position:absolute;top:14px;right:14px;width:36px;height:36px;border:0;border-radius:50%;background:#F3F4F6;font-size:22px;line-height:36px;cursor:pointer;color:#111}
 .intro-go{display:flex;align-items:center;justify-content:center;width:100%;height:52px;border:0;border-radius:6px;background:var(--green);color:var(--btn-ink);font-size:18px;font-weight:700;cursor:pointer}
@@ -1422,16 +1422,16 @@ function showIntro(){
   const o=document.createElement('div'); o.id='intro'; o.className='intro';
   o.innerHTML='<div class="intro-card" role="dialog" aria-modal="true" aria-labelledby="intro-title">'+
     '<button type="button" class="intro-x" id="intro-x" aria-label="Close">&times;</button>'+
-    '<h2 id="intro-title">Car Finance 247 apply form: redesign prototype</h2>'+
-    '<p class="lead">An interactive prototype of three steps of the apply form where the most people leave: <b>address</b>, <b>date of birth</b> and the <b>final contact page</b>. Each change is a switch with the hypothesis it would test, so it can be A/B tested on its own. It is for exploring ideas: it collects nothing and everything in it is sample data.</p>'+
+    '<h2 id="intro-title">Apply form redesign prototype</h2>'+
+    '<p class="lead">Three steps. Every change is a switch you can test. Sample data only.</p>'+
     '<ol>'+
-      '<li><b>It starts as the live form.</b>With every switch off, each page is the current live version.</li>'+
-      '<li><b>Switch changes on one at a time.</b>The <i>Hypotheses</i> card beside each page has a switch for every change. Flip one and the page updates to show it, with the reason it could reduce drop-off.</li>'+
-      '<li><b>Move between steps.</b>Use the Address, Date of birth and Contact details buttons in the bar at the bottom.</li>'+
-      '<li><b>Try the progress bar.</b>The Live, Marker and Stages selector at the bottom changes the progress bar on every step.</li>'+
-      '<li><b>Compare.</b>"Compare with current" shows the live and redesigned pages side by side.</li>'+
+      '<li><b>Starts as the live form</b>All switches off = what customers see today.</li>'+
+      '<li><b>Flip a switch</b>Use the Hypotheses card beside each page.</li>'+
+      '<li><b>Change step</b>Address, Date of birth, Contact details (bottom bar).</li>'+
+      '<li><b>Progress bar</b>Live, Marker or Stages (bottom bar).</li>'+
+      '<li><b>Compare</b>Side by side with the live form.</li>'+
     '</ol>'+
-    '<p class="intro-tip">Tip: on the address step, type <b>CR0 3AG</b> to see a list of sample addresses. The form is designed for a phone, so a narrow window shows it best. The web address records which switches are on, so you can share a setup.</p>'+
+    '<p class="intro-tip">Tip: type <b>CR0 3AG</b> on the address step.</p>'+
     '<button type="button" class="intro-go" id="intro-go">Start exploring</button>'+
   '</div>';
   document.body.appendChild(o);
