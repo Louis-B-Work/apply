@@ -294,6 +294,8 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .hyp b.h-result{color:#0B7A55}
 .n-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:20px}
 .n-state b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.n-state.live span{flex:1 1 auto}
+.n-state button.primary{background:var(--purple);border-color:var(--purple);color:#fff}
 .n-state.live{background:#E8F7F1;border:1px solid #B5E3D0;color:#0B5F43}
 .n-state.live::before{content:"";width:10px;height:10px;border-radius:50%;background:#0E9F6E;flex:none}
 .n-state.redesign{background:#F1EBFE;border:1px solid #D8CBF8;color:#4a05b0}
@@ -1496,7 +1498,7 @@ function paintNotes(k){
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
-    (exps.length?(on.length||xOn('global-stepper')||xOn('global-orb')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')||xOn('global-orb')?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
+    (exps.length?(on.length||xOn('global-stepper')||xOn('global-orb')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')||xOn('global-orb')?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button>'+(on.length<exps.length?'<button type="button" class="primary" data-xall="1">Try the full redesign</button>':'')+'</div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span><button type="button" class="primary" data-xall="1">Try the full redesign</button></div>'):'')+
     (exps.length?'<p class="n-sub h-headrow">Hypotheses<span>'+on.length+' of '+exps.length+' on</span></p><div class="h-list">'+(()=>{
       const row=(x,child)=>{ const idle=x.parent&&!X[x.parent], open=hypOpen.has(x.id);
         return '<div class="h-row'+(child?' child':'')+(X[x.id]?'':' off')+(idle?' idle':'')+'"><div class="h-line"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(idle?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button>'+
@@ -1627,6 +1629,8 @@ $('#notes').addEventListener('click',e=>{
   const st=location.hash.replace(/^#\//,'').split('/')[0];
   const hm=e.target.closest('[data-hyp]');
   if(hm){ const id=hm.dataset.hyp; if(hypOpen.has(id)) hypOpen.delete(id); else hypOpen.add(id); paintNotes(lastKey); const nb=document.querySelector('[data-hyp="'+id+'"]'); if(nb) nb.focus(); return; }
+  const all=e.target.closest('[data-xall]');
+  if(all){ EXPERIMENTS.forEach(x=>{ if(x.step===st) X[x.id]=true; }); syncX(); carry=null; hypOpen.clear(); goStepDefault(st); return; }   // every change on this step, from the starting state
   const off=e.target.closest('[data-xoff]');
   if(off){ EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); carry=null; goStepDefault(st); return; }
   const t=e.target.closest('[data-x]'); if(!t||t.disabled) return;
