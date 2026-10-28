@@ -415,13 +415,16 @@ button.dv-btn.alt:hover{background:#2a2a2a}
 .intro-x{position:absolute;top:14px;right:14px;width:36px;height:36px;border:0;border-radius:50%;background:#F3F4F6;font-size:22px;line-height:36px;cursor:pointer;color:#111}
 .intro-go{display:flex;align-items:center;justify-content:center;width:100%;height:52px;border:0;border-radius:6px;background:var(--green);color:var(--btn-ink);font-size:18px;font-weight:700;cursor:pointer}
 .intro-go:focus-visible,.intro-x:focus-visible{outline:3px solid #000;outline-offset:2px}
-.cmp{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;background:#F1F2F6;overflow:auto;color:#111}
+.cmp{position:fixed;inset:0 0 var(--cmp-b,0px) 0;z-index:100;display:flex;flex-direction:column;background:#F1F2F6;overflow:auto;color:#111}
 .cmp-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:12px 20px;background:#fff;border-bottom:1px solid #DDE0E6}
 .cmp-top h2{margin:0;font-size:18px;line-height:24px;font-weight:700}
 .cmp-tabs{display:flex;flex-wrap:wrap;gap:6px}
 .cmp-tabs button,.cmp-tog button,.cmp-navrow button{border:1px solid #DDE0E6;background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;line-height:20px;font-weight:600;color:#374151;cursor:pointer}
 .cmp-tabs button[aria-pressed=true],.cmp-tog button[aria-pressed=true]{background:#252525;border-color:#252525;color:#fff}
 .cmp-navrow button:disabled{opacity:.4;cursor:not-allowed}
+body.cmp-open .dev{z-index:101}
+body.cmp-open #dev-bar3{opacity:.4;pointer-events:none}   /* the progress bar choices are in the list while comparing */
+#dev-compare[aria-pressed=true]{background:var(--green);color:#111}
 .cmp-x{margin-left:auto;width:36px;height:36px;border:0;border-radius:50%;background:#F3F4F6;font-size:22px;line-height:36px;cursor:pointer;color:#111}
 .cmp button:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
 .cmp-main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;padding:20px;align-items:start}
@@ -1626,7 +1629,7 @@ if(!SHOT){
        '<div class="dv-row"><span class="dv-label">Step</span><div class="dv-steps"></div></div>'+
      '</div>'+
      '<div class="dv-side"><div class="dv-seg" id="dev-bar3" role="radiogroup" aria-label="Progress bar (all steps)"><span class="dv-seglabel">Progress bar</span><button type="button" role="radio" data-bar="live" aria-checked="true">Live</button><button type="button" role="radio" data-bar="orb" aria-checked="false">Marker</button><button type="button" role="radio" data-bar="stepper" aria-checked="false">Stages</button></div></div>'+
-     '<div class="dv-compare"><button type="button" class="dv-btn alt" id="dev-help">How to use</button><button type="button" class="dv-btn" id="dev-compare">Compare with current</button></div>'+
+     '<div class="dv-compare"><button type="button" class="dv-btn alt" id="dev-help">How to use</button><button type="button" class="dv-btn" id="dev-compare" aria-pressed="false">Compare with current</button></div>'+
    '</div>';
   document.body.appendChild(dev); document.body.classList.add('has-dev');
   dev.addEventListener('click',e=>{
@@ -1697,7 +1700,11 @@ function openCompare(pick){
   }
   const o=document.createElement('div'); o.id='cmp';
   o.setAttribute('role','dialog'); o.setAttribute('aria-modal','true'); o.setAttribute('aria-labelledby','cmp-title');
-  const back=document.activeElement, parts=[app,dev].filter(Boolean); parts.forEach(p=>{ p.inert=true; });
+  const back=document.activeElement, parts=[app].filter(Boolean); parts.forEach(p=>{ p.inert=true; });
+  const fit=()=>o.style.setProperty('--cmp-b',(dev?dev.offsetHeight:0)+'px');   // the overlay stops where the bar starts
+  fit(); window.addEventListener('resize',fit); document.body.classList.add('cmp-open'); $('#dev-compare').setAttribute('aria-pressed','true');
+  const onHash=()=>{ const st=(location.hash||'').replace(/^#\//,'').split('/')[0]; if(STEPS.some(t=>t.key===st)&&st!==S.step){ S.step=st; S.sel=new Set(Array.from(S.sel).filter(id=>inStep(EXPERIMENTS.find(x=>x.id===id)))); if(S.last&&!S.sel.has(S.last)) S.last=null; draw(); } };   // the step buttons in the bar change the step here too
+  window.addEventListener('hashchange',onHash);
   const cls=()=>'cmp show-'+S.show+(S.wide?' wide':' phone');
   function draw(focus){
     const list=EXPERIMENTS.filter(inStep), chosen=list.filter(e=>S.sel.has(e.id));
@@ -1705,7 +1712,6 @@ function openCompare(pick){
     const lastE=S.last&&S.sel.has(S.last)?EXPERIMENTS.find(e=>e.id===S.last):null, route=cmpRoute(S.step,lastE?lastE.id:(chosen.filter(e=>COMPARE_AT[e.id]).pop()||{}).id);   // open on the state that shows the change you added last
     o.className=cls();
     o.innerHTML='<div class="cmp-top"><h2 id="cmp-title">Compare with the current form</h2>'+
-      '<div class="cmp-tabs" role="group" aria-label="Step">'+STEPS.map(t=>'<button type="button" data-cs="'+t.key+'" aria-pressed="'+(t.key===S.step)+'">'+t.label+'</button>').join('')+'</div>'+
       '<div class="cmp-tabs" role="group" aria-label="Width"><button type="button" data-w="phone" aria-pressed="'+!S.wide+'">Phone width</button><button type="button" data-w="wide" aria-pressed="'+S.wide+'">Wide</button></div>'+
       '<button type="button" class="cmp-x" data-cx aria-label="Close">&times;</button></div>'+
     '<div class="cmp-main"><div class="cmp-side">'+
@@ -1717,10 +1723,10 @@ function openCompare(pick){
       '<figure class="cmp-ph with"><figcaption>'+(chosen.length?'With '+chosen.length+' change'+(chosen.length===1?'':'s')+' stacked':'No changes stacked')+'</figcaption><iframe title="Form with the stacked changes" src="'+cmpSrc(ids,route)+'"></iframe></figure></div></div></div>';
     const fe=focus&&o.querySelector(focus); if(fe) fe.focus();
   }
-  function close(){ o.remove(); document.removeEventListener('keydown',onKey); parts.forEach(p=>{ p.inert=false; }); if(back&&back.focus) back.focus(); }
+  function close(){ o.remove(); document.removeEventListener('keydown',onKey); window.removeEventListener('resize',fit); window.removeEventListener('hashchange',onHash); document.body.classList.remove('cmp-open'); $('#dev-compare').setAttribute('aria-pressed','false'); parts.forEach(p=>{ p.inert=false; }); if(back&&back.focus) back.focus(); }
   function onKey(e){
     if(e.key==='Escape'){ e.preventDefault(); close(); return; }
-    if(e.key==='Tab'){ const f=$$('button:not([disabled])',o); if(!f.length) return; const a=document.activeElement; if(e.shiftKey&&(a===f[0]||!o.contains(a))){ e.preventDefault(); f[f.length-1].focus(); } else if(!e.shiftKey&&a===f[f.length-1]){ e.preventDefault(); f[0].focus(); } }
+    if(e.key==='Tab'){ const f=[].concat($$('.dv-step, #dev-help, #dev-compare',dev),$$('button:not([disabled])',o)); if(!f.length) return; const a=document.activeElement; if(e.shiftKey&&a===f[0]){ e.preventDefault(); f[f.length-1].focus(); } else if(!e.shiftKey&&a===f[f.length-1]){ e.preventDefault(); f[0].focus(); } }
   }
   o.addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
