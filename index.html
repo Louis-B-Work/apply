@@ -346,18 +346,22 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 button.dv-btn.alt{background:transparent;color:#fff;border:1px solid #666}
 button.dv-btn.alt:hover{background:#2a2a2a}
 .intro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(17,17,17,.62);overflow:auto}
-.intro-card{position:relative;width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
+.intro-card{position:relative;width:100%;max-width:520px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#111;border-radius:16px;padding:22px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:16px;line-height:24px}
 .intro-card h2{margin:0 36px 8px 0;font-size:24px;line-height:30px;font-weight:700}
-.intro-card .lead{margin:0 0 14px;color:#374151}
+.intro-card .lead{margin:0 0 12px;color:#374151}
 .intro-why{margin:0 0 18px;padding:12px 14px;border-radius:8px;background:#F7F7F9;border:1px solid #E7E8EC}
 .intro-why p{margin:0 0 8px;font-size:15px;line-height:22px;color:#374151}
 .intro-why p:last-child{margin:0}
+.intro-why .intro-list{margin:0 0 8px;padding-left:18px;font-size:15px;line-height:22px;color:#374151;list-style:disc}
+.intro-why .intro-list li{margin:0 0 3px;padding:0;counter-increment:none}
+.intro-why .intro-list li::before{content:none;display:none}
+.intro-why .intro-list b{display:inline;font-size:inherit;line-height:inherit;letter-spacing:0;text-transform:none;color:#111}
 .intro-why b{display:block;font-size:12px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
-.intro-card ol{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
+.intro-card ol{list-style:none;margin:0 0 14px;padding:0;counter-reset:s}
 .intro-card li{position:relative;margin:0 0 10px;padding-left:40px;counter-increment:s;color:#374151}
 .intro-card li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:14px;line-height:26px;font-weight:700;text-align:center}
 .intro-card li b{display:block;color:#111}
-.intro-tip{margin:0 0 20px;padding:12px 14px;border-radius:8px;background:#F1EBFE;color:#3b0a96;font-size:15px;line-height:22px}
+.intro-tip{margin:0 0 16px;padding:12px 14px;border-radius:8px;background:#F1EBFE;color:#3b0a96;font-size:15px;line-height:22px}
 .intro-x{position:absolute;top:14px;right:14px;width:36px;height:36px;border:0;border-radius:50%;background:#F3F4F6;font-size:22px;line-height:36px;cursor:pointer;color:#111}
 .intro-go{display:flex;align-items:center;justify-content:center;width:100%;height:52px;border:0;border-radius:6px;background:var(--green);color:var(--btn-ink);font-size:18px;font-weight:700;cursor:pointer}
 .intro-go:focus-visible,.intro-x:focus-visible{outline:3px solid #000;outline-offset:2px}
@@ -1424,6 +1428,7 @@ if(!SHOT){
 }
 window.addEventListener('hashchange',route);
 /* ---- introduction overlay: shown once per browser tab, and from the 'How to use' button ---- */
+const FIG=k=>typeof INTRO_FIG!=='undefined'?INTRO_FIG[k]:'';   // figures exist only in the internal version
 function showIntro(){
   if($('#intro')) return;
   const o=document.createElement('div'); o.id='intro'; o.className='intro';
@@ -1432,7 +1437,13 @@ function showIntro(){
     '<h2 id="intro-title">Apply form redesign prototype</h2>'+
     '<p class="lead">Three steps where people leave: address, date of birth and the final contact page.</p>'+
     '<div class="intro-why">'+
-      '<p><b>What we are testing</b>Whether small fixes to each step reduce abandonment.</p>'+
+      '<p><b>What we are testing</b>Whether small fixes reduce abandonment on three steps:</p>'+
+      '<ul class="intro-list">'+
+        '<li><b>Date of birth:</b> most people leave without hitting an error'+FIG('dob')+'.</li>'+
+        '<li><b>Address:</b> building number and manual entry often fail'+FIG('address')+'.</li>'+
+        '<li><b>Final page:</b> the phone number is the biggest failure'+FIG('contact')+'.</li>'+
+      '</ul>'+
+      '<p><b>Why these three</b>They lose the most people in the form.'+FIG('why')+'</p>'+
       '<p><b>Why small switches</b>One change per hypothesis, so an A/B test shows which change made the difference.</p>'+
     '</div>'+
     '<ol>'+
