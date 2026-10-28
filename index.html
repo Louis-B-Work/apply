@@ -1642,7 +1642,14 @@ $('#notes').addEventListener('click',e=>{
   const all=e.target.closest('[data-xall]'), off=e.target.closest('[data-xoff]');
   if(all||off){   // Full redesign: every change on this step on; Live version: every switch off. Either way the step starts again.
     const go=()=>{ if(all){ EXPERIMENTS.forEach(x=>{ if(x.step===st) X[x.id]=true; }); X['global-stepper']=true; X['global-orb']=false; } else EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); carry=null; hypOpen.clear(); goStepDefault(st); };
-    const vs=$('.ver-sw'); if(vs){ vs.setAttribute('aria-checked',String(!!all)); setTimeout(go,220); } else go();   // let the switch slide first
+    const vs=$('.ver-sw');
+    if(vs){   // slide the version switch and every switch in the list, then restart the step
+      vs.setAttribute('aria-checked',String(!!all));
+      $$('.ver-lab',$('#notes')).forEach(l=>l.classList.toggle('on',l.hasAttribute('data-xall')===!!all));
+      $$('.h-row',$('#notes')).forEach(r=>{ const b=$('.n-sw',r); b.setAttribute('aria-checked',String(!!all)); r.classList.toggle('off',!all); if(all){ r.classList.remove('idle'); b.disabled=false; const n=$('.h-idle',r); if(n) n.remove(); } });
+      const c=$('.h-headrow span',$('#notes')); if(c) c.textContent=(all?$$('.h-row',$('#notes')).length:0)+' of '+$$('.h-row',$('#notes')).length+' on';
+      setTimeout(go,320);
+    } else go();
     return;
   }
   const t=e.target.closest('[data-x]'); if(!t||t.disabled) return;
