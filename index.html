@@ -881,8 +881,7 @@ function mountDob(preset){
   if(preset.picker) openPicker(preset.picker);
   // a switch was just flipped: show what it changes
   const rv=revealNext; revealNext=null;
-  if(rv==='dob-calendar'&&cal) openPicker();
-  else if(rv==='dob-why-we-ask'&&why) why.click();
+  if(rv==='dob-why-we-ask'&&why) why.click();   // the calendar button just appears; it is not opened for you
   else if(rv==='dob-two-digit-year'||rv==='dob-example-line'){
     setValue(rv==='dob-example-line'?'10  /  10  /  2000':'07  /  07  /  77');   // a valid date for the age line; a two-digit year for the year rule
     if(!ONE&&rv==='dob-two-digit-year'){ boxes[0].value='07'; boxes[1].value='07'; boxes[2].value='77'; }
