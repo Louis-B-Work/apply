@@ -520,14 +520,6 @@ const EXPERIMENTS=[
    control:"A dropdown showing ten addresses, then 'Show more addresses' as a plain text row, styled like the address rows, to press for the rest.",
    variant:"Every address is in the list from the start with a count line ('21 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
    measure:"address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)"},
-  {id:'addr-number-first',step:'address',on:false,name:'Address rows start with the house number',
-   short:"Every row starts with the same postcode, so the part people look for, the house number, is buried in the middle.",
-   because:"every row in the live list starts with the same postcode ('CR0 3AG 19 Rochford Way'), so {-the part people look for, the house number, is buried in the middle-}",
-   believe:"starting each row with the house number or flat, then street, town and postcode",
-   result:"people {+finding their address in the list faster+}",
-   control:"'CR0 3AG 19 Rochford Way, CROYDON': postcode first, then the address.",
-   variant:"'19 Rochford Way, Croydon, CR0 3AG': house number or flat first. Only changes the live-style list; the show-every-address list already starts with the number.",
-   measure:"time from results shown to address_selected; position of the chosen address; step completion"},
   {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' outside the list, always visible",
    short:"At the end of a long list it is out of sight, so people with a missing address may never find a way on.",
    because:"the 'Can't see your address?' link sits at the very end of the list, so {-people whose address is missing have to scroll, and press 'Show more addresses', to find a way on-}",
@@ -1157,7 +1149,7 @@ function mountAddress(preset){
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF||!ALL,   // with show-all off the list looks exactly like the live one, whatever else is on
-   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF, NF=xOn('addr-number-first');
+   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF;
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
@@ -1326,7 +1318,7 @@ function mountAddress(preset){
   function drawList(){
     const g=filtered(), lb=$('#lb'), f=FLT?S.filter.trim():'', total=S.list.length, items=ALL?g.items:g.items.slice(0,S.shown), left=!ALL&&g.items.length>S.shown;
     $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+qlabel());
-    const label=a=>LIVE?(NF?a.line1+', '+a.town+', '+a.postcode:a.postcode+' '+a.line1+', '+a.town.toUpperCase()):a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
+    const label=a=>LIVE?a.postcode+' '+a.line1+', '+a.town.toUpperCase():a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
     const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(label(a),f)+'</span></div>';
     lb.innerHTML=items.map(opt).join('')+
       (LIVE&&left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+(CSB?'':'<div class="live-foot">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>');
@@ -1419,11 +1411,11 @@ function mountAddress(preset){
     return Promise.resolve(lookup('button',true));
   }
   async function reveal(id){
-    if(id==='addr-show-all'||id==='addr-manual-outside'||id==='addr-number-first'){ S.selected=null; S.manual=false; drawZone(); await ensureList(); }
+    if(id==='addr-show-all'||id==='addr-manual-outside'){ S.selected=null; S.manual=false; drawZone(); await ensureList(); }
     else if(id==='addr-one-screen'||id==='addr-move-in-date'||id==='addr-status-same-step'){
       if(!S.selected&&!S.manual){ await ensureList(); if(S.status==='results'&&S.list.length){ S.selected=S.list[1]||S.list[0]; drawZone(); } }
     }
-    const t=id==='addr-show-all'||id==='addr-manual-outside'||id==='addr-number-first'?$('#lbwrap'):id==='addr-postcode-first'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
+    const t=id==='addr-show-all'||id==='addr-manual-outside'?$('#lbwrap'):id==='addr-postcode-first'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 }
 
@@ -1443,7 +1435,6 @@ const CHANGES={
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
   "address/results":[
-    ["Rows start with the house number, then street, town and postcode","The part people look for comes first","addr-number-first"],
     ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-show-all"],
     ["Count confirms the search worked","Removes the doubt that makes people leave","addr-show-all"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
@@ -1538,7 +1529,6 @@ function paintNotes(k){
           '<button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'" aria-label="'+esc(x.name)+'"'+(idle?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span></button>'+
           (mode==='compare'?'<span class="h-name plain"'+(idle?'':' data-x="'+x.id+'"')+'><span>'+esc(x.name)+(x.alt?'<em class="h-tag">alternative</em>':'')+'</span></span></div>':'<button type="button" class="h-name" data-hyp="'+x.id+'" aria-expanded="'+open+'" aria-controls="hyp-'+x.id+'"><span>'+esc(x.name)+(x.alt?'<em class="h-tag">alternative</em>':'')+'</span>'+ic('chevron-right')+'</button></div>')+
           (idle?'<p class="h-idle">Needs "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" on first.</p>':'')+
-          (x.id==='addr-number-first'&&xOn('addr-postcode-first')&&xOn('addr-show-all')?'<p class="h-idle">No visible difference while "Postcode-first" and "Show every address" are both on: that list already starts with the number.</p>':'')+
           (open?'<div class="h-detail" id="hyp-'+x.id+'">'+hypHTML(x)+onScreen(x)+'</div>':'')+'</div>'; };
       return exps.filter(e=>!e.parent).map(e=>row(e,false)+exps.filter(c=>c.parent===e.id).map(c=>row(c,true)).join('')).join('');
     })()+'</div>':'')+
@@ -1673,7 +1663,7 @@ function showIntro(){
 }
 /* ---- Compare with current: two live copies of the form side by side (?shot=1 gives a plain phone page), the current one and one with the change ---- */
 let cmpLast=null;
-const COMPARE_AT={'addr-postcode-first':'address/default','addr-show-all':'address/results','addr-number-first':'address/results','addr-manual-outside':'address/results','addr-one-screen':'address/selected','addr-move-in-date':'address/selected','addr-status-same-step':'address/selected','dob-calendar':'dob/picker-year','dob-example-line':'dob/valid','dob-two-digit-year':'dob/twodigit','dob-why-we-ask':'dob/why','contact-phone-tolerance':'contact/phone44','contact-phone-help-icon':'contact/help'};   // the page state where each change shows; the rest start on the step's first page
+const COMPARE_AT={'addr-postcode-first':'address/default','addr-show-all':'address/results','addr-manual-outside':'address/results','addr-one-screen':'address/selected','addr-move-in-date':'address/selected','addr-status-same-step':'address/selected','dob-calendar':'dob/picker-year','dob-example-line':'dob/valid','dob-two-digit-year':'dob/twodigit','dob-why-we-ask':'dob/why','contact-phone-tolerance':'contact/phone44','contact-phone-help-icon':'contact/help'};   // the page state where each change shows; the rest start on the step's first page
 const cmpRoute=(step,id)=>COMPARE_AT[id]||step+'/default';
 const cmpSrc=(ids,route)=>location.pathname+'?shot=1&x='+(ids.length?ids.join(','):'none')+'#/'+route;
 const ALLSET=()=>EXPERIMENTS.filter(e=>!e.alt&&e.id!=='global-orb').map(e=>e.id);   // the recommended set: no alternatives, and the Stages progress bar
