@@ -1504,8 +1504,7 @@ function paintNotes(k){
       return exps.filter(e=>!e.parent).map(e=>row(e,false)+exps.filter(c=>c.parent===e.id).map(c=>row(c,true)).join('')).join('');
     })()+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
-    (exps.length&&SUMMARY[step]?'<div class="n-reduce"><p class="n-sub">How this should reduce abandoned sessions</p><p>'+esc(SUMMARY[step].why)+'</p></div>':'')+
-    '<p class="n-foot">Expected effects, not measured results.</p>';
+    '';
 }
 
 /* ============================== ROUTER + DEV SWITCHER ============================== */
