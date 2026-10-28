@@ -134,6 +134,13 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .cant{margin:16px 0 24px}
 .more+.cant{margin-top:-8px}
 .moved{border:0;padding:0;margin:0 0 24px;min-width:0}
+.status{border:0;padding:0;margin:0 0 24px;min-width:0}
+.status legend{padding:0;margin-bottom:8px;font-weight:700;font-size:16px;line-height:24px}
+.res-opt{display:flex;align-items:center;gap:12px;min-height:56px;margin:0 0 8px;padding:12px 16px;border:1px solid var(--grey);border-radius:6px;background:#fff;cursor:pointer;font-size:18px;line-height:24px;color:#000}
+.res-opt input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--purple)}
+.res-opt:has(input:checked){border-color:var(--purple);box-shadow:0 0 0 1px var(--purple);background:var(--tint)}
+.res-opt:has(input:focus-visible){outline:2px solid var(--purple);outline-offset:2px}
+.hn-note{margin:0 0 12px;font-size:16px;line-height:24px;color:var(--grey-text)}
 .moved legend{padding:0;margin-bottom:8px;font-weight:700;font-size:16px;line-height:24px}
 .mv-row{display:flex;gap:12px}
 .mv-f{flex:1;min-width:0}
@@ -260,7 +267,10 @@ body.notes-on #notes{width:100%;box-sizing:border-box}
 .n-sw[aria-checked=true] .dv-track{background:var(--purple)}
 .n-sw[aria-checked=true] .dv-knob{left:19px}
 .n-sw:focus-visible{outline:2px solid var(--purple);outline-offset:3px;border-radius:4px}
-.n-exp.off>p{opacity:.55}
+.n-exp.off>p,.n-exp.off>.hyp{opacity:.55}
+.n-exp .hyp p{margin:0 0 6px;font-size:14px;line-height:20px;color:#1F2937}
+.n-exp .hyp p:last-child{margin:0}
+.n-exp .hyp b{color:var(--purple);font-weight:700}
 .n-child{grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #D3CAEE;display:grid;gap:6px}
 .n-child.off p{opacity:.55}
 .n-child .n-idle{opacity:1;font-size:13px;line-height:18px;font-style:italic;color:#6B7280}
@@ -455,103 +465,162 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
 const EXPERIMENTS=[
   {id:'addr-postcode-first',step:'address',on:false,name:'Postcode-first search and wording',
    short:"People stall on the open search box because they don't know what to type.",
-   hypothesis:"People stall on the open 'Search for your address' box because they do not know what to type (a postcode, a street, a house number). Failed searches then lead to manual entry or leaving. Asking only for a postcode, in plain words, makes the first step obvious.",
+   because:"{fig}people are not sure what to type in the open 'Search for your address' box (a postcode, a street or a house number), and failed searches lead to manual entry or leaving",
+   believe:"asking only for a postcode, in plain words, and searching as soon as a full postcode is typed",
+   result:"more people starting the search and fewer failed searches",
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
-   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, with a Find address button as a backup.",
-   metric:"Address step completion; address_lookup_started, address_validation_error, address_manual_opened."},
+   variant:"Headed 'Next, what's your postcode?' with a Postcode box. The search starts by itself on a full postcode, so there is no Find address button.",
+   measure:"address step completion, plus address_lookup_started, address_validation_error and address_manual_opened"},
+  {id:'addr-house-number',step:'address',on:false,parent:'addr-postcode-first',name:'House number and postcode, with a Find address button',
+   short:"Ask for the house number beside the postcode, as Compare the Market does, and go straight to the matching address.",
+   because:"{fig}people have to find their house in a list, and Compare the Market asks for the house number and postcode together",
+   believe:"asking for the house number or name beside the postcode, with a Find address button, and going straight to the matching address",
+   result:"more people reaching 'Is this your address?' without scanning a list",
+   control:"Postcode only; the search starts by itself and every address in the postcode is listed.",
+   variant:"A 'House number or name' box above the Postcode box and a Find address button; there is no automatic search. One match goes straight to 'Is this your address?'. Several matches are listed. No match lists every address with a note.",
+   measure:"address step completion; time on step; address_house_number_used; position of the chosen address (address_selected)"},
   {id:'addr-show-all',step:'address',on:false,name:"Show every address, no 'Show more addresses' button",
    short:"'Show more addresses' looks like just another row, not a button, so people may not realise it expands the list. A list that already holds every address removes that step.",
-   hypothesis:"The address list only shows part of the results and has to be expanded with 'Show more addresses'. That control is styled like one more plain row at the end of the list, with nothing to say it is a button, so people may not realise they can press it to see the rest, and give up when they do not find their address. A list that already holds every address, which they scroll to find, removes the hidden step and could reduce abandonment.",
+   because:"{fig}the list only shows part of the results behind 'Show more addresses', which looks like another row and not a button, so people may not find their address",
+   believe:"showing every address in one list, with a count and a type-to-filter box, instead of hiding them behind 'Show more addresses'",
+   result:"more people finding their address and fewer giving up in the list",
    control:"A dropdown showing ten addresses, then 'Show more addresses' as a plain text row, styled like the address rows, to press for the rest.",
    variant:"Every address is in the list from the start with a count line ('21 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
-   metric:"Step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)."},
+   measure:"address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)"},
+  {id:'addr-number-first',step:'address',on:false,name:'Address rows start with the house number',
+   short:"Every row starts with the same postcode, so the part people look for, the house number, is buried in the middle.",
+   because:"every row in the live list starts with the same postcode ('CR0 3AG 19 Rochford Way'), so the part people look for, the house number, is buried in the middle",
+   believe:"starting each row with the house number or flat, then street, town and postcode",
+   result:"people finding their address in the list faster",
+   control:"'CR0 3AG 19 Rochford Way, CROYDON': postcode first, then the address.",
+   variant:"'19 Rochford Way, Croydon, CR0 3AG': house number or flat first. Only changes the live-style list; the show-every-address list already starts with the number.",
+   measure:"time from results shown to address_selected; position of the chosen address; step completion"},
   {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' outside the list, always visible",
    short:"At the end of a long list it is out of sight, so people with a missing address may never find a way on.",
-   hypothesis:"The 'Can't see your address? Enter address manually' link only appears at the very end of the list, so people whose address is missing have to scroll through every row (and press 'Show more addresses') to find a way on, and some give up. Placing it outside the list, permanently visible, gives them a way out straight away.",
+   because:"the 'Can't see your address?' link sits at the very end of the list, so people whose address is missing have to scroll, and press 'Show more addresses', to find a way on",
+   believe:"placing 'Can't see your address? Enter it manually' outside the list, always visible",
+   result:"people with a missing address reaching manual entry sooner, and fewer leaving at the list",
    control:"Inside the dropdown, at the very end of the list, after 'Show more addresses'. ",
    variant:"Outside the list, directly below it, always visible without scrolling. The small link under the search box stays as it is.",
-   metric:"address_manual_opened; abandonment after results are shown; step completion."},
+   measure:"address_manual_opened; abandonment after results are shown; step completion"},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave, and competitors such as Compare the Market already ask this on the address screen.",
    brief:"The question sits under the address instead of on a separate page.",
-   hypothesis:"Too many questions across separate screens make this section feel long, and every extra screen is a chance to leave. Asking about time at the address on the address screen removes one page. Competitors such as Compare the Market already ask for the address and the move-in date on one screen.",
+   because:"{fig}the address section is spread over separate screens and every extra screen is a chance to leave, while Compare the Market asks for the address and the move-in date together",
+   believe:"asking about time at the address on the address step, once the address is confirmed, instead of on a separate page",
+   result:"one fewer page and more people finishing the address section",
    control:"Time at address is a separate page after the address.",
    variant:"Once an address is confirmed (or typed), the time-at-address question appears under it on the same step and the separate page is skipped.",
-   metric:"Completion of the combined address and time-at-address section; total time through it."},
+   measure:"completion of the combined address and time-at-address section; total time through it"},
   {id:'addr-move-in-date',step:'address',on:false,parent:'addr-one-screen',name:"Ask 'When did you move in?', not 'How long?'",
    short:"A date is easier to answer than a duration, and the system does the maths.",
    brief:"'When did you move in?' with month and year; the system works out the length.",
-   hypothesis:"'How long have you lived there?' makes people do sums in their head (years and months) and some get it wrong or give up. 'When did you move in?' is quicker and easier to answer, and the system works out the years and months it needs. The same wording can replace the other 'how long' questions (for example 'When did you start there?' for a job).",
+   because:"'How long have you lived there?' makes people work out years and months in their head, and some get it wrong or give up",
+   believe:"asking 'When did you move in?' with a month and then a year, the UK order, and working out the length for them",
+   result:"quicker, more accurate answers to this question",
    control:"'How long have you lived at this address?' with Years and Months boxes.",
-   variant:"'When did you move in?' with Month and Year boxes. The system works out the length. Only applies when time at address is asked on the same step.",
-   metric:"Completion and time on the time-at-address question; validation errors; people who enter a wrong length."},
+   variant:"'When did you move in?' with a Month box and then a Year box, and 'For example, 09 2019' under the question. A month name such as Sep is accepted. The system works out the length. Only applies when time at address is asked on the same step.",
+   measure:"completion and time on the question; validation errors; wrong lengths entered"},
+  {id:'addr-status-same-step',step:'address',on:false,parent:'addr-one-screen',name:'Residential status on the same step',
+   short:"Residential status is another separate page; asking it under time at address removes a second screen.",
+   because:"residential status is asked on yet another page after the address, and every extra page is a chance to leave",
+   believe:"asking for residential status on the same step, under time at address",
+   result:"two fewer pages in the address section and more people finishing it",
+   control:"Residential status is its own page after the address.",
+   variant:"Under the time-at-address question: 'What is your residential status?' with the live options (Private Tenant, Home Owner, Council Tenant, Living with Parents). Continue needs one chosen.",
+   measure:"completion of the address section; total time through it; address_status_selected"},
   {id:'dob-single-box',step:'dob',on:false,name:'One date box that adds the slashes',
    short:"Three separate boxes are slow and fiddly on a phone; one box that adds the slashes cuts taps and format mistakes.",
-   hypothesis:"Three separate boxes are slow and rigid on a phone, with a tap into each one and no help with the format. One box that adds the slashes, shows the rest of the date in grey and accepts pasting cuts taps and format mistakes.",
+   because:"three separate boxes mean a tap into each one on a phone, with no help with the format",
+   believe:"one box that adds the slashes, shows the rest of the date in grey and accepts pasting",
+   result:"fewer taps and fewer format mistakes",
    control:"Three boxes (Day, Month, Year) that move on by themselves, with a tick in each when valid.",
    variant:"One box that adds the slashes as you type, shows the rest of the date in grey, pads a lone 4 to 04, and accepts pasting and autofill.",
-   metric:"Step completion; time on step; dob_validation_error by type."},
+   measure:"step completion; time on step; dob_validation_error by type"},
   {id:'dob-calendar',step:'dob',on:false,name:'Calendar that starts at the year',
    short:"People who dislike typing a date need another way in, and starting at the year avoids scrolling back from today.",
-   hypothesis:"Native date pickers open on today, so someone born decades ago scrolls back a long way, and some people simply dislike typing a date. A calendar that goes year, then month, then day is a quick second route.",
+   because:"some people dislike typing a date, and native date pickers open on today so someone born decades ago scrolls back a long way",
+   believe:"adding a calendar that goes year, then month, then day as a second way in",
+   result:"more people finishing, and faster, who would otherwise struggle to type a date",
    control:"No calendar.",
    variant:"A calendar button opens a sheet that goes year, then month, then day. Only valid years are offered, and tapping the day fills the date in.",
-   metric:"dob_picker_opened and dob_picker_completed; step completion; time on step."},
+   measure:"dob_picker_opened and dob_picker_completed; step completion; time on step"},
   {id:'dob-why-we-ask',step:'dob',on:false,name:"'Why do we ask this?' line",
    short:"Most people who leave this page never hit an error, so the question may feel like the start of a credit check. A one-tap reason answers that.",
-   hypothesis:"Most people who leave this page never hit an error, so they are choosing to go. Asking for a date of birth can feel like the start of a credit check, and nothing says why it is needed. A one-tap explanation answers the doubt where people leave.",
+   because:"{fig}nothing says why a date of birth is needed, and asking for it can feel like the start of a credit check",
+   believe:"adding a collapsed 'Why do we ask this?' line that opens a one-sentence reason",
+   result:"fewer people leaving out of doubt",
    control:"No explanation.",
    variant:"A collapsed 'Why do we ask this?' line under the heading that opens a one-sentence reason.",
-   metric:"Step completion; taps on the line; time on step."},
+   measure:"step completion; taps on the line; time on step"},
   {id:'dob-example-line',step:'dob',on:false,name:"Example and 'That makes you 26.' line",
    short:"An example removes format guesswork, and the age played back catches a mistyped year before Continue.",
-   hypothesis:"People are unsure of the format and the order, and a mistyped year passes unnoticed until later. An example shows the format; reading the date back as an age makes a wrong year jump out.",
+   because:"people are unsure of the format, and a mistyped year passes unnoticed until later",
+   believe:"showing an example under the heading, and reading the date back as an age ('That makes you 26.')",
+   result:"fewer format errors and fewer wrong years",
    control:"No example and no age line.",
    variant:"'For example, 27 / 03 / 1990' under the heading, and 'That makes you 26.' once the date is valid.",
-   metric:"dob_validation_error by type; step completion."},
+   measure:"dob_validation_error by type; step completion"},
   {id:'dob-two-digit-year',step:'dob',on:false,name:'Two-digit years like 77 are accepted',
    short:"A common way of typing a date should not be an error.",
-   hypothesis:"Some people type the year as two digits (07 / 07 / 77). Because applicants must be 18 to 100, only one reading is usually possible, so it can be accepted instead of blocked.",
+   because:"some people type the year as two digits (07 / 07 / 77), which is blocked today",
+   believe:"accepting a two-digit year when only one reading is between 18 and 100 years ago",
+   result:"fewer blocked people and fewer validation errors",
    control:"A two-digit year shows 'Year must have four numbers, like 1990'.",
    variant:"77 becomes 1977 when only one reading is between 18 and 100 years ago. Years with no valid reading say 'Please check the year. You need to be between 18 and 100 to apply.'",
-   metric:"dob_year_expanded; dob_validation_error{type: year}; step completion."},
+   measure:"dob_year_expanded; dob_validation_error{type: year}; step completion"},
   {id:'contact-results-promise',step:'contact',on:false,name:'Promise results, not a quote later',
    short:"'Where should we send your quote?' sounds like an email later; 'see your results' points to the outcome people want now.",
-   hypothesis:"'Where should we send your quote?' sounds like an email arriving later, or the start of a spam loop. A headline and button that promise results now match what applicants expect, which is a reason to finish rather than leave.",
+   because:"'Where should we send your quote?' sounds like an email arriving later, or the start of a spam loop",
+   believe:"a headline and button that promise results now: 'Last step, then see your results' and 'See my results'",
+   result:"more people finishing the final page",
    control:"'And finally, where should we send your quote?', the button 'Get my quote', and 'By clicking 'get my quote' you agree to Car Finance 247 Limited's terms & conditions.'",
    variant:"'Last step, then see your results', the button 'See my results', and the terms line to match.",
-   metric:"Final page to submitted rate; time on page."},
+   measure:"final page to submitted rate; time on page"},
   {id:'contact-phone-help-icon',step:'contact',on:false,name:"'?' that explains why we need the phone number",
    short:"People fear unwanted calls; an answer at the moment they hesitate, without adding a box to the page.",
-   hypothesis:"People hesitate at the phone box because they fear aggressive calls. A small '?' that explains, on hover or tap, why a number is needed answers the worry at the moment it comes up without adding anything to the page.",
+   because:"people may hesitate at the phone box because they fear aggressive calls",
+   believe:"adding a '?' next to the phone label that explains, on hover or tap, why a number is needed",
+   result:"fewer people leaving at the phone box",
    control:"No explanation next to the phone number.",
    variant:"A '?' next to the label opens: 'We need a number to reach you about your application, for example to check a detail or confirm your approval.'",
-   metric:"Final page to submitted rate; contact_phone_help_opened; abandonment at the phone box."},
+   measure:"final page to submitted rate; contact_phone_help_opened; abandonment at the phone box"},
   {id:'contact-phone-tolerance',step:'contact',on:false,name:'Phone box accepts numbers the way people type them',
    short:"Phone is the biggest validation failure on this page; accepting spaces, +44 and a missing 0 blocks fewer people.",
-   hypothesis:"Phone number validation is the biggest source of failures on the final page. People type spaces, brackets, +44 or leave off the 0, so accepting those and tidying the number blocks far fewer of them.",
+   because:"{fig}people type spaces, brackets or +44, or leave off the 0, and the live page rejects them",
+   believe:"accepting numbers the way people type them and tidying them to 07700 900123",
+   result:"fewer phone validation failures and more people submitting",
    control:"Digits only: 11 digits starting 0. Spaces, brackets and +44 are rejected. Error: 'Enter a valid UK phone number'.",
    variant:"Accepts spaces, brackets, +44 and 0044, a missing leading 0 and non-UK numbers, and tidies UK mobiles to 07700 900123. Error: 'Enter a phone number, like 07700 900123'.",
-   metric:"contact_validation_error{field: phone}; final page to submitted rate."},
+   measure:"contact_validation_error{field: phone}; final page to submitted rate"},
   {id:'contact-ghost-text',step:'contact',on:false,name:'Example text in both boxes',
    short:"Grey example text shows what to type and the format, so people hesitate less and make fewer format mistakes.",
-   hypothesis:"Empty boxes give no hint of the format, so people hesitate or type a number or email in a way that fails. Grey example text in the boxes shows what to type and how.",
+   because:"empty boxes give no hint of the format, so people hesitate or type a number or email in a way that fails",
+   believe:"showing grey example text in both boxes",
+   result:"less hesitation and fewer format mistakes",
    control:"Empty boxes.",
    variant:"Grey example text in both boxes: 'e.g. name@example.com' and 'e.g. 07700 900123'.",
-   metric:"contact_validation_error by field; time to first input; final page to submitted rate."},
+   measure:"contact_validation_error by field; time to first input; final page to submitted rate"},
   {id:'global-orb',step:'all',on:false,name:'Plain progress bar with a marker at the end',
    short:"The plain bar shows how full it is but not where you are now; a small marker at the end of the fill says 'you are here'.",
-   hypothesis:"The plain bar shows how much is done but nothing marks where the person is now, so progress can feel easy to miss. A small marker at the end of the fill makes the current position obvious without changing the bar.",
+   because:"the plain bar shows how much is done but nothing marks where the person is now",
+   believe:"adding a small marker at the end of the fill",
+   result:"people seeing their position more clearly and fewer leaving in the middle stages",
    control:"The plain progress bar with no marker.",
    variant:"The same bar with a small round marker at the end of the fill.",
-   metric:"Drop-off through the middle stages; completion of the form."},
+   measure:"drop-off through the middle stages; completion of the form"},
   {id:'global-stepper',step:'all',on:false,name:'Four-stage progress stepper',
    short:"Labelled stages show where you are and what is left, which reduces uncertainty in the long middle of the form.",
-   hypothesis:"The form has 15 pages but only a plain bar, so people cannot tell how far they are or what is left. A stepper with labelled stages makes progress visible, which reduces uncertainty and abandoning in the long middle.",
+   because:"the form has 15 pages but only a plain bar, so people cannot tell how far they are or what is left",
+   believe:"a stepper with four labelled stages",
+   result:"less uncertainty and fewer people leaving in the long middle of the form",
    control:"The plain progress bar.",
    variant:"A numbered stepper in four stages (Vehicle, Details, Employment, Finance) that ends on Your results.",
-   metric:"Drop-off through the middle stages; completion of the form."}
+   measure:"drop-off through the middle stages; completion of the form"}
 ];
+const HYP_LABELS=[['because','Because'],['believe','We believe'],['result','Will result in'],['measure','Which we will measure by']];
+const hypText=(x,k)=>k==='because'?x.because.replace('{fig}',typeof HYP_FIG!=='undefined'&&HYP_FIG[x.step]||''):x[k];   // the figures exist only in the internal version
+const hypHTML=x=>'<div class="hyp">'+HYP_LABELS.map(l=>'<p><b>'+l[1]+'</b> '+esc(hypText(x,l[0]))+'</p>').join('')+'</div>';
 const X={};
 (function(){ const q=qs.get('x'), listed=q===null?null:q.split(',').map(t=>t.trim()).filter(Boolean); EXPERIMENTS.forEach(e=>{ X[e.id]=listed===null?e.on:listed.indexOf(e.id)>-1; }); })();
 const PARENT={}; EXPERIMENTS.forEach(e=>{ if(e.parent) PARENT[e.id]=e.parent; });
@@ -964,17 +1033,25 @@ const hl=(t,f)=>{ if(!f) return esc(t); const i=t.toLowerCase().indexOf(f.toLowe
 
 /* The time-at-address question. Date mode asks 'When did you move in?' (month and year, the system works out the length);
    otherwise the live 'How long have you lived at this address?' (years and months). */
+const monthNum=t=>{ t=t.trim().toLowerCase(); if(t.length<3) return null; const i=MONTHS.findIndex(m=>m.toLowerCase().indexOf(t)===0); return i<0?null:(i<9?'0':'')+(i+1); };   // 'sep', 'sept' and 'September' all give 09
+const hasLetters=t=>/[a-z]/i.test(t);
 function movedWidget(host,v,date,showLegend){
-  const F=date?[{k:'b',id:'mv-b',label:'Year',ph:'YYYY',max:4,year:true},{k:'a',id:'mv-a',label:'Month',ph:'MM',max:2}]   // year first, then month
+  const F=date?[{k:'a',id:'mv-a',label:'Month',ph:'MM',max:9},{k:'b',id:'mv-b',label:'Year',ph:'YYYY',max:4,year:true}]   // month first, then year: the UK order
               :[{k:'a',id:'mv-a',label:'Years',ph:'0',max:2},{k:'b',id:'mv-b',label:'Months',ph:'0',max:2}];
   const title=date?'When did you move in?':'How long have you lived at this address?';
-  host.innerHTML='<fieldset class="moved"><legend'+(showLegend?'':' class="sr"')+'>'+title+'</legend><div class="mv-row">'+
-    F.map(x=>'<div class="mv-f'+(x.year?' year':'')+'"><label for="'+x.id+'">'+x.label+'</label><input class="input" id="'+x.id+'" type="text" inputmode="numeric" maxlength="'+x.max+'" autocomplete="off" placeholder="'+x.ph+'" aria-describedby="mv-msg" value="'+esc(v[x.k])+'"></div>').join('')+
+  host.innerHTML='<fieldset class="moved"><legend'+(showLegend?'':' class="sr"')+'>'+title+'</legend>'+(date?'<p class="hint" id="mv-hint">For example, 09 2019</p>':'')+'<div class="mv-row">'+
+    F.map(x=>'<div class="mv-f'+(x.year?' year':'')+'"><label for="'+x.id+'">'+x.label+'</label><input class="input" id="'+x.id+'" type="text" inputmode="numeric" maxlength="'+x.max+'" autocomplete="off" placeholder="'+x.ph+'" aria-describedby="'+(date?'mv-hint ':'')+'mv-msg" value="'+esc(v[x.k])+'"></div>').join('')+
     '</div><div id="mv-msg" aria-live="polite"></div></fieldset>';
   const a=$('#mv-a',host), b=$('#mv-b',host), msg=$('#mv-msg',host), digits=el=>{ el.value=el.value.replace(/\D/g,''); };
+  function normMonth(){   // a month name or a lone digit becomes two digits
+    if(!date) return;
+    if(hasLetters(v.a)){ const m=monthNum(v.a); if(m){ v.a=m; a.value=m; } }
+    else if(v.a.length===1){ v.a='0'+v.a; a.value=v.a; }
+  }
   function error(final,bblur){
     if(date){
       const ty=TODAY.getFullYear(), tmo=TODAY.getMonth()+1;
+      if(hasLetters(v.a)) return final||bblur?{f:'a',msg:'Enter the month as a number, like 09'}:null;   // a name we know has already been turned into its number
       if(final&&v.a.length===1) v.a='0'+v.a;
       if(v.a.length===2&&(+v.a<1||+v.a>12)) return {f:'a',msg:'Month must be between 1 and 12'};
       if(v.b&&v.b.length!==4&&(final||bblur)) return {f:'b',msg:'Year must have four numbers, like 2019'};
@@ -995,6 +1072,7 @@ function movedWidget(host,v,date,showLegend){
     return null;
   }
   function check(final,bblur){
+    if(final) normMonth();
     const e=error(final,bblur);
     if(final) a.value=v.a;
     a.classList.toggle('err',!!e&&e.f==='a'); b.classList.toggle('err',!!e&&e.f==='b');
@@ -1003,9 +1081,14 @@ function movedWidget(host,v,date,showLegend){
     if(e&&(final||bblur)) track('address_moved_validation_error');
     return e;
   }
-  a.addEventListener('input',()=>{ digits(a); if(date&&a.value.length===1&&+a.value>1) a.value='0'+a.value; v.a=a.value; check(false); });
-  b.addEventListener('input',()=>{ digits(b); v.b=b.value; if(date&&b.value.length===4&&!error(false)) a.focus(); check(false); });   // a full year moves on to the month
-  a.addEventListener('blur',()=>{ if(date&&a.value.length===1){ a.value='0'+a.value; v.a=a.value; } check(false); });
+  a.addEventListener('input',()=>{
+    if(date&&hasLetters(a.value)){ a.value=a.value.replace(/[^a-z]/gi,''); v.a=a.value; check(false); return; }   // a month name is turned into its number when the box is left
+    digits(a); if(date) a.value=a.value.slice(0,2);
+    if(date&&a.value.length===1&&+a.value>1) a.value='0'+a.value;
+    v.a=a.value; const e=check(false); if(date&&a.value.length===2&&!e) b.focus();   // a full month moves on to the year
+  });
+  b.addEventListener('input',()=>{ digits(b); v.b=b.value; check(false); });
+  a.addEventListener('blur',()=>{ normMonth(); check(false,date&&hasLetters(v.a)); });
   b.addEventListener('blur',()=>{ if(b.value) check(false,true); });
   return {check:check};
 }
@@ -1036,25 +1119,25 @@ function mountAddress(preset){
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF||!ALL,   // with show-all off the list looks exactly like the live one, whatever else is on
-   MOV=xOn('addr-one-screen');
+   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=xOn('addr-house-number'), NF=xOn('addr-number-first');
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
-  const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''}};
+  const S={postcode:'',isPc:false,status:'idle',list:[],shown:PAGE,filter:'',active:null,selected:null,manual:false,man:{n:'',street:'',town:'',pc:''},mv:{a:'',b:''},house:'',res:'',note:''};
   let seq=0, timer=null;
-  liveSnap=()=>({postcode:S.postcode,status:S.status==='results'?'results':'idle',list:S.list,shown:S.shown,filter:S.filter,selected:S.selected,manual:S.manual,man:S.man});
+  liveSnap=()=>({postcode:S.postcode,status:S.status==='results'?'results':'idle',list:S.list,shown:S.shown,filter:S.filter,selected:S.selected,manual:S.manual,man:S.man,house:S.house});
   let revealId=null;
   if(carry){   // a switch was flipped: come back to the same place
     const c=carry; carry=null; revealId=c.reveal||null;
     S.postcode=c.postcode; S.isPc=UK_PC.test(S.postcode.replace(/[^A-Za-z0-9]/g,''));
     if(PF&&S.isPc) S.postcode=fmtPC(S.postcode);
-    S.list=c.list; S.status=c.status; S.shown=c.shown; S.filter=c.filter; S.selected=c.selected; S.manual=c.manual; S.man=c.man;
+    S.list=c.list; S.status=c.status; S.shown=c.shown; S.filter=c.filter; S.selected=c.selected; S.manual=c.manual; S.man=c.man; S.house=c.house||'';
   }
   main.innerHTML=backLink+
-  '<h1 id="step-title">'+(PF?'Next, what\'s your postcode?':'Next, where do you live?')+'</h1>'+
+  '<h1 id="step-title">'+(HN?'Next, what\'s your address?':PF?'Next, what\'s your postcode?':'Next, where do you live?')+'</h1>'+
   '<button type="button" class="why" id="why" aria-expanded="false" aria-controls="why-panel">'+ic('chevron-right')+'<span>Why do we ask this?</span></button>'+
   '<div class="why-panel" id="why-panel" hidden>Lenders use your address to confirm who you are and check you\'re eligible for finance.</div>'+
-  '<form id="f" novalidate aria-labelledby="step-title"><div id="zone"></div><div id="moved"></div><div id="cont-msg" aria-live="polite"></div>'+
+  '<form id="f" novalidate aria-labelledby="step-title"><div id="zone"></div><div id="moved"></div><div id="res-host"></div><div id="cont-msg" aria-live="polite"></div>'+
   '<button type="submit" class="btn" id="cont" hidden>Continue'+ic('arrow-right')+'</button></form>';
   wireBack();
   const zone=$('#zone'), cont=$('#cont');
@@ -1090,23 +1173,36 @@ function mountAddress(preset){
   /* --- search box: postcode only (variant) or the live 'address or street name' box (control) --- */
   function drawSearch(){
     zone.innerHTML=
+    (HN?'<div class="field" id="hn-field"><label for="hn">House number or name</label><div class="control"><input class="input" id="hn" type="text" maxlength="40" autocomplete="off" enterkeyhint="next" spellcheck="false" placeholder="e.g. 19" value="'+esc(S.house)+'"></div></div>':'')+
     '<div class="field" id="pc-field"><label for="pc">'+(PF?'Postcode':'Search for your address')+'</label>'+
       '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
-    (PF?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+
+    (HN?'<button type="button" class="btn secondary" id="find">Find address</button>':'')+   // the postcode-first search runs by itself, so the button is only for the house-number version, which needs both boxes
     '<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>'+
     '<div id="results"></div>';
     const pc=$('#pc');
     pc.addEventListener('input',()=>{
       S.postcode=PF?pc.value.toUpperCase():pc.value; if(PF) pc.value=S.postcode;
       clearTimeout(timer); seq++;
-      if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; paint(); }
-      if(PF?looksPc(S.postcode):S.postcode.trim().length>=3) timer=setTimeout(()=>lookup('auto'),400);
+      if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; S.note=''; paint(); }
+      if(!HN&&(PF?looksPc(S.postcode):S.postcode.trim().length>=3)) timer=setTimeout(()=>lookup('auto'),400);
     });
+    const hn=$('#hn');
+    if(hn){
+      hn.addEventListener('input',()=>{ S.house=hn.value; clearTimeout(timer); seq++; if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; S.note=''; paint(); } });
+      hn.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pc.focus(); } });
+    }
     pc.addEventListener('blur',()=>{ if(!PF||!looksPc(pc.value)) return; const f=fmtPC(pc.value); if(f!==pc.value){ pc.value=f; S.postcode=f; } });
     pc.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(timer); lookup('button'); } });
     const find=$('#find'); if(find) find.addEventListener('click',()=>{ clearTimeout(timer); lookup('button'); });
     paint();
+  }
+  const houseMatch=(a,h)=>{ h=h.toLowerCase(); return String(a.n)===h||a.sub.toLowerCase()===h||a.building.toLowerCase()===h; };
+  function narrow(list){   // house-number branch: keep the addresses with that number or name; with none, show them all and say so
+    S.note=''; const h=HN?S.house.trim():''; if(!h||!list.length) return list;
+    track('address_house_number_used');
+    const m=list.filter(a=>houseMatch(a,h)); if(m.length) return m;
+    S.note='We couldn\'t find “'+h+'” at '+S.postcode+'. Choose your address from the list.'; return list;
   }
   function lookup(source,instant){
     if(S.status==='loading') return;
@@ -1117,8 +1213,9 @@ function mountAddress(preset){
     const my=++seq; S.status='loading'; paint(); track('address_lookup_started',{source:source});
     // never leave a spinner running: after LOOKUP_TIMEOUT fall back to the manual route
     const to=setTimeout(()=>{ if(my===seq&&S.status==='loading'){ seq++; S.status='error'; paint(); track('address_lookup_timeout'); } },LOOKUP_TIMEOUT);
-    return mockSearch(S.postcode,instant).then(list=>{
+    return mockSearch(S.postcode,instant).then(found=>{
       clearTimeout(to); if(my!==seq) return;
+      const list=narrow(found);
       S.list=list; S.status=list.length?'results':'empty'; S.filter=''; S.active=null; S.shown=PAGE;
       if(list.length===1){ S.selected=list[0]; drawZone(); track('address_selected',{position:1}); return; }
       paint();
@@ -1148,6 +1245,7 @@ function mountAddress(preset){
   function drawResults(){
     const res=$('#results'), many=S.list.length>8;
     res.innerHTML=
+      (S.note?'<p class="hn-note" role="status">'+esc(S.note)+'</p>':'')+
       '<p class="count'+(ALL?'':' sr')+'" id="count" tabindex="-1" aria-live="polite"></p>'+
       (FLT&&many?'<div class="control filter">'+ic('search')+'<input class="input" id="flt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your house number or name" aria-label="Filter addresses" aria-controls="lb" value="'+esc(S.filter)+'"></div>':'')+
       '<div class="lbwrap'+(LIVE?' live':ALL?'':' paged')+'" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(qlabel())+'"></div></div>'+
@@ -1187,7 +1285,7 @@ function mountAddress(preset){
   function drawList(){
     const g=filtered(), lb=$('#lb'), f=FLT?S.filter.trim():'', total=S.list.length, items=ALL?g.items:g.items.slice(0,S.shown), left=!ALL&&g.items.length>S.shown;
     $('#count').textContent=f?('Showing '+g.items.length+' of '+total+' addresses'):(total+(total===1?' address':' addresses')+' found for '+qlabel());
-    const label=a=>LIVE?a.postcode+' '+a.line1+', '+a.town.toUpperCase():a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
+    const label=a=>LIVE?(NF?a.line1+', '+a.town+', '+a.postcode:a.postcode+' '+a.line1+', '+a.town.toUpperCase()):a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
     const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(label(a),f)+'</span></div>';
     lb.innerHTML=items.map(opt).join('')+
       (LIVE&&left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+(CSB?'':'<div class="live-foot">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>');
@@ -1200,7 +1298,7 @@ function mountAddress(preset){
   function choose(id){
     S.selected=S.list.find(a=>a.id===id); S.manual=false; $('#cont-msg').innerHTML='';
     track('address_selected',{position:S.list.indexOf(S.selected)+1});
-    drawZone(); const mv=MDATE?$('#mv-b'):$('#mv-a'); (mv||cont).focus();
+    drawZone(); const mv=$('#mv-a'); (mv||cont).focus();
   }
   function goManual(fromSelected){
     track('address_manual_opened',{reason:fromSelected?'change_address':S.status==='error'?'lookup_error':S.status==='empty'?'no_results':'user'});
@@ -1230,8 +1328,17 @@ function mountAddress(preset){
   let MVW=null;
   function drawMoved(){
     const el=$('#moved');
-    if(!MOV||!(S.selected||S.manual)){ el.innerHTML=''; MVW=null; return; }
-    MVW=movedWidget(el,S.mv,MDATE,true);
+    if(!MOV||!(S.selected||S.manual)){ el.innerHTML=''; $('#res-host').innerHTML=''; MVW=null; return; }
+    MVW=movedWidget(el,S.mv,MDATE,true); drawStatus();
+  }
+  const RESIDENTIAL=[['31','Private Tenant'],['32','Home Owner'],['33','Council Tenant'],['34','Living with Parents']];   // the live options
+  function drawStatus(){
+    const el=$('#res-host');
+    if(!STAT){ el.innerHTML=''; return; }
+    el.innerHTML='<fieldset class="status"><legend>What is your residential status?</legend>'+
+      RESIDENTIAL.map(r=>'<label class="res-opt"><input type="radio" name="res" value="'+r[0]+'"'+(S.res===r[0]?' checked':'')+'><span>'+r[1]+'</span></label>').join('')+
+      '<div id="res-msg" aria-live="polite"></div></fieldset>';
+    $$('input[name=res]',el).forEach(i=>i.addEventListener('change',()=>{ S.res=i.value; $('#res-msg').innerHTML=''; track('address_status_selected',{value:i.value}); }));
   }
   const movedCheck=final=>MVW?MVW.check(final):null;
 
@@ -1249,6 +1356,7 @@ function mountAddress(preset){
     if(!S.selected&&!S.manual){ $('#cont-msg').innerHTML='<div style="margin-bottom:16px">'+errHTML('Choose your address from the list to continue')+'</div>'; const t=$('#lb'); if(t) t.focus(); return; }
     if(S.manual){ const F=zone._F; let first=null; F.forEach(f=>{ const i=$('#'+f[2]); if(!manualCheck(i,F)&&!first) first=i; }); if(first){ first.focus(); if(MOV) movedCheck(true); return; } }
     if(MOV){ const err=movedCheck(true); if(err){ $('#mv-'+err.f).focus(); return; } track('address_moved_in_entered'); }
+    if(STAT&&!S.res){ $('#res-msg').innerHTML=errHTML('Please select an option'); const r=$('input[name=res]'); if(r) r.focus(); track('address_status_validation_error'); return; }
     if(MOV) note('Prototype: this goes to the next step.'); else location.hash='#/address/time';   // the separate time-at-address page
   });
 
@@ -1269,11 +1377,11 @@ function mountAddress(preset){
     return Promise.resolve(lookup('button',true));
   }
   async function reveal(id){
-    if(id==='addr-show-all'||id==='addr-manual-outside'){ S.selected=null; S.manual=false; drawZone(); await ensureList(); }
-    else if(id==='addr-one-screen'||id==='addr-move-in-date'){
+    if(id==='addr-show-all'||id==='addr-manual-outside'||id==='addr-number-first'){ S.selected=null; S.manual=false; drawZone(); await ensureList(); }
+    else if(id==='addr-one-screen'||id==='addr-move-in-date'||id==='addr-status-same-step'){
       if(!S.selected&&!S.manual){ await ensureList(); if(S.status==='results'&&S.list.length){ S.selected=S.list[1]||S.list[0]; drawZone(); } }
     }
-    const t=id==='addr-show-all'||id==='addr-manual-outside'?$('#lbwrap'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
+    const t=id==='addr-show-all'||id==='addr-manual-outside'||id==='addr-number-first'?$('#lbwrap'):id==='addr-house-number'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 }
 
@@ -1287,11 +1395,12 @@ const CHANGES={
   "address/default":[
     ["Postcode first, nothing else to fill in","Easy to start: everyone knows their postcode","addr-postcode-first"],
     ["Search runs by itself once the postcode is valid","One less tap","addr-postcode-first"],
-    ["'Find address' button kept as a backup","Still works if the search doesn't start","addr-postcode-first"],
+    ["House number and postcode boxes, with a Find address button","Most people know their house number, so they can skip the list","addr-house-number"],
     ["Keyboard Enter key searches, and moves between fields","Fewer taps with the keyboard open"],
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
   "address/results":[
+    ["Rows start with the house number, then street, town and postcode","The part people look for comes first","addr-number-first"],
     ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-show-all"],
     ["Count confirms the search worked","Removes the doubt that makes people leave","addr-show-all"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
@@ -1311,10 +1420,13 @@ const CHANGES={
     ["Enter moves to the next field","Fewer taps with the keyboard open"],
     ["Link back to the search","Manual entry is never a trap"]],
   "address/moved":[
+    ["Residential status under time at address","Two fewer pages in the address section","addr-status-same-step"],
+    ["Month first, then year, with 'For example, 09 2019' under the question","The UK order, and a hint people can't miss; 'Sep' or 'September' is accepted","addr-move-in-date"],
     ["Time at address on the same step","One fewer screen in the address section","addr-one-screen"],
     ["'When did you move in?', month and year","Easier than working out 'how long'; the system does the maths","addr-move-in-date"],
     ["Month moves on to year by itself, Enter continues","Quick to fill in on a phone","addr-move-in-date"]],
   "address/time":[
+    ["Month first, then year, with 'For example, 09 2019' under the question","The UK order, and a hint people can't miss; 'Sep' or 'September' is accepted","addr-move-in-date"],
     ["'When did you move in?', month and year","Easier than working out 'how long'; the system does the maths","addr-move-in-date"],
     ["Month moves on to year by itself, Enter continues","Quick to fill in on a phone","addr-move-in-date"]],
   "address/error":[
@@ -1376,7 +1488,7 @@ function paintNotes(k){
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p><h2>'+esc(STATE_LABELS[k]||k)+'</h2>'+
     (exps.length?(on.length||xOn('global-stepper')||xOn('global-orb')?'<div class="n-state redesign"><b>Redesign</b><span>'+(on.length?on.length+' of '+exps.length+' changes switched on'+(xOn('global-stepper')||xOn('global-orb')?', plus the progress bar change.':'.'):'The progress bar change is switched on.')+'</span><button type="button" data-xoff="1">Show the live version</button></div>':'<div class="n-state live"><b>Current live version</b><span>All switches are off, so this is what customers see today.</span></div>'):'')+
-    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(x.parent&&!X[x.parent]?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button><p>'+esc(x.short)+'</p>'+(x.parent&&!X[x.parent]?'<p class="n-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button><p>'+esc(e.short)+'</p>'+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
+    (exps.length?'<p class="n-sub">Hypotheses</p><div class="n-exps">'+exps.filter(e=>!e.parent).map(e=>{ const sw=(x,cls)=>'<div class="'+cls+(X[x.id]?'':' off')+(x.parent&&!X[x.parent]?' idle':'')+'"><button type="button" class="n-sw" role="switch" data-x="'+x.id+'" aria-checked="'+!!X[x.id]+'"'+(x.parent&&!X[x.parent]?' disabled aria-disabled="true"':'')+'><span class="dv-track"><span class="dv-knob"></span></span>'+esc(x.name)+'</button>'+hypHTML(x)+(x.parent&&!X[x.parent]?'<p class="n-idle">Switch on "'+esc(EXPERIMENTS.find(p=>p.id===x.parent).name)+'" first to use this.</p>':'')+'</div>'; return '<div class="n-exp'+(X[e.id]?'':' off')+'"><button type="button" class="n-sw" role="switch" data-x="'+e.id+'" aria-checked="'+!!X[e.id]+'"><span class="dv-track"><span class="dv-knob"></span></span>'+esc(e.name)+'</button>'+hypHTML(e)+exps.filter(c=>c.parent===e.id).map(c=>sw(c,'n-child')).join('')+'</div>'; }).join('')+'</div>':'')+
     (plain.length&&!exps.length?'<p class="n-sub">What changed</p><ul class="c-list">'+plain.map(p=>'<li>'+esc(p[0])+'<span class="gain">'+esc(p[1])+'</span></li>').join('')+'</ul>':'')+
     (exps.length&&SUMMARY[step]?'<div class="n-reduce"><p class="n-sub">How this should reduce abandoned sessions</p><p>'+esc(SUMMARY[step].why)+'</p></div>':'')+
     '<p class="n-foot">Expected effects, not measured results.</p>';
@@ -1495,7 +1607,18 @@ if(dev){
   if(qs.get('intro')!=='0'&&!seen) setTimeout(showIntro,0);   // ?intro=0 skips it
 }
 if(dev) $('#dev-bar3').addEventListener('click',e=>{ const b=e.target.closest('[data-bar]'); if(!b) return; X['global-stepper']=b.dataset.bar==='stepper'; X['global-orb']=b.dataset.bar==='orb'; syncX(); dev.querySelectorAll('#dev-bar3 [data-bar]').forEach(x=>x.setAttribute('aria-checked',String(x===b))); if(progKey) setProgress(progKey); paintNotes(lastKey); });
-$('#notes').addEventListener('click',e=>{ const off=e.target.closest('[data-xoff]'); if(off){ carry=liveSnap?liveSnap():null; const y0=window.scrollY; const st=(location.hash.replace(/^#\//,'').split('/')[0]); EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); route(); window.scrollTo(0,y0); return; } const t=e.target.closest('[data-x]'); if(!t) return; const y=window.scrollY; if(t.disabled) return; const id=t.dataset.x; X[id]=!X[id]; if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; }); syncX(); if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; if(carry) carry.reveal=id; else revealNext=id; route(); window.scrollTo(0,y); } });
+const goStepDefault=st=>{ const h='#/'+st+'/default'; if(location.hash===h) route(); else location.hash=h; };   // the step starts again, so nothing of the new design is left on screen
+$('#notes').addEventListener('click',e=>{
+  const st=location.hash.replace(/^#\//,'').split('/')[0];
+  const off=e.target.closest('[data-xoff]');
+  if(off){ EXPERIMENTS.forEach(x=>{ if(x.step===st||x.step==='all') X[x.id]=false; }); syncX(); carry=null; goStepDefault(st); return; }
+  const t=e.target.closest('[data-x]'); if(!t||t.disabled) return;
+  const y=window.scrollY, id=t.dataset.x; X[id]=!X[id];
+  if(!X[id]) EXPERIMENTS.forEach(c=>{ if(c.parent===id) X[c.id]=false; });
+  syncX();
+  if(!X[id]){ carry=null; goStepDefault(st); return; }   // switched off: back to the live page
+  if(liveHooks[id]){ liveHooks[id](); paintNotes(lastKey); } else { carry=liveSnap?liveSnap():null; if(carry) carry.reveal=id; else revealNext=id; route(); window.scrollTo(0,y); }   // switched on: stay where you are so the change can be seen
+});
 route();
 })();
 </script>
