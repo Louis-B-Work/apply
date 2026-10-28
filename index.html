@@ -430,7 +430,8 @@ button.dv-btn.alt:hover{background:#2a2a2a}
 .cmp-list{display:grid;border:1px solid #DDE0E6;border-radius:10px;background:#fff;overflow:hidden}
 .cmp-item{display:block;width:100%;border:0;border-top:1px solid #EEE9FA;background:#fff;padding:9px 14px;font:inherit;font-size:14px;line-height:20px;font-weight:600;text-align:left;color:#374151;cursor:pointer}
 .cmp-item:first-child{border-top:0}
-.cmp-item.child{padding-left:30px;font-weight:500}
+.cmp-item.child{width:auto;margin-left:18px;padding-left:12px;border-left:3px solid #D8CBF8;font-weight:500}
+.cmp-item.child[aria-checked=true]{border-left-color:var(--purple)}
 .cmp-item{display:flex;align-items:center;gap:10px}
 .cmp-item .dv-track{flex:none;background:#B8BCC6}
 .cmp-item[aria-checked=true] .dv-track{background:var(--purple)}
