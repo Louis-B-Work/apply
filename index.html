@@ -1732,13 +1732,14 @@ function drawCompare(){
   if(!$('#cmp-live',host)){
     host.innerHTML='<div class="cmpx-top"><div class="cmp-tabs" role="group" aria-label="Width"><button type="button" data-w="phone">Phone width</button><button type="button" data-w="wide">Wide</button></div></div>'+
       '<div class="cmp-tog" role="group" aria-label="Show"><button type="button" data-tog="live">Live site</button><button type="button" data-tog="with">With your changes</button></div>'+
-      '<div class="cmp-phones"><figure class="cmp-ph live"><figcaption>Live site</figcaption><iframe id="cmp-live" title="Live site"></iframe></figure>'+
-      '<figure class="cmp-ph with"><figcaption id="cmp-cap">With your changes</figcaption><iframe id="cmp-with" title="Form with your changes"></iframe></figure></div>';
+      '<div class="cmp-phones"><figure class="cmp-ph live"><figcaption>Live site</figcaption><iframe id="cmp-live" title="Live site" scrolling="no"></iframe></figure>'+
+      '<figure class="cmp-ph with"><figcaption id="cmp-cap">With your changes</figcaption><iframe id="cmp-with" title="Form with your changes" scrolling="no"></iframe></figure></div>';
     const fitFrames=()=>{
       const fr=[$('#cmp-live',host),$('#cmp-with',host)]; if(!fr[0]||!fr[1]) return;
-      const hs=fr.map(i=>{ try{ const d=i.contentDocument; return d&&d.body?Math.ceil(d.body.getBoundingClientRect().height):0; }catch(e){ return 0; } });
+      const hs=fr.map(i=>{ try{ const d=i.contentDocument; if(!d||!d.body) return 0; d.documentElement.style.overflow='hidden'; const r=d.body.getBoundingClientRect(), cs=getComputedStyle(d.body); return Math.ceil(r.bottom+(parseFloat(cs.marginBottom)||0)+(parseFloat(getComputedStyle(d.documentElement).paddingBottom)||0))+8; }catch(e){ return 0; } });
       const h=Math.max(560,...hs); fr.forEach(i=>{ i.style.height=h+'px'; });
     };
+    setInterval(()=>{ if(mode==='compare'&&$('#cmp-live')) fitFrames(); },300);
     $$('iframe',host).forEach(i=>i.addEventListener('load',()=>{ fitFrames(); try{ new ResizeObserver(()=>requestAnimationFrame(fitFrames)).observe(i.contentDocument.body); }catch(e){} }));
     host.addEventListener('click',e=>{
       const b=e.target.closest('button'); if(!b) return;
