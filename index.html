@@ -1728,8 +1728,7 @@ function drawCompare(){
   const host=$('#cmpframes'); if(!host) return;
   if(mode!=='compare'||SHOT||!notesOn){ host.innerHTML=''; return; }
   const step=lastKey.split('/')[0], ids=EXPERIMENTS.filter(e=>xOn(e.id)).map(e=>e.id);
-  const here=EXPERIMENTS.filter(e=>xOn(e.id)&&e.step===step), pick=here.find(e=>e.id===cmpLast)||here.filter(e=>COMPARE_AT[e.id]).pop();   // open on the state that shows the change you touched last
-  const route=cmpRoute(step,pick?pick.id:'');
+  const route=step+'/default';   // both forms start empty, so the live site and the changes can each be tried from scratch
   if(!$('#cmp-live',host)){
     host.innerHTML='<div class="cmpx-top"><div class="cmp-tabs" role="group" aria-label="Width"><button type="button" data-w="phone">Phone width</button><button type="button" data-w="wide">Wide</button></div></div>'+
       '<div class="cmp-tog" role="group" aria-label="Show"><button type="button" data-tog="live">Live site</button><button type="button" data-tog="with">With your changes</button></div>'+
