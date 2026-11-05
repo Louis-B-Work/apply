@@ -22,6 +22,7 @@ body{margin:0;background:#fff;overflow:hidden}
 .picker .opt:focus-visible{outline:3px solid #6905F2;outline-offset:2px}
 .picker .opt[aria-pressed=true]{border-color:#6905F2;background:#F5F3FF;font-weight:700}
 .picker .opt[aria-pressed=true] b{background:#6905F2;color:#fff}
+.picker .base{margin:12px 0 0;font-size:13px;line-height:18px;color:#6B7280}
 .picker .about{margin-top:14px;padding-top:14px;border-top:1px solid #E5E7EB;font-size:14px;line-height:20px;color:#374151}
 .picker .about p{margin:0 0 6px}
 .picker .about .st{color:#6B7280;font-style:italic}
@@ -43,13 +44,14 @@ body{margin:0;background:#fff;overflow:hidden}
 <li><button type="button" class="opt" data-t="4" aria-pressed="false"><b>4</b><span>Calendar button</span></button></li>
 <li><button type="button" class="opt" data-t="5" aria-pressed="false"><b>5</b><span>One date box</span></button></li>
   </ol>
+  <p class="base">Every test also shows DD, MM and YYYY in the boxes.</p>
   <div class="about" aria-live="polite"><p id="about-what"></p><p class="st" id="about-shown"></p></div>
 </aside>
-<iframe class="test" id="test-1" title="Test 1: Continue greyed out" data-src="../index.html?intro=0&amp;shot=1&amp;x=global-grey-continue#/dob/default" hidden></iframe>
-<iframe class="test" id="test-2" title="Test 2: Two-digit years accepted" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-two-digit-year#/dob/default" hidden></iframe>
-<iframe class="test" id="test-3" title="Test 3: ‘Why do we ask this?’ line" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-why-we-ask#/dob/default" hidden></iframe>
-<iframe class="test" id="test-4" title="Test 4: Calendar button" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-calendar#/dob/default" hidden></iframe>
-<iframe class="test" id="test-5" title="Test 5: One date box" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-single-box#/dob/default" hidden></iframe>
+<iframe class="test" id="test-1" title="Test 1: Continue greyed out" data-src="../index.html?intro=0&amp;shot=1&amp;x=global-grey-continue,dob-format-guide#/dob/default" hidden></iframe>
+<iframe class="test" id="test-2" title="Test 2: Two-digit years accepted" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-two-digit-year,dob-format-guide#/dob/default" hidden></iframe>
+<iframe class="test" id="test-3" title="Test 3: ‘Why do we ask this?’ line" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-why-we-ask,dob-format-guide#/dob/default" hidden></iframe>
+<iframe class="test" id="test-4" title="Test 4: Calendar button" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-calendar,dob-format-guide#/dob/default" hidden></iframe>
+<iframe class="test" id="test-5" title="Test 5: One date box" data-src="../index.html?intro=0&amp;shot=1&amp;x=dob-single-box,dob-format-guide#/dob/default" hidden></iframe>
 <script>
 (function(){
 'use strict';

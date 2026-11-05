@@ -606,6 +606,14 @@ const EXPERIMENTS=[
    control:"A two-digit year shows 'Year must have four numbers, like 1990'.",
    variant:"77 becomes 1977 when only one reading is between 18 and 100 years ago. Years with no valid reading say 'Please check the year. You need to be between 18 and 100 to apply.'",
    measure:"dob_year_expanded; dob_validation_error{type: year}; step completion"},
+  {id:'dob-format-guide',step:'dob',on:false,name:'DD, MM and YYYY shown in the boxes',
+   short:"Three empty boxes do not say how the date should be typed.",
+   because:"three empty boxes {-do not show how the date should be typed-}",
+   believe:"showing DD, MM and YYYY inside the Day, Month and Year boxes",
+   result:"{+fewer format mistakes+} and {+fewer validation errors+}",
+   control:"The Day, Month and Year boxes are empty.",
+   variant:"Grey DD, MM and YYYY inside the Day, Month and Year boxes, gone as soon as the person types. The one-box version already shows DD / MM / YYYY.",
+   measure:"dob_validation_error{type: format}; step completion; time on step"},
   {id:'contact-results-promise',step:'contact',on:false,name:'Promise results, not a quote later',
    short:"'Where should we send your quote?' sounds like an email later; 'see your results' points to the outcome people want now.",
    because:"'Where should we send your quote?' {-sounds like an email arriving later, or the start of a spam loop-}",
@@ -895,7 +903,7 @@ function mountDob(preset){
   const BX=[['d','Day','bday-day',2],['m','Month','bday-month',2],['y','Year','bday-year',4]], FIELD_IDX={day:0,month:1,year:2};
   const field=ONE
     ?'<div class="seg" id="seg"><div class="control"><input class="input" id="dob" type="text" inputmode="numeric" autocomplete="bday" enterkeyhint="go" autocapitalize="off" spellcheck="false" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg"><div class="mask" id="dob-mask" aria-hidden="true"></div>'+ic('i-tick','tick')+'</div></div>'
-    :'<div class="seg bxs" id="seg" role="group" aria-label="Date of birth">'+BX.map(b=>'<div class="bx"><label for="dob-'+b[0]+'">'+b[1]+'</label><div class="control"><input class="input" id="dob-'+b[0]+'" type="text" inputmode="numeric" maxlength="'+b[3]+'" autocomplete="'+b[2]+'" enterkeyhint="'+(b[0]==='y'?'go':'next')+'" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg">'+ic('i-tick','tick')+'</div></div>').join('')+'</div>';
+    :'<div class="seg bxs" id="seg" role="group" aria-label="Date of birth">'+BX.map(b=>'<div class="bx"><label for="dob-'+b[0]+'">'+b[1]+'</label><div class="control"><input class="input" id="dob-'+b[0]+'" type="text" inputmode="numeric" maxlength="'+b[3]+'"'+(xOn('dob-format-guide')?' placeholder="'+({d:'DD',m:'MM',y:'YYYY'})[b[0]]+'"':'')+' autocomplete="'+b[2]+'" enterkeyhint="'+(b[0]==='y'?'go':'next')+'" aria-describedby="'+(dobHelp?'dob-hint ':'')+'dob-msg">'+ic('i-tick','tick')+'</div></div>').join('')+'</div>';
   main.innerHTML=backLink+
   '<h1 id="step-title">What is your date of birth?</h1>'+
   (WHY?'<button type="button" class="why" id="why" aria-expanded="false" aria-controls="why-panel">'+ic('chevron-right')+'<span>Why do we ask this?</span></button>'+
@@ -1563,7 +1571,7 @@ function paintNotes(k){
   document.body.classList.toggle('mode-compare',mode==='compare'&&notesOn&&!SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], DOB_ORDER=['global-grey-continue','dob-two-digit-year','dob-why-we-ask','dob-calendar','dob-single-box','dob-example-line'],
+  const step=k.split('/')[0], DOB_ORDER=['global-grey-continue','dob-format-guide','dob-two-digit-year','dob-why-we-ask','dob-calendar','dob-single-box','dob-example-line'],
     exps=step==='dob'?DOB_ORDER.map(id=>EXPERIMENTS.find(e=>e.id===id)).filter(Boolean):EXPERIMENTS.filter(e=>e.step===step), onN=EXPERIMENTS.filter(e=>xOn(e.id)).length;
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
