@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en-GB">
-<head><script>if(!/[?&]x=/.test(location.search)) history.replaceState(null,'','?shot=1&x=contact-results-promise,contact-phone-tolerance,contact-ghost-text#/contact/default');</script>
+<head><script>if(!location.hash) history.replaceState(null,'',location.pathname+location.search+'#/contact/default'); addEventListener('load',()=>setTimeout(()=>{ if(!location.search) history.replaceState(null,'',location.pathname); },0));</script>
 <meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -500,7 +500,7 @@ body.has-dev{padding-bottom:156px}
 <script>
 (function(){
 'use strict';
-const qs=new URLSearchParams(location.search);
+const qs=new URLSearchParams(location.search||'?shot=1&x=contact-results-promise,contact-phone-tolerance,contact-ghost-text');
 const SHOT=qs.get('shot')==='1';
 const TODAY=new Date((qs.get('today')||new Date().toISOString().slice(0,10))+'T12:00:00');
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -677,7 +677,7 @@ const PARENT={}; EXPERIMENTS.forEach(e=>{ if(e.parent) PARENT[e.id]=e.parent; })
 EXPERIMENTS.forEach(e=>{ if(e.parent&&!X[e.parent]) X[e.id]=false; });
 if(X['global-stepper']) X['global-orb']=false;   // the bar choices are alternatives
 const xOn=id=>!!X[id]&&(!PARENT[id]||!!X[PARENT[id]]);   // a branch only counts while its parent is on
-const syncX=()=>{ try{ const u=new URL(location.href); u.searchParams.set('x',EXPERIMENTS.filter(e=>X[e.id]).map(e=>e.id).join(',')||'none'); history.replaceState(null,'',u); }catch(e){} };
+const syncX=()=>{ return; try{ const u=new URL(location.href); u.searchParams.set('x',EXPERIMENTS.filter(e=>X[e.id]).map(e=>e.id).join(',')||'none'); history.replaceState(null,'',u); }catch(e){} };
 const trackExposure=step=>EXPERIMENTS.filter(e=>e.step===step||e.step==='all').forEach(e=>track('experiment_exposure',{id:e.id,variant:xOn(e.id)?'variant':'control'}));
 
 /* every page of the live "direct" flow (15 pages), in order. We only redesign three of them. */
