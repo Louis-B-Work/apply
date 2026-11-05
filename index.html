@@ -88,6 +88,9 @@ h1{font-size:30px;line-height:37.5px;font-weight:700;margin:0 0 16px}
 .legal{font-size:14px;line-height:20px;margin:16px 0 0}
 @media (max-width:660px){ .legal{font-size:12px;line-height:18px} }
 @media (max-width:600px){ .legal{font-size:11px;line-height:16px} }
+@media (max-width:480px){ .legal .lg-long{display:none} }
+.legal .lg-short{display:none}
+@media (max-width:480px){ .legal .lg-short{display:inline} }
 .legal a{font-weight:700;color:#000;text-decoration:underline;text-underline-offset:3px}
 
 /* step 1 address */
@@ -758,7 +761,7 @@ function mountContact(preset){
     '</div>'+
     '<div id="form-msg" class="formerr" aria-live="polite"></div>'+
     '<button type="submit" class="btn" id="go"><span id="go-label">'+BTN+'</span>'+ic('arrow-right')+'</button>'+
-    '<p class="legal">'+(PROMISE?'By clicking \'See my results\' you agree to <a href="#">Car Finance 247 Limited\'s terms and conditions.</a>':'By clicking \'get my quote\' you agree to <a href="#">Car Finance 247 Limited\'s terms &amp; conditions.</a>')+'</p>'+
+    '<p class="legal">'+(PROMISE?'<span class="lg-long">By clicking \'See my results\' you agree to </span><span class="lg-short">By continuing you agree to </span><a href="#"><span class="lg-long">Car Finance 247 Limited\'s </span>terms and conditions.</a>':'<span class="lg-long">By clicking \'get my quote\' you agree to </span><span class="lg-short">By continuing you agree to </span><a href="#"><span class="lg-long">Car Finance 247 Limited\'s </span>terms &amp; conditions.</a>')+'</p>'+
   '</form>';
   wireBack();
   const f=$('#f'), email=$('#email'), phone=$('#contact-phone'), go=$('#go');
