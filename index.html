@@ -1563,7 +1563,8 @@ function paintNotes(k){
   document.body.classList.toggle('mode-compare',mode==='compare'&&notesOn&&!SHOT);
   const pins=$('#pins'), panel=$('#notes'); pins.innerHTML=''; panel.innerHTML=''; $('#summary').innerHTML='';
   if(!notesOn) return;
-  const step=k.split('/')[0], exps=EXPERIMENTS.filter(e=>e.step===step), onN=EXPERIMENTS.filter(e=>xOn(e.id)).length;
+  const step=k.split('/')[0], DOB_ORDER=['global-grey-continue','dob-two-digit-year','dob-why-we-ask','dob-calendar','dob-single-box','dob-example-line'],
+    exps=step==='dob'?DOB_ORDER.map(id=>EXPERIMENTS.find(e=>e.id===id)).filter(Boolean):EXPERIMENTS.filter(e=>e.step===step), onN=EXPERIMENTS.filter(e=>xOn(e.id)).length;
   // lines that belong to an experiment are covered by its block; the rest are changes that need no test
   const plain=(CHANGES[k]||[]).filter(p=>!p[2]&&(dobHelp||!/^Example shown|confirms the date/.test(p[0])));
   panel.innerHTML='<p class="n-head">'+STEP_TITLES[step]+'</p>'+
