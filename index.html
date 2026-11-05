@@ -28,10 +28,10 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid 
 .wrap{max-width:640px;margin:0 auto;padding:0 20px}
 .top{display:flex;justify-content:space-between;align-items:flex-start;padding-top:20px}
 .logo svg{display:block;width:70.15px;height:60px;fill:var(--purple)}
-.tp{display:block;width:156px;color:#000;text-decoration:none}
-.tp .l svg{display:block;width:100%;aspect-ratio:126/31;fill:#000}
+.tp{display:block;width:144px;color:#000;text-decoration:none}
+.tp .l svg{display:block;width:79px;aspect-ratio:126/31;fill:#000}
 .tp .s svg{display:block;width:100%;aspect-ratio:512/96;margin-top:4px}
-.tp .i{font-size:10px;line-height:14px;margin-top:4px;white-space:nowrap}
+.tp .i{font-size:9px;line-height:14px;margin-top:3px;white-space:nowrap}
 .tp .i b{font-weight:700}
 .tp .i .dv{margin:0 4px;color:#6B7280}
 .progress{display:flex;align-items:center;height:32px;margin:16px 0 42px}
@@ -86,6 +86,8 @@ h1{font-size:30px;line-height:37.5px;font-weight:700;margin:0 0 16px}
 .control .spinner{position:absolute;right:16px;top:18px;width:20px;height:20px;border-color:rgba(105,5,242,.2);border-top-color:var(--purple)}
 @keyframes sp{to{transform:rotate(360deg)}}
 .legal{font-size:14px;line-height:20px;margin:16px 0 0}
+@media (max-width:660px){ .legal{font-size:12px;line-height:18px} }
+@media (max-width:600px){ .legal{font-size:11px;line-height:16px} }
 .legal a{font-weight:700;color:#000;text-decoration:underline;text-underline-offset:3px}
 
 /* step 1 address */
@@ -631,7 +633,7 @@ const EXPERIMENTS=[
    believe:"showing grey example text in both boxes",
    result:"{+less hesitation+} and {+fewer format mistakes+}",
    control:"Empty boxes.",
-   variant:"Grey example text in both boxes: 'e.g. name@example.com' and 'e.g. 07700 900123'.",
+   variant:"Grey example text in both boxes: 'e.g. name@example.com' and 'e.g. 07700900123'.",
    measure:"contact_validation_error by field; time to first input; final page to submitted rate"},
   {id:'global-grey-continue',step:'all',on:false,name:'Continue button greyed out until the answers are valid',
    short:"A bright green button invites a tap before the answers are right; grey says 'not yet', green says 'ready'.",
@@ -751,7 +753,7 @@ function mountContact(preset){
     '</div>'+
     '<div class="field">'+
       (HELP?'<div class="lblrow"><label for="contact-phone">Phone number</label><span class="tip"><button type="button" class="tipbtn" id="phone-why" aria-label="Why we need your phone number" aria-expanded="false" aria-controls="phone-tip">?</button><span class="tipbox" id="phone-tip" role="tooltip">We need a number to reach you about your application, for example to check a detail or confirm your approval.</span></span></div>':'<label for="contact-phone">Phone number</label>')+
-      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" '+(GHOST?'placeholder="e.g. 07700 900123" ':'')+' aria-describedby="phone-msg"></div>'+
+      '<div class="control"><input class="input" id="contact-phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="go" '+(GHOST?'placeholder="e.g. 07700900123" ':'')+' aria-describedby="phone-msg"></div>'+
       '<div id="phone-msg" aria-live="polite"></div>'+
     '</div>'+
     '<div id="form-msg" class="formerr" aria-live="polite"></div>'+
