@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Address: 7 tests | Car Finance 247</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+html,body{height:100%}
+body{margin:0;background:#fff;overflow:hidden}
+.test{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+.test[hidden]{display:none}
+.picker{position:fixed;top:24px;right:24px;width:300px;max-height:calc(100vh - 48px);overflow:auto;background:#fff;border:1px solid #D9DCE3;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:16px;z-index:10;font-family:Inter,sans-serif;font-size:16px;line-height:24px;color:#111}
+.picker h2{margin:0 0 12px;font-size:12px;line-height:16px;letter-spacing:.08em;text-transform:uppercase;color:#6905F2}
+.picker ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.picker .opt{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1px solid #D9DCE3;background:#fff;border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;line-height:20px;font-weight:500;color:#111;cursor:pointer}
+.picker .opt b{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#EDE9FE;color:#6905F2;font-size:13px}
+.picker .opt:hover{border-color:#6905F2}
+.picker .opt:focus-visible{outline:3px solid #6905F2;outline-offset:2px}
+.picker .opt[aria-pressed=true]{border-color:#6905F2;background:#F5F3FF;font-weight:700}
+.picker .opt[aria-pressed=true] b{background:#6905F2;color:#fff}
+.picker .base{margin:12px 0 0;font-size:13px;line-height:18px;color:#6B7280}
+.picker .about{margin-top:14px;padding-top:14px;border-top:1px solid #E5E7EB;font-size:14px;line-height:20px;color:#374151}
+.picker .about p{margin:0 0 6px}
+.picker .about .st{color:#6B7280;font-style:italic}
+@media (max-width:1180px){
+  body{overflow:auto}
+  .picker{position:static;width:auto;max-height:none;margin:0;border-radius:0;box-shadow:none;border-width:0 0 1px 0;padding:12px 16px}
+  .picker ol{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .test{position:static;display:block;height:calc(100vh - 20px);min-height:640px}
+}
+</style>
+</head>
+<body>
+<aside class="picker" aria-label="Tests">
+  <h2>7 tests</h2>
+  <ol>
+<li><button type="button" class="opt" data-t="1" aria-pressed="false"><b>1</b><span>Continue greyed out</span></button></li>
+<li><button type="button" class="opt" data-t="2" aria-pressed="false"><b>2</b><span>House number and postcode first</span></button></li>
+<li><button type="button" class="opt" data-t="3" aria-pressed="false"><b>3</b><span>Every address shown, no ‘Show more addresses’</span></button></li>
+<li><button type="button" class="opt" data-t="4" aria-pressed="false"><b>4</b><span>‘Can’t see your address?’ outside the list</span></button></li>
+<li><button type="button" class="opt" data-t="5" aria-pressed="false"><b>5</b><span>Time at address on the same step</span></button></li>
+<li><button type="button" class="opt" data-t="6" aria-pressed="false"><b>6</b><span>‘When did you move in?’ instead of ‘How long?’</span></button></li>
+<li><button type="button" class="opt" data-t="7" aria-pressed="false"><b>7</b><span>Residential status on the same step</span></button></li>
+  </ol>
+  <div class="about" aria-live="polite"><p id="about-what"></p><p class="st" id="about-shown"></p></div>
+</aside>
+<iframe class="test" id="test-1" title="Test 1: Continue greyed out" data-src="../index.html?intro=0&amp;shot=1&amp;x=global-grey-continue#/address/default" hidden></iframe>
+<iframe class="test" id="test-2" title="Test 2: House number and postcode first" data-src="../index.html?intro=0&amp;shot=1&amp;x=addr-postcode-first#/address/default" hidden></iframe>
+<iframe class="test" id="test-3" title="Test 3: Every address shown, no ‘Show more addresses’" data-src="../index.html?intro=0&amp;shot=1&amp;x=addr-show-all#/address/default" hidden></iframe>
+<iframe class="test" id="test-4" title="Test 4: ‘Can’t see your address?’ outside the list" data-src="../index.html?intro=0&amp;shot=1&amp;x=addr-manual-outside#/address/default" hidden></iframe>
+<iframe class="test" id="test-5" title="Test 5: Time at address on the same step" data-src="../index.html?intro=0&amp;shot=1&amp;x=addr-one-screen#/address/default" hidden></iframe>
+<iframe class="test" id="test-6" title="Test 6: ‘When did you move in?’ instead of ‘How long?’" data-src="../index.html?intro=0&amp;shot=1&amp;x=addr-one-screen,addr-move-in-date#/address/default" hidden></iframe>
+<iframe class="test" id="test-7" title="Test 7: Residential status on the same step" data-src="../index.html?intro=0&amp;shot=1&amp;x=addr-status-same-step#/address/default" hidden></iframe>
+<script>
+(function(){
+'use strict';
+const INFO=[["Continue is grey and cannot be pressed until the answers on the page are valid, then it turns green.","Try: search CR0 3AG, choose an address, and watch Continue turn green."],["‘House number or name’ and ‘Postcode’ boxes replace the single search box. The search runs by itself once the postcode is complete, so there is no Find address button, and a house number narrows the list.","Try: type 4 as the house number and CR0 3AG as the postcode."],["Every address is in the list from the start, with a count line and a type-to-filter box on long lists, instead of hiding them behind ‘Show more addresses’.","Try: search CR0 3AG and look at the list."],["‘Can’t see your address? Enter it manually’ sits directly below the list, always visible, instead of at the very end of it.","Try: search CR0 3AG and look below the list."],["Once an address is confirmed, the time-at-address question appears under it on the same step, and the separate page is skipped.","Try: search CR0 3AG and choose an address."],["Builds on time at address on the same step. It asks ‘When did you move in?’ with a Month box and then a Year box, and works out the length for the person. A month name such as Sep is accepted.","Try: choose an address, then type 09 and 2019 (or Sep and 2019)."],["‘What is your residential status?’ is asked under the address, with the same four options as the live form, instead of on its own page.","Try: search CR0 3AG, choose an address and pick a status."]];
+const frames=[...document.querySelectorAll('.test')], opts=[...document.querySelectorAll('.opt')];
+function pick(n){
+  n=Math.min(Math.max(n,1),frames.length);
+  frames.forEach((f,i)=>{
+    f.hidden=i!==n-1;
+    if(i===n-1&&!f.getAttribute('src')) f.setAttribute('src',f.dataset.src);   // loaded the first time it is picked, then kept so a half-filled form is still there when you come back
+  });
+  opts.forEach((o,i)=>o.setAttribute('aria-pressed',String(i===n-1)));
+  document.getElementById('about-what').textContent=INFO[n-1][0];
+  document.getElementById('about-shown').textContent=INFO[n-1][1];
+  document.title='Address: test '+n+' of '+frames.length+' | Car Finance 247';
+}
+opts.forEach(o=>o.addEventListener('click',()=>pick(+o.dataset.t)));
+pick(parseInt((location.hash||'').replace('#',''),10)||1);
+})();
+</script>
+</body>
+</html>
