@@ -133,7 +133,8 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .live-foot .link{display:block;margin-top:6px;font-weight:700}
 .live-foot.outside{padding:20px 0 0;margin-bottom:40px}
 .live-foot.outside .link{padding:8px 0}
-.live-foot.sticky{position:sticky;bottom:0;z-index:2;background:#fff;padding:14px 16px 16px;box-shadow:0 -10px 14px -8px rgba(0,0,0,.22)}   /* stays at the bottom of the dropdown while the list scrolls behind it */
+.live-foot.sticky{position:sticky;bottom:0;z-index:2;background:#F3EEFE;padding:12px 16px 14px;font-size:14px;line-height:20px;color:#374151;box-shadow:0 -10px 14px -8px rgba(0,0,0,.22)}
+.live-foot.sticky .link{margin-top:2px;color:var(--purple);font-weight:700;text-decoration:none}   /* purple footer, purple link */   /* stays at the bottom of the dropdown while the list scrolls behind it */
 .lbwrap:has(.live-foot.sticky)::after{display:none}
 .lbwrap:has(.live-foot.sticky){margin-bottom:24px}   /* room between the dropdown and the button below it */
 .lbwrap.paged .lb{max-height:none;overflow:visible}
