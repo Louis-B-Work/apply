@@ -520,14 +520,22 @@ const note=msg=>{ if(SHOT) return; const n=document.createElement('div'); n.clas
    Every change that could move drop-off on its own is a switch with the hypothesis it tests, so each can be A/B tested alone.
    Off = what the live site does. ?x=a,b turns exactly those on, ?x=none turns all off; no ?x uses the defaults below. */
 const EXPERIMENTS=[
-  {id:'addr-postcode-first',step:'address',on:false,name:'House number and postcode first, search runs by itself',
-   short:"People stall on the open search box because they don't know what to type. Two plain boxes and a search that runs by itself leave nothing else to work out.",
-   because:"{fig}{-people are not sure what to type in the open 'Search for your address' box-} (a postcode, a street or a house number), {-failed searches lead to manual entry or leaving-}, and a Find address button beside a search that runs by itself is {-one more thing to work out-}",
-   believe:"asking for the house number and the postcode in plain words, searching as soon as a full postcode is typed with no button to press, and narrowing the results by the house number",
+  {id:'addr-postcode-first',step:'address',on:false,name:'House number and postcode boxes',
+   short:"People stall on the open search box because they don't know what to type. Two plain boxes leave nothing to work out.",
+   because:"{fig}{-people are not sure what to type in the open 'Search for your address' box-} (a postcode, a street or a house number) and {-failed searches lead to manual entry or leaving-}",
+   believe:"asking for the house number and the postcode in plain words, with a Find address button, and narrowing the results by the house number",
    result:"{+more people starting the search+}, {+fewer failed searches+} and {+less to think about+} on the first step",
    control:"Headed 'Next, where do you live?' with one 'Search for your address' box that takes a postcode or a street name, and a small 'Manually enter address details' link under it.",
-   variant:"Headed 'Next, what's your address?' with 'House number or name' and 'Postcode' boxes and no Find address button. The search starts by itself on a full postcode, narrowed by the house number if there is one: a single match goes straight to 'Is this your address?'. A house number typed after the results narrows the list.",
+   variant:"Headed 'Next, what's your address?' with 'House number or name' and 'Postcode' boxes and a Find address button. The house number narrows the results, and a single match goes straight to 'Is this your address?'. The search by itself is a separate switch under this one.",
    measure:"address step completion, plus address_lookup_started, address_validation_error, address_manual_opened, address_house_number_used and position of the chosen address (address_selected)"},
+  {id:'addr-auto-search',step:'address',on:false,parent:'addr-postcode-first',name:'Search runs by itself, no Find address button',
+   short:"A Find address button is one more thing to press once the postcode is typed.",
+   because:"a Find address button after the postcode is {-one more thing to find and press-}",
+   believe:"searching as soon as a full postcode is typed, with no button",
+   result:"{+fewer taps+} and {+less to think about+} before the list",
+   control:"The house number and postcode boxes with a Find address button under them.",
+   variant:"No Find address button. The search starts by itself about half a second after a full postcode is typed. Enter still searches.",
+   measure:"address_lookup_started{source: auto vs button}; time from first keystroke to results; step completion"},
   {id:'addr-show-all',step:'address',on:false,name:"Show every address, no 'Show more addresses' button",
    short:"'Show more addresses' looks like just another row, not a button, so people may not realise it expands the list. A list that already holds every address removes that step.",
    because:"{fig}{-the list only shows part of the results behind 'Show more addresses'-}, which looks like another row and not a button, so {-people may not find their address-}",
@@ -1193,7 +1201,7 @@ function mountAddress(preset){
   trackExposure('address');
   // each switch is one experiment (see EXPERIMENTS); with every switch off this is the live page
   const PF=xOn('addr-postcode-first'), ALL=xOn('addr-show-all'), CSB=xOn('addr-manual-outside'), LIVE=!PF||!ALL,   // with show-all off the list looks exactly like the live one, whatever else is on
-   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF, GREY=xOn('global-grey-continue');
+   MOV=xOn('addr-one-screen'), STAT=xOn('addr-status-same-step'), HN=PF, AUTO=!PF||xOn('addr-auto-search'), GREY=xOn('global-grey-continue');   // AUTO: the search starts by itself (the live box always does); the postcode boxes wait for a Find address button unless this is on
   let MDATE=xOn('addr-move-in-date');
   const FLT=ALL;   // the full list comes with a type-to-filter box (shown when it has more than eight addresses)
   const PAGE=10;   // the live page shows this many addresses, then 'Show more addresses'
@@ -1262,6 +1270,7 @@ function mountAddress(preset){
       '<div class="control"><input class="input" id="pc" type="text" '+(PF?'maxlength="14" autocomplete="postal-code" autocapitalize="characters"':'maxlength="80" autocomplete="off" autocapitalize="off"')+' enterkeyhint="search" spellcheck="false" placeholder="'+(PF?'e.g. CR0 3AG':'e.g. \'CR0 3AG\' or \'Factory Lane\'')+'" aria-describedby="pc-msg" value="'+esc(S.postcode)+'"><span class="spinner" id="pc-spin" role="status" aria-label="Finding addresses…" hidden></span></div>'+
       '<div id="pc-msg" aria-live="polite"></div></div>'+
     
+    (AUTO?'':'<button type="button" class="btn" id="find" style="margin-top:16px">Find address</button>')+
     '<button type="button" class="link manual" id="top-manual" data-manual>Manually enter address details</button>'+
     '<div id="results"></div>';
     const pc=$('#pc');
@@ -1269,7 +1278,7 @@ function mountAddress(preset){
       S.postcode=PF?pc.value.toUpperCase():pc.value; if(PF) pc.value=S.postcode;
       clearTimeout(timer); seq++;
       if(S.status!=='idle'){ S.status='idle'; S.list=[]; S.filter=''; S.active=null; S.shown=PAGE; S.note=''; paint(); }
-      if(PF?looksPc(S.postcode):S.postcode.trim().length>=3) timer=setTimeout(()=>lookup('auto'),400);
+      if(AUTO&&(PF?looksPc(S.postcode):S.postcode.trim().length>=3)) timer=setTimeout(()=>lookup('auto'),400);
     });
     const hn=$('#hn');
     if(hn){
@@ -1313,7 +1322,7 @@ function mountAddress(preset){
     const pc=$('#pc'); if(!pc) return;
     const msg=$('#pc-msg'), find=$('#find'), res=$('#results');
     $('#pc-spin').hidden=S.status!=='loading';
-    if(find){ find.hidden=S.status==='results'; find.disabled=S.status==='loading'; }
+    if(find){ find.hidden=S.status==='results'; find.disabled=S.status==='loading'; }   // only there when the search does not run by itself
     pc.classList.toggle('err',S.status==='invalid'||S.status==='empty'||S.status==='error');
     pc.setAttribute('aria-invalid',pc.classList.contains('err')?'true':'false');
     let m='';
@@ -1471,7 +1480,7 @@ function mountAddress(preset){
     else if(id==='addr-one-screen'||id==='addr-move-in-date'||id==='addr-status-same-step'){
       if(!S.selected&&!S.manual){ await ensureList(); if(S.status==='results'&&S.list.length){ S.selected=S.list[1]||S.list[0]; drawZone(); } }
     }
-    const t=id==='addr-show-all'||id==='addr-manual-outside'?$('#lbwrap'):id==='addr-postcode-first'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
+    const t=id==='addr-show-all'||id==='addr-manual-outside'?$('#lbwrap'):id==='addr-postcode-first'||id==='addr-auto-search'?$('#pc-field'):id==='addr-status-same-step'?$('#res-host'):$('#moved'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 }
 
@@ -1486,7 +1495,7 @@ const STEP_TITLES={address:'Step 1: Address',dob:'Step 2: Date of birth',contact
 const CHANGES={
   "address/default":[
     ["House number and postcode boxes","Easy to start: everyone knows them, and most people can skip the list","addr-postcode-first"],
-    ["Search runs by itself once the postcode is complete, no Find address button","Nothing to press or work out","addr-postcode-first"],
+    ["Search runs by itself once the postcode is complete, no Find address button","Nothing to press or work out","addr-auto-search"],
     ["Keyboard Enter key searches, and moves between fields","Fewer taps with the keyboard open"],
     ["'Why do we ask this?' kept, collapsed","Reassures without lengthening the page"],
     ["Progress bar is a numbered stepper in four stages","Shows which stage you are in and how much is left"]],
