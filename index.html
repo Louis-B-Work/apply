@@ -133,6 +133,8 @@ mark{background:rgba(105,5,242,.12);color:inherit;font-weight:700;border-radius:
 .live-foot .link{display:block;margin-top:6px;font-weight:700}
 .live-foot.outside{padding:20px 0 0;margin-bottom:40px}
 .live-foot.outside .link{padding:8px 0}
+.live-foot.sticky{position:sticky;bottom:0;z-index:2;background:#fff;padding:14px 16px 16px;box-shadow:0 -10px 14px -8px rgba(0,0,0,.22)}   /* stays at the bottom of the dropdown while the list scrolls behind it */
+.lbwrap:has(.live-foot.sticky)::after{display:none}
 .lbwrap.paged .lb{max-height:none;overflow:visible}
 .lb>.opt:last-child{border-bottom:0}
 .more{margin:16px 0 24px}
@@ -532,13 +534,13 @@ const EXPERIMENTS=[
    control:"A dropdown showing ten addresses, then 'Show more addresses' as a plain text row, styled like the address rows, to press for the rest.",
    variant:"Every address is in the list from the start with a count line ('21 addresses found'), and lists of more than eight also get a type-to-filter box that narrows the list as you type.",
    measure:"address step completion; position of the chosen address (address_selected); time on step; address_see_more (control only)"},
-  {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' outside the list, always visible",
+  {id:'addr-manual-outside',step:'address',on:false,name:"'Can't see your address?' stuck to the bottom of the list",
    short:"At the end of a long list it is out of sight, so people with a missing address may never find a way on.",
-   because:"the 'Can't see your address?' link sits at the very end of the list, so {-people whose address is missing have to scroll, and press 'Show more addresses', to find a way on-}",
-   believe:"placing 'Can't see your address? Enter it manually' outside the list, always visible",
+   because:"the 'Can't see your address?' link sits at the very end of a long list, so {-people whose address is missing have to scroll to the bottom to find a way on-}",
+   believe:"keeping 'Can't see your address? Enter address manually' stuck to the bottom of the dropdown, with the list scrolling behind it",
    result:"people with a missing address {+reaching manual entry sooner+}, and {+fewer leaving at the list+}",
-   control:"Inside the dropdown, at the very end of the list, after 'Show more addresses'. ",
-   variant:"Outside the list, directly below it, always visible without scrolling. The small link under the search box stays as it is.",
+   control:"At the very end of the list, after 'Show more addresses', so it scrolls out of sight.",
+   variant:"Inside the dropdown, stuck to the bottom with a shadow above it. The list scrolls behind it, so it is always in view, including on a phone where the page cannot be scrolled from inside the list. The small link under the search box stays as it is.",
    measure:"address_manual_opened; abandonment after results are shown; step completion"},
   {id:'addr-one-screen',step:'address',on:false,name:'Time at address on the same step',
    short:"Fewer screens means fewer chances to leave, and competitors such as Compare the Market already ask this on the address screen.",
@@ -1334,7 +1336,7 @@ function mountAddress(preset){
       '<div class="lbwrap'+(LIVE?' live':ALL?'':' paged')+'" id="lbwrap"><div class="lb" id="lb" role="listbox" tabindex="0" aria-label="Addresses for '+esc(qlabel())+'"></div></div>'+
       '<p class="nomatch" id="nomatch" hidden></p>'+
       (ALL||LIVE?'':'<button type="button" class="btn secondary more" id="more">Show more addresses</button>')+
-      (CSB?(PF?'<button type="button" class="btn secondary cant" data-manual>Can\'t see your address? Enter it manually</button>':'<div class="live-foot outside">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>'):'')+
+      (CSB?'<div class="live-foot outside" id="cant-out" hidden>Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>':'')+
       '<div id="sel-msg" aria-live="polite"></div>';
     const lb=$('#lb'), flt=$('#flt'), moreBtn=!LIVE&&!ALL?$('#more'):null;
     lb.addEventListener('scroll',atEnd);
@@ -1371,9 +1373,9 @@ function mountAddress(preset){
     const label=a=>LIVE?a.postcode+' '+a.line1+', '+a.town.toUpperCase():a.line1;   // the live rows read 'CR0 3AG 19 Rochford Way, CROYDON'
     const opt=a=>'<div class="opt" role="option" id="o-'+a.id+'" data-id="'+a.id+'" aria-selected="'+(a.id===S.active)+'"><span>'+hl(label(a),f)+'</span></div>';
     lb.innerHTML=items.map(opt).join('')+
-      (LIVE&&left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+(CSB?'':'<div class="live-foot">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>');
+      (LIVE&&left?'<div class="live-more" id="more" role="button" tabindex="0">Show more addresses</div>':'')+'<div class="live-foot'+(CSB?' sticky':'')+'">Can\'t see your address?<button type="button" class="link" data-manual>Enter address manually</button></div>';
     lb.removeAttribute('aria-activedescendant');
-    const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0;
+    const nm=$('#nomatch'); nm.hidden=g.items.length>0; $('#lbwrap').hidden=g.items.length===0; const co=$('#cant-out'); if(co) co.hidden=g.items.length>0;   // no rows: the link shows on its own, since the list is hidden
     if(!g.items.length) nm.textContent='No addresses match "'+S.filter+'". Check the number, or enter your address manually.';
     const more=$('#more'); if(more&&!LIVE) more.hidden=!left;
     lb.scrollTop=0; atEnd();
@@ -1490,7 +1492,7 @@ const CHANGES={
     ["All addresses in one scrollable list, no 'See more addresses'","No repeated clicking to find your address","addr-show-all"],
     ["Count confirms the search worked","Removes the doubt that makes people leave","addr-show-all"],
         ["Filter box to jump to a house number","A long list becomes a few rows"],
-    ["'Can't see your address? Enter it manually' button under the list","No dead end if your address is missing","addr-manual-outside"]],
+    ["'Can't see your address? Enter address manually' stuck to the bottom of the list","No dead end if your address is missing","addr-manual-outside"]],
   "address/filtered":[
     ["List narrows as you type, matches in bold","Reach your address faster"],
     ["Count updates: 'Showing 11 of 21'","Shows the filter is working"]],
